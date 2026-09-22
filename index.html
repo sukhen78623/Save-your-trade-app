@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+(function(){
+  function show(m){
+    try{
+      var d=document.getElementById('tj-err');
+      if(!d){d=document.createElement('div');d.id='tj-err';
+        d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99999;background:#7a1f1f;color:#fff;padding:12px 14px;font:13px/1.4 system-ui,sans-serif;white-space:pre-wrap;word-break:break-word';
+        document.documentElement.appendChild(d);}
+      d.textContent='Error: '+m;
+    }catch(e){}
+  }
+  function info(){
+    try{
+      var out=[],sc=document.getElementsByTagName('script');
+      for(var i=0;i<sc.length;i++){
+        var t=sc[i].textContent||'';
+        if(t.indexOf('const mem'+'Store')>-1){out.push('main script len='+t.length+' tail='+JSON.stringify(t.slice(-40)));}
+      }
+      return '\n'+out.join(' ')+'\npage len='+document.documentElement.outerHTML.length;
+    }catch(x){return ''}
+  }
+  window.addEventListener('error',function(e){show((e.message||'unknown')+(e.lineno?' (line '+e.lineno+')':'')+info())});
+  window.addEventListener('unhandledrejection',function(e){show((e.reason&&e.reason.message)||String(e.reason))});
+})();
+</script>
+<meta name="theme-color" content="#111314">
+<title>Save Your Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f7f5; --surface:#ffffff; --surface2:#f0f4f1; --line:#dfe6e1;
+  --text:#18201a; --muted:#66706a; --faint:#8c968f;
+  --green:#4f8f5a; --green-d:#397348; --green-bg:rgba(79,143,90,.10); --green-line:rgba(79,143,90,.30); --on-green:#ffffff;
+  --red:#c0392f; --red-d:#a52d25; --red-bg:rgba(192,57,47,.08); --red-line:rgba(192,57,47,.28); --on-red:#ffffff;
+  --grey:#8a8f95;
+  --nav-bg:rgba(255,255,255,.94); --scrim:rgba(16,17,19,.45);
+  --hero-stat:rgba(0,0,0,.035); --hero-stat-line:rgba(0,0,0,.07);
+  --shadow:0 1px 2px rgba(16,17,19,.06);
+  --shadow-lg:0 10px 28px rgba(16,17,19,.14);
+  --mark-a:#57ab5e; --mark-b:#367a3f;
+  --heart:#e04376;
+  --font:'Roboto',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --r1:6px; --r2:9px; --r3:12px;
+  --side-w:88px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#111314; --surface:#181a1c; --surface2:#1d2022; --line:#2c3033;
+  --text:#ecedee; --muted:#9a9fa3; --faint:#737a7f;
+  --green:#62a96d; --green-d:#76bd80; --green-bg:rgba(98,169,109,.16); --green-line:rgba(98,169,109,.40); --on-green:#ffffff;
+  --red:#c6453b; --red-d:#d9655a; --red-bg:rgba(198,69,59,.13); --red-line:rgba(198,69,59,.30); --on-red:#f3f4f6;
+  --grey:#767a7d;
+  --nav-bg:rgba(24,26,28,.94); --scrim:rgba(0,0,0,.70);
+  --hero-stat:rgba(255,255,255,.05); --hero-stat-line:rgba(255,255,255,.08);
+  --shadow:0 1px 2px rgba(0,0,0,.22);
+  --shadow-lg:0 10px 28px rgba(0,0,0,.34);
+  --mark-a:#57ab5e; --mark-b:#367a3f;
+  --heart:#e04376;
+  color-scheme:dark;
+}}
+:root[data-theme=dark]{
+  --bg:#111314; --surface:#181a1c; --surface2:#1d2022; --line:#2c3033;
+  --text:#ecedee; --muted:#9a9fa3; --faint:#737a7f;
+  --green:#62a96d; --green-d:#76bd80; --green-bg:rgba(98,169,109,.16); --green-line:rgba(98,169,109,.40); --on-green:#ffffff;
+  --red:#c6453b; --red-d:#d9655a; --red-bg:rgba(198,69,59,.13); --red-line:rgba(198,69,59,.30); --on-red:#f3f4f6;
+  --grey:#767a7d;
+  --nav-bg:rgba(24,26,28,.94); --scrim:rgba(0,0,0,.70);
+  --hero-stat:rgba(255,255,255,.05); --hero-stat-line:rgba(255,255,255,.08);
+  --shadow:0 1px 2px rgba(0,0,0,.22);
+  --shadow-lg:0 10px 28px rgba(0,0,0,.34);
+  --mark-a:#57ab5e; --mark-b:#367a3f;
+  --heart:#e04376;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:400 13px/1.5 var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+.big,.mid,.amt,.stat .v,.kv span:last-child,.px b,.pos,.neg,.zero{font-variant-numeric:tabular-nums}
+#app{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative;background:var(--bg)}
+@media (min-width:560px){#app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+.pos{color:var(--green)}.neg{color:var(--red)}.zero{color:var(--grey)}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+svg.ic{flex:none;display:block}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{letter-spacing:-.01em}
+@supports (-webkit-touch-callout:none){input,select,textarea,.sel{font-size:16px!important}}
+
+.screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:18px 16px 20px}
+.screen.hasnav{padding-bottom:88px}
+.grow{flex:1}
+.foot{margin-top:28px;text-align:center;color:var(--faint);font-size:12px;line-height:1.7}
+.foot .heart{display:inline-block;vertical-align:-2px;margin:0 1px;color:var(--heart)}
+
+.brand{display:flex;flex-direction:column;align-items:center;text-align:center;margin:22px 0 20px}
+.logo{width:64px;height:64px;border-radius:14px;display:block;margin-bottom:14px}
+.logo svg{display:block;border-radius:14px}
+@keyframes tjLine{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:no-preference){
+  .tja .tj-line{animation:tjLine .9s .25s ease-out both}
+}
+.brand h1{font-size:22px;font-weight:500;letter-spacing:-.01em}
+.brand p{color:var(--muted);margin-top:4px;font-size:12px;letter-spacing:.02em}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:3px;margin-bottom:16px}
+.seg button{flex:1;padding:9px 0;border-radius:var(--r1);color:var(--muted);font-weight:500;font-size:13px}
+.seg button.on{background:linear-gradient(135deg,#5d9d67 0%,#45834f 100%);color:#fff}
+.seg.appearance{gap:2px}
+.seg.appearance button{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 0;font-size:11px}
+.seg.appearance button svg.ic{width:15px;height:15px}
+.field{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:0 12px;margin-bottom:10px;color:var(--faint);min-width:0;width:100%}
+.field:focus-within{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
+.field:focus-within>svg:first-child{color:var(--green)}
+.field>svg.ic{width:18px;height:18px}
+.field input,.field select{color:var(--text)}
+.field input{flex:1;min-width:0;width:100%;background:none;border:0;outline:0;padding:12px 0;font-size:13px}
+.field input::placeholder{color:var(--faint)}
+.field .pw-toggle{width:28px;height:28px;display:grid;place-items:center;color:var(--faint);flex:none;border-radius:var(--r1)}
+.field .pw-toggle:active{background:var(--surface2)}
+.field .pw-toggle svg.ic{width:18px;height:18px}
+.field input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.field input[type=number]::-webkit-outer-spin-button,.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.lbl{color:var(--muted);font-size:12px;font-weight:400;margin:2px 2px 5px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.two>*{min-width:0}
+.two .field{padding:0 10px;gap:0}
+.row-between{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 16px}
+.check{display:flex;align-items:center;gap:8px;color:var(--text)}
+.check input{width:18px;height:18px;accent-color:var(--green)}
+.link{color:var(--green-d);text-decoration:underline;text-underline-offset:3px}
+.btn{width:100%;min-height:44px;background:linear-gradient(135deg,#5d9d67 0%,#45834f 100%);color:#fff;border:1px solid #43804d;font-weight:500;padding:10px 15px;border-radius:10px;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,.14);transition:filter .2s,box-shadow .2s}
+.btn:active{filter:brightness(.94)}
+.btn.danger{background:var(--red);color:var(--on-red);border-color:var(--red-d);box-shadow:none}
+.btn.danger:active{background:var(--red-d);filter:none}
+.btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:0 1px 2px rgba(28,40,28,.06)}
+.btn.ghost:active{background:var(--surface2);filter:none}
+.btn.small{width:auto;min-height:36px;padding:7px 13px;font-size:13px;border-radius:10px}
+.swap{text-align:center;color:var(--muted);margin-top:18px}
+.terms{color:var(--muted);font-size:12px;margin:6px 2px 16px;line-height:1.55}
+.err{color:var(--red);margin:0 2px 10px;font-size:13px}
+
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+.top>div:first-child{min-width:0}
+.hello{color:var(--muted);font-size:12px}
+.name{font-size:18px;font-weight:500;line-height:1.3;letter-spacing:-.01em}
+.when{color:var(--muted);font-size:12px;margin-top:2px}
+.sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
+.sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:16px;margin-bottom:12px}
+.card.hero.g{border-color:var(--green-line);background:var(--green-bg)}
+.card.hero.r{border-color:var(--red-line);background:var(--red-bg)}
+.card.hero.g .pos{color:var(--green-d)}
+.card.hero.r .neg{color:var(--red-d)}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-h h2{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.card-h h2 svg{color:var(--green);width:18px;height:18px}
+.big{font-size:28px;font-weight:500;letter-spacing:-.02em;line-height:1.15}
+.mid{font-size:18px;font-weight:500}
+.k{color:var(--muted);font-size:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:9px 11px}
+.card.hero .stat{background:var(--hero-stat);border-color:var(--hero-stat-line)}
+.stat .v{font-size:15px;font-weight:500;margin-top:2px}
+.stat .s{color:var(--muted);font-size:11px}
+.range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:14px}
+.range label{display:block;min-width:0}
+.range .full{grid-column:1/-1}
+.range span{display:block;color:var(--muted);font-size:12px;margin:0 2px 4px}
+.range input,.sel{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:9px 10px;font-size:13px;color:var(--text);min-height:38px;font-family:inherit}
+.disc{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.disc .it{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:6px}
+.disc .it svg{color:var(--muted);width:18px;height:18px}
+.disc .it.bad{background:var(--red-bg);border-color:var(--red-line)}
+.disc .it.bad svg{color:var(--red)}
+.disc .it b{font-size:18px;font-weight:500}
+.empty{color:var(--muted);text-align:center;padding:14px 6px}
+.empty svg.ic{display:block;margin:0 auto 8px;opacity:.75}
+.textbtn{color:var(--green-d);font-weight:500;font-size:12px;display:flex;align-items:center;gap:2px}
+.textbtn svg.ic{width:16px;height:16px}
+
+.trade{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.trade:first-child{border-top:0;padding-top:0}
+.bar3{width:3px;align-self:stretch;border-radius:2px;flex:none}
+.gbg{background:var(--green)}.rbg{background:var(--red)}.nbg{background:var(--grey)}
+.trade .tl{flex:1;min-width:0}
+.trade .d{font-weight:500;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.trade .px{color:var(--muted);font-size:12px;margin-top:2px}
+.trade .px b{color:var(--text);font-weight:500}
+.trade .tr{text-align:right}
+.trade .amt{font-weight:500;font-size:14px}
+.trade .sub{color:var(--muted);font-size:11px}
+.pill{border:1px solid var(--line);background:var(--bg);border-radius:var(--r1);padding:0 7px;font-size:11px;color:var(--muted);font-weight:500;line-height:18px}
+.pill.bk{color:var(--green-d);background:var(--green-bg);border-color:var(--green-line)}
+.tag{color:var(--muted);font-size:11px}
+.editb{width:38px;height:38px;border-radius:var(--r2);background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--green);flex:none}
+.editb svg.ic{width:18px;height:18px}
+.pagecard{padding:4px 16px}
+.pagecard .trade:first-child{padding-top:12px}
+.title{font-size:20px;font-weight:500;letter-spacing:-.01em;margin:2px 0 14px}
+.pager{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px}
+.pager button:disabled{opacity:.4;cursor:default}
+
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--nav-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:20}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:11px;font-weight:500;padding:2px 0}
+.bnav button .ico{width:48px;height:28px;border-radius:var(--r2);display:grid;place-items:center}
+.bnav button.on{color:var(--green-d)}
+.bnav button.on .ico{background:var(--green-bg)}
+
+.shell{display:block}
+.side{display:none}
+.main{min-width:0}
+
+.bar{display:flex;align-items:center;gap:8px;margin:-2px 0 16px}
+.bar .bk{width:36px;height:36px;border-radius:var(--r2);display:grid;place-items:center;background:var(--surface);border:1px solid var(--line)}
+.bar h1{font-size:16px;font-weight:500}
+.sec{color:var(--muted);font-size:11px;font-weight:500;margin:18px 2px 6px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:14px;width:100%;text-align:left;border-top:1px solid var(--line);font-size:13px}
+.li:active{background:var(--surface2)}
+.li:first-child{border-top:0}
+.li>svg.ic{width:18px;height:18px}
+.li svg:first-child{color:var(--green)}
+.li .grow{flex:1}
+.li .r{color:var(--muted);display:flex;align-items:center;gap:6px;font-size:12px}
+.li .lsub{display:flex;align-items:center;gap:7px;color:var(--green-d);font-size:12px;font-weight:500;margin-top:2px}
+.field select{margin-left:-4px}
+.li svg:last-child{color:var(--faint)}
+.li.danger{color:var(--red)}
+.li.danger svg:first-child{color:var(--red)}
+.doc p{color:var(--text);margin-bottom:10px;line-height:1.65}
+.note{color:var(--muted);font-size:12px}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:500;text-align:right}
+.hd{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin-bottom:10px}
+.hd svg{color:var(--green);width:18px;height:18px}
+.yn{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}
+.yn:first-of-type{border-top:0}
+.yn .seg2{display:flex;gap:6px}
+.yn .seg2 button{min-width:56px;padding:7px 0;border-radius:var(--r2);border:1px solid var(--line);color:var(--muted);font-weight:500;font-size:12px;background:var(--surface)}
+.yn .seg2 button.on{color:var(--on-green)}
+.yn .seg2 button.on[data-v=yes]{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.yn .seg2 button.on[data-v=no]{background:var(--green);border-color:var(--green)}
+textarea.ta{width:100%;min-height:96px;resize:vertical;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;outline:0;font-size:13px;color:var(--text)}
+textarea.ta::placeholder{color:var(--faint)}
+textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
+.shot{display:flex;align-items:center;gap:12px;margin-top:4px}
+.shot img{width:72px;height:72px;object-fit:cover;border-radius:var(--r2);border:1px solid var(--line)}
+.fileb{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:9px 12px;font-weight:500;cursor:pointer}
+.fileb svg.ic{width:18px;height:18px}
+.fileb input{display:none}
+
+.crow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.crow.link{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.crow.link .ct2{color:var(--green-d);font-weight:500}
+.crow:first-child{border-top:0;padding-top:2px}
+.crow:last-child{padding-bottom:2px}
+.cico{width:36px;height:36px;border-radius:var(--r2);background:var(--green-bg);color:var(--green-d);display:grid;place-items:center;flex:none}
+.cico svg.ic{width:20px;height:20px}
+.crow .ct2{flex:1;min-width:0;font-size:14px;line-height:1.4;word-break:break-word}
+
+.about h2{font-size:16px;font-weight:500}
+.about h3{font-size:14px;font-weight:500;margin:18px 0 8px}
+.about p{margin:0 0 10px;line-height:1.65}
+.about ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.about li{display:flex;gap:10px;align-items:flex-start;line-height:1.55}
+.about li svg.ic{width:18px;height:18px;color:var(--green);margin-top:1px}
+.ab-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ab-h .logo{width:44px;height:44px;margin:0;border-radius:10px}
+.ab-h .logo svg{border-radius:10px}
+.ab-acts{display:flex;gap:10px;margin-top:18px}
+
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-i .top2{display:flex;justify-content:space-between;margin-bottom:5px}
+.track{height:8px;border-radius:2px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;border-radius:2px}
+.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px}
+.legend div{display:flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.chartwrap svg{width:100%;height:auto;display:block}
+.chartwrap{margin-bottom:14px}
+
+.calnav{display:flex;align-items:center;gap:6px}
+.calnb{width:26px;height:26px;border-radius:var(--r1);background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+.calnb:active{background:var(--surface2)}
+.calnb svg.ic{width:15px;height:15px}
+.calm{font-size:12px;font-weight:500;min-width:88px;text-align:center;color:var(--muted)}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.calgrid.calhead{margin-bottom:6px}
+.calh{text-align:center;color:var(--muted);font-size:10px;font-weight:500;padding:2px 0}
+.calday{aspect-ratio:1/1;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;min-width:0;overflow:hidden}
+.calday.empty{border:0;background:none}
+.calday .cd-n{font-size:11px;font-weight:500;color:var(--text)}
+.calday .cd-v{font-size:8px;font-weight:500;line-height:1;color:var(--muted);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.calday.light .cd-n,.calday.light .cd-v{color:#fff}
+.calday.zero{background:var(--surface2)}
+.calday.today{box-shadow:0 0 0 2px var(--green) inset}
+.calday:disabled{opacity:.4}
+.callegend{display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:11px;color:var(--muted)}
+.callegend .lg{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+@media (min-width:480px){.calday .cd-v{font-size:9px}}
+
+.ov{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;justify-content:center;align-items:flex-end}
+.ov.center{align-items:center;padding:24px}
+.sheet{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3) var(--r3) 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg)}
+.modal{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:20px;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:6px}
+.modal p{color:var(--muted);margin-bottom:18px}
+.modal .acts{display:flex;gap:10px}
+.modal .acts button{flex:1}
+.sheet.bm{max-width:440px;border-radius:var(--r3);padding:20px;max-height:calc(100vh - 48px);overflow-y:auto}
+.ov.fresh .sheet.bm{animation:pop .24s}
+.bgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.bt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 8px;min-height:104px;border:1px solid var(--line);background:var(--bg);border-radius:var(--r2);font-size:14px;font-weight:500;text-align:center;color:var(--text)}
+.bt svg{color:var(--green)}
+.bico{display:block;flex:none;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:22%}
+.bm-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.xbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--muted);background:transparent;border:1px solid var(--line);margin:-4px -4px 0 0}
+.xbtn:hover{background:var(--surface2);color:var(--text)}
+.xbtn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.kv .bwrap{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
+.bt .st{font-size:11px;font-weight:500;color:var(--muted)}
+.bt .st.g{color:var(--green-d);background:var(--green-bg);padding:2px 8px;border-radius:var(--r1)}
+.bt.on{border-color:var(--green-line);background:var(--green-bg)}
+@media (min-width:768px){.bgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.brk{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);background:var(--bg);border-radius:var(--r2);width:100%;text-align:left;margin-top:10px;font-size:14px;font-weight:500}
+.brk svg:first-child{color:var(--green)}
+.brk .grow{flex:1}
+.brk .st{font-size:11px;font-weight:500;color:var(--muted)}
+.brk .st.g{color:var(--green-d);background:var(--green-bg);padding:2px 8px;border-radius:var(--r1);font-weight:500}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 14px;border-radius:var(--r2);font-weight:500;font-size:13px;z-index:60;max-width:88%;text-align:center;box-shadow:var(--shadow-lg)}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ring{0%{transform:scale(.6);opacity:.75}100%{transform:scale(1.7);opacity:0}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--green-line)}50%{box-shadow:0 0 0 6px transparent}}
+#app.enter .screen>.grow>*:not(.dash):not(.agrid),#app.enter :is(.dash,.agrid)>*{animation:fadeUp .45s both}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(2){animation-delay:.05s}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(3){animation-delay:.1s}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(4){animation-delay:.15s}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(5){animation-delay:.2s}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(6){animation-delay:.25s}
+#app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(n+7){animation-delay:.3s}
+.ov.fresh{animation:fadeIn .2s}
+.ov.fresh .sheet{animation:slideUp .34s cubic-bezier(.2,.8,.2,1)}
+.ov.fresh .modal{animation:pop .24s}
+.loader{position:fixed;inset:0;background:var(--bg);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;animation:fadeIn .25s}
+.lg{position:relative;width:100px;height:100px;display:grid;place-items:center;color:var(--green)}
+.lg::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:spin .9s linear infinite}
+.ltxt{color:var(--muted);font-size:14px;font-weight:500;letter-spacing:.02em}
+.connect{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 0 10px;text-align:center}
+.rings{position:relative;width:120px;height:120px;display:grid;place-items:center}
+.rings span{position:absolute;inset:16px;border-radius:50%;border:2px solid var(--green);animation:ring 1.8s ease-out infinite}
+.rings span:nth-child(2){animation-delay:.6s}
+.rings span:nth-child(3){animation-delay:1.2s}
+.core{width:66px;height:66px;border-radius:50%;background:var(--green-bg);display:grid;place-items:center;color:var(--green-d);position:relative}
+.ct{font-size:16px;font-weight:500}
+.okc{animation:pop .3s}
+.okring{stroke-dasharray:145;stroke-dashoffset:145;animation:draw .55s ease-out forwards}
+.okchk{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .4s .45s ease-out forwards}
+
+/* ---------- page grids (single column on phone) ---------- */
+.dash,.agrid{display:block}
+.editgrid{display:block}
+.setwrap{display:block}
+
+/* ---------- TABLET (768px and up): left rail + 2-column dashboard ---------- */
+@media (min-width:768px){
+  #app{max-width:none;margin:0;border:0}
+  .shell{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);align-items:start;min-height:100vh;min-height:100dvh}
+  .side{display:flex;flex-direction:column;align-items:stretch;gap:20px;position:sticky;top:0;height:100vh;height:100dvh;background:var(--surface);border-right:1px solid var(--line);padding:16px 10px}
+  .sbrand{display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 0}
+  .sbrand svg{display:block;border-radius:8px}
+  .sname{display:none;font-size:15px;font-weight:500;letter-spacing:-.01em}
+  .snav{display:flex;flex-direction:column;gap:4px}
+  .snav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;border-radius:var(--r2);color:var(--muted);font-size:11px;font-weight:500}
+  .snav button:hover{background:var(--surface2)}
+  .snav button.on{color:var(--green-d);background:var(--green-bg)}
+  .sfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+  .sfoot .sync{display:none;width:100%;justify-content:center}
+  .suser{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 4px;border-radius:var(--r2);text-align:left;width:100%}
+  .suser:hover{background:var(--surface2)}
+  .av{width:32px;height:32px;border-radius:50%;background:var(--green-bg);color:var(--green-d);display:grid;place-items:center;font-weight:500;font-size:14px;flex:none}
+  .stx{display:none;min-width:0}
+  .stx b{display:block;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stx span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bnav{display:none}
+  .main .screen{padding:24px 28px 28px;max-width:1240px;margin:0 auto;min-height:100vh;min-height:100dvh}
+  .main .screen.hasnav{padding-bottom:28px}
+  .subwrap{max-width:760px;margin:0 auto}
+  .subwrap.wide{max-width:1000px}
+  .toast{bottom:28px}
+  .title{font-size:22px;margin:0 0 18px}
+  .name{font-size:20px}
+  .li:hover,.brk:hover,.bt:not(.on):hover{background:var(--surface2)}
+  .btn.ghost:hover{background:var(--surface2)}
+  .btn:not(.ghost):not(.danger):hover{filter:brightness(1.06)}
+
+  /* dashboard grid */
+  .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:stretch}
+  .dash>.top{grid-column:1/-1;margin-bottom:0;align-items:center}
+  .dash>.card{margin:0}
+  .dash>.d-hero{grid-column:1/-1}
+  .dash>.d-hero .stats{grid-template-columns:repeat(2,minmax(0,200px))}
+  .dash>.d-month{grid-column:1/-1}
+  .dash>.d-month .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .dash>.d-disc{grid-column:1/-1}
+  .dash>.d-cal{grid-column:1/-1}
+  .dash>.d-recent{grid-column:1/-1}
+  .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+  /* filters on trades / analytics sit in one row */
+  .range.wide{grid-template-columns:repeat(3,minmax(0,240px))}
+  .range.wide .full{grid-column:auto}
+
+  /* trade rows become table-like */
+  .trade{gap:16px;padding:14px 0}
+  .trade .tr{min-width:96px}
+  .pagecard{padding:2px 20px}
+  .pagecard .trade .tl{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr) 110px;align-items:center;gap:16px}
+  .pagecard .trade .px{margin-top:0}
+  .pagecard .trade .tag{white-space:nowrap}
+
+  /* analytics grid */
+  .agrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:stretch}
+  .agrid>.card{margin:0}
+  .a-range{grid-column:1/-1;grid-row:1}
+  .a-net{grid-column:1/8;grid-row:2}
+  .a-win{grid-column:8/13;grid-row:2}
+  .a-prof{grid-column:1/7;grid-row:3}
+  .a-most{grid-column:7/13;grid-row:3}
+  .a-disc{grid-column:1/-1;grid-row:4}
+  .a-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .a-win svg{max-width:100%;height:auto}
+
+  .setwrap{max-width:640px}
+
+  /* sheets become centred dialogs */
+  .ov{align-items:center;padding:24px}
+  .sheet{max-width:440px;border-radius:var(--r3);padding:20px}
+
+  /* login / signup */
+  #app.noshell .screen{max-width:640px;margin:0 auto}
+  #app.noshell .screen.auth{max-width:460px;justify-content:center}
+  #app.noshell .screen.auth .grow{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:8px 28px 28px}
+}
+
+/* ---------- DESKTOP (1100px and up): full sidebar + wide dashboard ---------- */
+@media (min-width:1100px){
+  :root{--side-w:232px}
+  .side{padding:18px 12px}
+  .sbrand{justify-content:flex-start;padding:2px 8px}
+  .sname{display:block}
+  .snav button{flex-direction:row;gap:12px;padding:9px 10px;font-size:13px}
+  .sfoot .sync{display:flex}
+  .suser{justify-content:flex-start}
+  .stx{display:block}
+  .main .screen{padding:28px 36px 32px}
+  .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
+  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
+  .dash>.d-disc{grid-column:span 8}
+  .dash>.d-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .dash>.d-month{grid-column:1/-1}
+  .dash>.d-cal{grid-column:1/-1}
+  .dash>.d-recent{grid-column:1/-1}
+  .disc{grid-template-columns:1fr 1fr}
+  .a-net{grid-column:1/9}
+  .a-win{grid-column:9/13}
+  .editgrid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+  .editgrid>.card{margin-bottom:0}
+}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important}}
+</style>
+</head>
+<body>
+<div id="app"><div style="padding:60px 20px;text-align:center;color:var(--muted);font:16px system-ui,sans-serif">Loading Save Your Trade…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL='https:'+'/'+'/clnhiudhlqwodrhinepg.supabase.co';
+const SUPABASE_KEY='sb_publishable_DST2x9Hm_a5WJkIu6z4u9w_yKmfC-OY';
+const memStore={};
+const safeStorage={
+  getItem:k=>{try{return window.localStorage.getItem(k)}catch(e){return memStore[k]??null}},
+  setItem:(k,v)=>{try{window.localStorage.setItem(k,v)}catch(e){memStore[k]=v}},
+  removeItem:k=>{try{window.localStorage.removeItem(k)}catch(e){delete memStore[k]}}
+};
+/* Read the link we were opened with BEFORE Supabase clears it (password reset link or an expired link) */
+const AUTH_HASH=window.location.hash||'';
+const IS_RECOVERY=/(^|[#&])type=recovery(&|$)/.test(AUTH_HASH);
+const HASH_ERR=(()=>{try{return new URLSearchParams(AUTH_HASH.replace(/^#/,'')).get('error_description')||''}catch(e){return ''}})();
+let sb=null;
+try{
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:safeStorage}});
+}catch(e){console.error('Supabase failed to start',e)}
+
+const ICONS={
+  logo:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7.5 14.5l3-3.5 2.5 2.5L17 9"/>',
+  auto:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  sun:'<circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  moon:'<path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/>',
+  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/>',
+  trades:'<path d="M8 6.5h12M8 12h12M8 17.5h12"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01"/>',
+  analytics:'<path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/>',
+  settings:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20c1-4 4-5.5 7.5-5.5s6.5 1.5 7.5 5.5"/>',
+  whatsapp:'<path d="M20.5 11.8a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.35-4.2A8.5 8.5 0 1 1 20.5 11.8z"/><path d="M9.4 8.4c-.3.4-.3 1 0 1.7.9 1.9 2.2 3.1 4.1 3.9.7.3 1.3.2 1.7-.2l.5-.7-1.8-.9-.6.6c-.9-.4-1.6-1.1-2-2l.6-.6-.8-1.8z"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  card:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h3"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  calendar:'<rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>',
+  refresh:'<path d="M4 12a8 8 0 0 1 13.5-5.8L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.5 5.8L4 15.5"/><path d="M4 20v-4.5h4.5"/>',
+  file:'<path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 16h6"/>',
+  shield:'<path d="M12 3.5 19 6v5.5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>',
+  db:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8h.01"/>',
+  phone:'<path d="M5 4h4l1.8 4.5-2.3 1.5a11 11 0 0 0 5.5 5.5l1.5-2.3L20 15v4a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z"/>',
+  logout:'<path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3"/><path d="M15 8l4 4-4 4M19 12H9"/>',
+  pencil:'<path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  back:'<path d="m15 6-6 6 6 6"/>',
+  flag:'<path d="M6 21V4M6 5h11l-2 4 2 4H6"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  flame:'<path d="M13 3c1 3.5-2 5-2 8 0 1.2.8 2 1.8 2 2 0 2.8-2 2.2-4 2 1.5 3 3.5 3 5.5a6 6 0 0 1-12 0c0-3 2-4.5 3.5-6.5.5 1 1 1.5 1.5 1.5C11.5 7.5 12 5.5 13 3z"/>',
+  repeat:'<path d="M4 9h13l-3-3M20 15H7l3 3"/>',
+  trend:'<path d="m4 16 5.5-5.5 4 4L20 8"/><path d="M15 8h5v5"/>',
+  image:'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/>',
+  bank:'<path d="M3.5 9 12 4l8.5 5M5.5 9.5V17M10 9.5V17M14 9.5V17M18.5 9.5V17M3.5 20h17"/>',
+  pie:'<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12z"/><path d="M15 3.8A8.5 8.5 0 0 1 20.2 9H15z"/>',
+  bars:'<path d="M4 6h10M4 12h14M4 18h7"/>',
+  calendar2:'<rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16"/>',
+  sad:'<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 16.2c.9-1.4 2.1-2.2 3.5-2.2s2.6.8 3.5 2.2"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  chat:'<path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5v-3.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z"/><path d="M8 9h8M8 12.5h5"/>',
+  eye:'<path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5z"/><circle cx="12" cy="12" r="2.5"/>',
+  eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.9A10.7 10.7 0 0 1 12 6.8c6 0 9.5 5.2 9.5 5.2a18 18 0 0 1-3.2 3.4M6.2 6.3C3.9 7.9 2.5 12 2.5 12s3.5 5.2 9.5 5.2c1.3 0 2.5-.2 3.6-.6"/>'
+};
+const I=(n,s=22)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
+const logoMark=(s=72,uid='')=>{const an=s>=40;return `<svg width="${s}" height="${s}" viewBox="0 0 64 64" role="img" aria-label="Save Your Trade" class="tjm${an?' tja':''}"><defs><linearGradient id="tjg${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--mark-a)"/><stop offset="1" style="stop-color:var(--mark-b)"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#tjg${uid})"/><path d="M22 11H42Q45 11 45 14V53L32 43.5L19 53V14Q19 11 22 11Z" fill="#fff" fill-opacity=".97"/><path class="tj-line" d="M25 35L30.5 29.5L34.5 33L40 25.5" fill="none" stroke="var(--mark-b)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="30" stroke-dashoffset="0"/></svg>`};
+const checkSvg=s=>`<svg viewBox="0 0 52 52" width="${s}" height="${s}"><circle class="okring" cx="26" cy="26" r="23" fill="none" stroke="var(--green)" stroke-width="3"/><path class="okchk" d="M15 27l8 8 14-16" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const CONTENT={
+  terms:`
+Save Your Trade Terms and Conditions
+
+Welcome to Save Your Trade. By creating an account or using the application, you agree to these Terms and Conditions.
+
+1. Use of the application
+Save Your Trade is a personal trading journal designed to help users record, review and understand their trading activity. You are responsible for the information you enter into the application and for using the application responsibly.
+
+2. Broker information
+Where broker connectivity is available, Save Your Trade may display trading information received from the connected broker API. Broker-fetched information is intended for journaling and record-keeping purposes. You remain responsible for checking the accuracy of your trading and account information with your broker.
+
+3. No financial advice
+Save Your Trade is a journaling and statistics tool. It does not provide investment, trading or financial advice, and nothing in the application should be treated as a recommendation to buy, sell or hold any financial instrument.
+
+4. Account security
+You are responsible for keeping your account credentials and access information secure and for activity carried out through your account.
+
+5. Availability
+We aim to keep Save Your Trade useful and available, but access may occasionally be affected by maintenance, technical problems, broker API availability or other circumstances outside our control.
+
+6. Changes
+Save Your Trade may update these Terms and Conditions when necessary. The latest version shown in the application will apply to your continued use of the service.
+
+7. Contact
+For questions about these Terms and Conditions, please contact Save Your Trade using the contact details provided in the Contact Us section of the application.
+`,
+  data:`
+User Data Management
+
+Save Your Trade is designed to help you keep your trading journal and related information in one place.
+
+Promotional emails
+We do not use your user data to send promotional emails. We do not use your personal information for promotional email campaigns without your permission.
+
+Your responsibility
+Please make sure the information you provide to Save Your Trade is accurate and keep your login credentials secure.
+
+Data management
+Information associated with your Save Your Trade account may be stored and processed so that the application can provide its journaling, account and broker-sync functionality.
+
+If you have a question about your data or want to understand how your information is handled, contact Save Your Trade through the Contact Us section.
+`,
+  privacy:`
+Privacy Policy
+
+Save Your Trade respects your privacy and aims to handle your information responsibly.
+
+1. Information we may handle
+Depending on how you use the application, Save Your Trade may handle account information such as your name, email address and date of birth, information you enter in your trading journal, and trading information received from a connected broker API.
+
+2. How information is used
+Your information may be used to provide the Save Your Trade service, display your journal and statistics, support broker synchronization, maintain account functionality and respond to support requests.
+
+3. Promotional communications
+We do not use your user data to send promotional emails.
+
+4. Broker connections
+When you connect a supported broker, information made available through the broker API may be used to provide the broker-related functionality of Save Your Trade. Broker services are operated by the respective broker and are subject to their own terms and privacy policies.
+
+5. Security
+We take reasonable steps to protect information handled by the application. However, no online service can guarantee absolute security.
+
+6. Changes to this policy
+This Privacy Policy may be updated when necessary. The latest version displayed in the application will be the current version.
+
+7. Contact
+If you have questions about this Privacy Policy or your information, please contact Save Your Trade using the contact details shown in the application.
+`,
+  contact:`
++91 87795 91740 (WhatsApp only)
+Email: support [at] saveyourtrade [dot] com
+`
+};
+
+const app=document.getElementById('app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date());
+const monthStart=()=>{const d=new Date();d.setDate(1);return iso(d)};
+const monthEnd=()=>{const d=new Date();return iso(new Date(d.getFullYear(),d.getMonth()+1,0))};
+const fmtD=s=>new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+const cls=v=>v>0?'pos':v<0?'neg':'zero';
+const money=v=>{const a=Math.abs(Math.round(v));return (v>0?'+':v<0?'−':'')+'₹'+a.toLocaleString('en-IN')};
+const num=v=>(+v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pnl=t=>(t.exit-t.entry)*t.qty*(t.side==='buy'?1:-1);
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const BROKERS=['Angel One','Dhan','Shoonya','Fyers','Upstox','Zerodha'].sort((a,b)=>a.localeCompare(b));
+const LIVE_BROKERS=['Upstox','Zerodha'];
+const BROKER_LOGOS={"Angel One":"data:image/png;base64,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","Dhan":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAIAAABJgmMcAAAWvElEQVR42u1deZBlZXU/5/vufVu/ft093dPTMwwwGwOCzMI2UuKIOOAAEmJMWVGisUSjZWJZiWJiJQQSMVXGJC4VI1pEjQipCpYgqCgFggyyjYFhmWYEZ2Fmepbe+/Vb773fOfnj9rvvu+t7Mz3MdFt963VVv/2+33e+s/zOcpGZYeE4cYdYgGAB0AVAFwBdOBYAXQB0AdCFYwHQBUDn/2G0fAUxC8SiXbv/9R1PD+85Ui06rE75eTMDADf+Z9/jqD3UeB26r/a/VI8RGdj9PG7cAwBDyKW5rrcOnPWeVRd0p3IuFMknhsmhp/sRz4/t//rOR4Yqk6aQBspWn/mGAqn96iCs2vOB5wJI6q/y/R/8AmZ2SNXJOT2/6Kb1Wy/qX9kSU2wZy+8YO/D53/wIAbOGSczN7z91ULKHX/h+shj6YA2A7pfQxicigECsOBYzfOWt77+of8WsdOiUVf3azkdcNBXTKUCTARh4ZiHZPUDf0N595pnnNfhYQ5Ib8DU+j3lGQhufCt63eFAzMTtEWZkC4C89/7MpqzorQH964MWhyoSL5ikQSe9HMvgQadzVoWVdpzaA1TDW3sEzsPo1J3PzW4IL5ZDKGqn9pbF79/zfrAB9cnh3Skg6yRSfjiI0YWXQ/0JS2RQ10GRZR6sp8QFsvZXhJqzggxdYMaWEfHRo16ys/JFKUQp5MnZ6wKR4+s57iKOeTVSUQaUYsGgBwx6hlv2nRGygOFyemBWgDis8SQaHoxDRflnED2eOhjQaSg5aowhz5v3F+QGWUrP1Q994wx00udzyh8dbct9iJEmy79M5cpcEl1l3w+YaoBy7EUOw+n9HAxP/jw25mQHxDDioAZRCL4n5zrYUn/GGa0YMaMnorYuNp6KEJkmB+t3JJOxinNgAlNHahtsW0TcYUIzUheFNiuSPcKI8duZmCBkd4XBo6cJCz1ERVxyUHK8eTp2EQmuDw5p0cnKEw4F7cYY7auOG90b0o7GKG9pIEb+BgIZ0Fcesf2szwmET1lIzcry6DixtULu0sHonHVCO1u5B0Qy+Ms6Gh5VerA/E0d5VvO2OseOREtpmAYNxQnGM94EgdNez11FQhhVWxO4OQBklodGeaLw8R8Cne7ttmHrjxIpkpN/D8VooQh2GDW+i+EViFxLJBLcsVmkGXQRoK2A0ThiUHO/3xFOTcUwlJ4WO2rsw/J44trTBPAcI6JaRbMAivhGAhh0y5hiDE9pH2Mp+cuSviLLdzdXkWMPtX1H27rTc/FHealtq1DhuKDnB2UgkLCINDrcKKRPip0g7HqEZOSEAi/ft2o86jwHQ+KiWk0xrEn/h7lcEYEQ3c0AcZMujTV3bQXdrTiCZz09a7OMGNOpcm9oobjvH53AAQAASsEPKJkUNAlMgGihMIQFQMemAIqBAdLFnZDecZQDkRuYNAd2H3HNDAMDmGWBzoRVQNDZNiiBSJXFAoRw/oBzalBzx9RwVxURE3FIISzkVxzKE7E139GXyBTNrSqmIpqzqSLU4Uisppq50DgDc/BUCOERFq8rJkXWUqghYKUTsMFLEHGVQW8R1J0xCWY+oUV+6BLonAkpEBMDJemVJtnDdmRveOrBmVaG/J53Tv2uyXvnt1JEHdj9/7+BTAkXaMIi55tjn9C675dL36TRLgHtJDmNcRl4gvjx28DuDj3eY6ZlUo0+XtMVenwCj5Es1crRmxKZl9Hve3p5DVER1st+3+pIbznpLXybvfT4xETMiShTd6dym/lWb+ldd1rvyEz/+5v5qKWemi/XqYkptXnb27N3lt592zstjB58+sjtvpolbmroQ+d+OW9+6coS9LEsjc8ha9iWYR/Q4uOZTAOCQIuZbLrz+0+dv6cvkFZOrOhWRQGEIKVG4jxCzw7R17QU//uDfFbIdhJDPZPcXRw9Njysmh5RiOr6bTYoBPv7md0gUzUSV50I1ztgzAFp+lVnP67USUtGSLfJyYeD7Ps+N50D+yzszL/FrK3XrRX9wxWlvcpgYWKJARESUQoyUi88d2r1/asR9yDVNlnLWD6z4/Ob3FmvljGEeLU0+uX+XRAEAEsXx3UwhgXld3+lnGPmSVZNCkJvH9WWetXQpN0WEQUs5z15CZwBy3Rr/93lryqCtKTTXVQAWrepH37T5sqVrHVIGCgR0nyPm2x6755LbP3vV92695Js3/cUD37KU7X6kISQx//F5lw7ke+qObQj5ved+CQAIyFpSkpOEgMM3hwlRbFx0xt7X9ykiIQQRsU8iNRHR5YMbiVZoXefRWkKjnIqAtGoyqiGKAGXbOr93+QfOeotikkJ6ayQQ//In3/6HR+4uW3VTGoj4n0//7O4Xt7naViAKxMUdXcu7emuO1ZXO/XLPSz98+UkpBCIieLdYUlt7TfNmoESAjaetrtfqQwcO1ut1KSU3XLRGGYUvy8x6NObhOitAGwtH4C+x0EoIuCkTgYw62OT8yZpNYsYzBABw9eb3n3/029t/cVqhVwrBzAaKXCrzm4O/g6ApRwAg4JyZ+tuHvj84fKBi10tWrWLXy1at7tiR51xz7LJVq9j1wK1kVSt2PWukMmaqbluHhobK5bIQUq9GYS813zQHoNeVtLTzrSOlZFY8xrAzAFrKWZrr3tS/CgAEzqycEFhXzn8887POVFaR8jgOh1RPNu9JCiJO1SrD5SlDSCJOSWOiVr72zi90ZTqYWQpRrFXeddbGb1z3cWLyPtz9/68f/K+HXttRyOQUUVh4LeWkpYGIRHTk8OHevr5CoaBIJZSM6Z42z5K+C5UFxvBAoeBOINSVvbprcYeZ5hk/dOYH7xo5sHvscMac8bEFirrjdKZzN6zf7IZMxCwRnx16bag42pXucAOnlDTKVm2qVkEAIcRktTxSLkae80i5+PrkSHe2IwzoTEgmpHdKoyMjtm33LOphrRQqjrLANvwmow0dGldCGFUloEmoQ7Q40+nuWemeDAMg7JsYqTl2xkwpZoFYc+q2Ut+6/pPnLF5Omlf71Scf8ETPXVqJUhoSAKQQacM0ZfTJm9JIG2baMCMBDfjnQoipyUnHcXr7el1GoRlXt8rrHV8sz3E8LSfwQA2STIoIHV13LFc2EdFWzrLO3i9v/fDVay9QRAxgCCERb3nkfx7b+1JPNq+D0lQ+mlWO0/sJLwjKrBDlUslxnL7FfVIaRErjKtrd6cdi5TnskzFHOv2eu9ZQjdP1WsjOQCGTkwKBQSBWbGvjspVXr72g7thSCEOIil3/zIPf/fIT93Zn8nEidsIPIUS9Vjt65KhVrwshfL607ta3sUjHIKF+HpMhMelKzBLFofKEbpFctXVW77LOVFYxIUMhk7v/le0P735hy+r1Zat2/67tX33ygReP7FuUO3loepgqxxk+erSntzeXyylS8XzbiWGbILosLcDtYrPMMCXkvunR4WqxP1twjYBAZOZVPUs2Llu9bd9gIZMlZiHw0z+947qzL35kz4s7h/enpdnXUSAmQwjV9rY9IQciAvP46Kjq7s4XOpW/LqxdBdJGKA+gF1QGi1a5WcgJzeCJGQwUo9XStkOvunbJk1xE/Oxl1zuk3AqcjJEaLk199akH9owfXZzrypnpUr06Xi2NVqYt5eh26SSBijg5MTE5PuHuJ10ft+HXt26r8ZVLBwIi9ju/4CuAZWJOS+Oe3z1rKceNOF0DTUxXrFp325YbRstFm5REkTbM/o4uAD5anqw61prepR/eeMVXrrlxdc9AyapKPNm9P0KI0vT0xOiYu7GYm4TG7P3QmKRNBBcLoYIszkrztxOH7xj81SfPf6dDyhDSVamK6TOXXd+f77r54bsOT08YQiLAeUvOePfZF29du3HdwMq0NADgqjUbrv7vfxyrTKcN8yRXUQshqtWqGlFdi3qkPIYa7jZ0aHwurEVtG4DDVEhlvzP4+IpC3zVnrldMAtBlP4n5gxsuf8eq87+9/aFdIwc/tOHyK9dsSBum+0bFpIhWLxq44z2fuv4HXzwlUyeEELZtj4+OdfV0m6kUtWckjyWn1KpHKMbiY0aatz5zb9W23rvmYhcsl/5QTMsLvf/0zvd736aIEAFdzk0Kh9TmFef++cVXfe2pn/TlCg6d7IYzRCSlJsfGO7u60rkMKcLZGiVgP+upKRM/U+pvyGg6W8SEiClh3Lb9/i88e994rSRRIKBLbhKzIiIm16uXQggUqH21rZxPX3rdQL7bVcQnX05d01ScnKxMlxBx9nxoALsmh+XjtAP0rK+1BYgJgPNm+p7Xtt/wi9vv3PXrQ+UJL9npgiiFQM2HVUQIaAhpSmNZYdHlK99csmraS04BrOXidKlY5Nnr0BaFdMnFF5qaIOCudHayXrn5qR/unXr7zZv+MNzm56bPJApALFv1Z4de3bZ38Nmh1347OpRPZYgITt2BQtQqVeXMrmkhqeK93WbK5tPEoEit6zvjUxuuxFBMqoikEAC4c/jAD3Y89uBrz+0ZP2IpxxQyY6QMIU75PCREtC1rlnxodMlxy57eaNwRyrZ143lv70l3KCbdwSQmKcSe8SNf2nbvfYPPTNXLOTOdT2Xd4IqY5sh0KWzVOdwWH8otIvsQ8EFZBgaXqbNXdy3eeub5DCz8aAoU33vul3//8F1jlWJXpqMvV1BMxETzbUxXu1lPnWjxNajqmcIYJ8AVWgSoOtamgdVpaVKjbsdD82tP/eRj933DUk5vruBmnlvGzuJUtpmfALYpTIJGtPskVLEwIjOf27vcb4VIoNhxeO8tj9zd11FAgDadTQSs2ta8lNCgQxRof27krD1/1Oc8+TPdEoXL4etmHQB+NPh01bYNFG1GeAhokX3N2RcCAM8vCW1pu33/IyRUirn3Axy+66tPVktSaK1KiTZBojhamvybzX9044VbyG/Z5sOWT0QnOksSXd7GAKhIlexaOBI7rdBLxAIwebdLIRTRcGXqpre957YtNygt3zl/trxucIKZmpClCiRBtKIS93+HaH9xjEOGZevaCzKmSY1MZASUKAwhp2oVh+jr1370n6/8U1f54rzToaANN/CXgkXEmGH2WU9GuTp0x8g+bOx0l8ojpvUDKz656ZpD0+PMbAgphXBvhhAu41e0qmOV6betOPehD9/6iUu2qrmKZruRUrShD9RnQ1xnP3vVw1nDfPbIniPlqSW5ghd3Igpivm3LDVkz9c1nHhytFLHhP7s2qpDObT7z3I9cuOW9512qBVRz9GizPjQ+HEpuisGmRiUGQ8ix6vT3X9n2uYve7XKjrn/qwnfz5e/74PrLH979wuDwgYlaGQEWdxTOWbx80/K15/af7nkFcxnNY+NDY/r8OQx/U6r91UCKVWcqe+fgE1vPXLdu8Rkeh++Ryit6+j960ZWRZ0HEUgjPmXd1yDw0Sr5y1ICZ8qeYfANRWKsL1GoKGQQgEf/VYz84VJowhHRIsWZ5iNkhpYhcxt4hcot1EdATTHZ5aMA5iOYxWXn2Vf+Eau705CDrpcG+AIAVU8YwD06P/9nPbx8cG3KzSYqIvF4Q1yhh0yi5UskALg+NAFKIqmM9vm/nHJzI3Y6V1wsVIVBW2xjgw5pL4NmzZgObnmh2SHWY6QPFsQ/89Bt3vPRo1bbcveyK3oyENoR05hEmBHB56Jpj/+/Lv37L7Tf92xM/RkRimldGiRkiGlEhqtWfW1dCNB51WGWMlEPqtqfuu2fXM9ev2HDVqvVrepcGDY7mGVnK2Tm8/8FXn7vvlWdeGTlYsWrrlqyct1Y+2GIZZkiarTdxJTuBSNW18t3p3N7pkS9uf+Bfn7x/TWHxxmWr1/QODOR7OlIZKUTNscYrpQNTI7tGhnYO7989fqRk1bJGqifbAcxqjslm+34oBOas+MUPfb2pUTNr4qY5EAAxp4WRyxdsUi+ODz2+b6dbYy9QIEIjhcdSYFqaGcPsyxVcTUpz9XoG7cTyzBHtvlE7PYQ2J7WvNt9MSgFDf29fT75QmioqpVAg80zLod7n4JJ7EudmlHQMbFPc+IS4UVzxogmx/eiOcoRp5LoL5amibdkoEIDh94yx10N59rUrNV0j1ip+mnG8bxRlsL8qhhIAIhJS5Hu6M7nsPL1IybHWNgUcUQxb9Cj5bXd8AgO7hXq5zrwwjGqpxPEU1Bz0mY4rlufwpAoGaGNgXNJ0sKDroJjT2bQ0ZKU4rZQKY4qAdcd2ySq3tQnnhmJtq3Ik1NEJgTalQL2ONzTV3yEaHbxyMOyaQZoUCSk7ugtmOhXY/ooon8488frgXS/8aqbqBJGB3Sjg1OqKtmN5iGCMmwqUA1pS60gLdaSCv9lWC171ilN3MQgAsp35dC4bKHVFAGL+xP23X3fnF+9+4fFDxXEENKVhCJmSxim0ZceSU2pVbgcx0yQ4YbJFKJSKGiRAqWxWSFkvV4gIG6G9ROxMZR/b+9LDu19Y2tl9zuLlqxctHejseXXs0MmvJz1mxz4QG8UFQ5w06yYIZWjGfEwABgCkpGlmCvl6qaIcx8OUmQrpHCBMW7Vtr7/y6J6XiTmfzmRkiucmoLG+JCRMN+eYESxRI74gLtsfnvtEiJjJd1jVmlOve72zigkYDJSdKQMRcGZkyZzd8jG7PXICIscACHoDc6tRNfGzbmb+N7MZlMKu1oAZ/HzzXIgCWleOQKthsxE5krjhcz7Zg4TxY/ETMhmAZcpEKexKjZWCORaGtiGhoWRc7FZPGq4W1+8UM5I7uAZ+XU6EQpgdWadaJ9ueU5i2beUDZXitLqcRN9gbomsiA9hh8uUpPLfXyKaVEMqy5g2gASmMwyF2amogEZ04aE2/qEkzXAhyhI37M2qFRMoAiapmATHgvJHQ2PR8qwamWCgj3dHgHGH2i6oP06beRSFkNk01ay6o1DYqmANuZ6xp8sEaNxEvqe0JoniBdtwyBgAQmRRZNtvq1Mppm2xTvAQm/siWIgkJ0/rDuiHgXYWqVTBlgEC2nHkgoa3mx0LcGG79p3NUhMWtXbToYCx6FIqUmEa2HJizoWd06jLsTib4Pck+UOJISY6d/ccxZo0AEVIGOAoUzT1AE93JmKgnznZDaKwGBOf+x7ll8ZS2PuWk8S4CADAEIKBDcwtQU8i6cjAywkmY4QLhkZvxI5lhZihogmPB3jUw/HUCkYM2m9tFCkQQDp2okJSBU8KYFR+6vLPXVg4Aag2drGeKAHyXx+Jgpgg4cE2pUKejv5DHf3ko0K7K5eNNYy/N5atqISZEZQg+Eb4UIjpKnd7VNytAr165vubYYiaR6xvawNqkMe8pjef3QalfSCuifDfA6flnReglu+Cf76elBbQpa/rV0ZgZQBlIs67PlSiqjn3t2RfNCtAPvXnzyu7+kl2TKIK1yXpKAziQB+FQ1tOTMvAVmOufAf4LoOkVfbpcsu8SZ6C3Q2sz1vz7nCSScfyYSiHKVm1Vz5KPRVVbHgOgPZmOf7n8A8RUsmpGI1MeMXaHfRM4AxM5WZ9HFMgla61hHkoUSLY0VyO4tfVJR765KFFas7H9j3mnG0JWrLpD6ivX3tif727x+lYXSiWB4vEDr3zu0bt2Tw6npWEK6Q0QSXDLIaJfJI6aSr4MSmwbNEe6cG1AJBVhey2PDOAop+bYK3r6//2aj7xrzUbVqpGn9YVS3Y8Yq5a++9JjP9+zY39xzFZOkCJKYksTXMuIWCgGJ465zFFwa+uLnbQxiYVq/TJTyNMKvdecfeHHL37Xkny3aqMtCudpgcacPRau3r0A6AKgC4AuHAuALgC6AOjCsQDoAqC/B8f/A+W3oi/nWNquAAAAAElFTkSuQmCC","Shoonya":"data:image/png;base64,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","Fyers":"data:image/png;base64,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","Upstox":"data:image/png;base64,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","Zerodha":"data:image/png;base64,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"};
+const bIcon=(name,size=20)=>{const src=BROKER_LOGOS[brokerLabel(name)];return src?`<img class="bico" src="${src}" width="${size}" height="${size}" alt="" style="width:${size}px;height:${size}px">`:I('bank',size)};
+const brokerLabel=b=>{const s=String(b||'').trim();if(!s)return '';const m=BROKERS.find(x=>x.toLowerCase()===s.toLowerCase());return m||cap(s.toLowerCase())};
+
+const brokerScripName=raw=>{
+  const r=raw||{};
+  return String(
+    r.scripName ?? r.scrip_name ?? r.tradingsymbol ?? r.tradingSymbol ??
+    r.trading_symbol ?? r.symbol ?? r.instrumentName ?? r.instrument_name ??
+    r.instrument ?? r.displayName ?? r.display_name ?? ''
+  ).trim();
+};
+const normalizeBrokerTrade=raw=>({
+  ...raw,
+  scripName:brokerScripName(raw)
+});
+
+const HEART=`<svg class="heart" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="heart"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+function foot(){return `<div class="foot"><div>Made with ${HEART} For Traders</div><div>App version v3.9</div></div>`}
+
+const MONTH_PERIODS=[['this','This Month'],['lastmonth','Last Month'],['custom','Custom Date Range']];
+const DISC_PERIODS=[['today','Today'],['thisweek','This Week'],['this','This Month'],['lastweek','Last Week'],['lastmonth','Last Month'],['custom','Custom Date Range']];
+const TRADE_PERIODS=[['today','Today'],['thisweek','This Week'],['this','This Month'],['lastweek','Last Week'],['lastmonth','Last Month'],['custom','Custom Date Range']];
+const defRange=k=>({mode:(k==='monthly'||k==='discipline')?'this':'today',from:monthStart(),to:today()});
+const RKEYS=['monthly','discipline','trades','analytics'];
+const initR=()=>Object.fromEntries(RKEYS.map(k=>[k,defRange(k)]));
+function rangeOf(k){
+  const r=S.R[k],d=new Date();
+  if(r.mode==='all')return {from:'',to:''};
+  if(r.mode==='today')return {from:today(),to:today()};
+  if(r.mode==='thisweek'){
+    const back=(d.getDay()+6)%7;
+    const mon=new Date(d);mon.setDate(d.getDate()-back);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    return {from:iso(mon),to:iso(sun)};
+  }
+  if(r.mode==='this')return {from:monthStart(),to:monthEnd()};
+  if(r.mode==='lastmonth')return {from:iso(new Date(d.getFullYear(),d.getMonth()-1,1)),to:iso(new Date(d.getFullYear(),d.getMonth(),0))};
+  if(r.mode==='lastweek'){
+    const back=(d.getDay()+6)%7;
+    const mon=new Date(d);mon.setDate(d.getDate()-back-7);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    return {from:iso(mon),to:iso(sun)};
+  }
+  return {from:r.from||'',to:r.to||''};
+}
+const inR=(k,t)=>{const r=rangeOf(k);return (!r.from||t.date>=r.from)&&(!r.to||t.date<=r.to)};
+const emptyMsg=()=>S.tradesLoading?'Loading…':(S.connected||S.trades.length)?`${I('sad',40)}<div>No data available</div>`:'Connect with broker to fetch data';
+function filterUI(k){
+  const r=S.R[k];
+  const wide=(k==='trades'||k==='analytics');
+  const opts=k==='monthly'?MONTH_PERIODS:k==='discipline'?DISC_PERIODS:TRADE_PERIODS;
+  return `<div class="range${wide?' wide':''}">
+    <label class="full"><span>Period</span><select class="sel" data-per="${k}">${opts.map(([v,l])=>`<option value="${v}" ${r.mode===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    ${r.mode==='custom'?`
+    <label><span>From</span><input type="date" data-rng="${k}" data-side="from" value="${r.from}" ${r.to?`max="${r.to}"`:''}></label>
+    <label><span>To</span><input type="date" data-rng="${k}" data-side="to" value="${r.to}" ${r.from?`min="${r.from}"`:''}></label>`:''}
+  </div>`;
+}
+
+const bpNow=()=>window.innerWidth>=1100?'d':window.innerWidth>=768?'t':'m';
+let curBp=bpNow();
+window.addEventListener('resize',()=>{const b=bpNow();if(b!==curBp){curBp=b;if(S.user&&!S.busy)render()}});
+
+const S={
+  authMode:'login', form:{}, error:'', info:'', acct:null, user:null, subscriptionPlan:'free',
+  subStatus:'trial', subDaysLeft:0, trialEndsAt:null, subscriptionEndsAt:null,
+  tab:'dashboard', sub:null, subFrom:'main',
+  connected:false, broker:null, changeModal:false, trades:[], tradesLoading:false, R:initR(),
+  editId:null, draft:{}, sheet:false, logoutModal:false, busy:null, conn:null, tpage:1,
+  pw:{cur:'',nw:'',cf:''}, em:{nw:'',pw:''}, emSent:'', fb:{type:'glitch',msg:''}, fbSent:false, feedbacks:[], shotReady:false, connTitle:'', connNote:'',
+  calMonth:today().slice(0,7), calDay:null
+};
+
+S.theme=(()=>{try{return safeStorage.getItem('tj-theme')||'auto'}catch(e){return 'auto'}})();
+function applyTheme(){
+  const r=document.documentElement;
+  if(S.theme==='light'||S.theme==='dark')r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme');
+  const m=document.querySelector('meta[name=theme-color]');
+  if(m)m.setAttribute('content',getComputedStyle(r).getPropertyValue('--bg').trim()||'#111314');
+}
+applyTheme();
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.theme==='auto')applyTheme()})}catch(e){}
+
+const TRADE_COLS='id,broker,broker_trade_id,trade_date,trade_time,scrip_name,side,entry_price,exit_price,qty,setup,planned_sl,planned_target,anticipation,rule_break,over_trading,revenge,mistake,note';
+const numOrBlank=v=>(v===null||v===undefined||v==='')?'':+v;
+function dbToTrade(r){
+  return normalizeBrokerTrade({
+    id:r.id,broker:r.broker||'',date:r.trade_date,time:r.trade_time||'',side:r.side,
+    entry:+r.entry_price,exit:+r.exit_price,qty:+r.qty,
+    scripName:r.scrip_name||'',setup:r.setup||'',
+    sl:numOrBlank(r.planned_sl),target:numOrBlank(r.planned_target),
+    anticipation:r.anticipation||'',ruleBreak:r.rule_break||'',overTrading:r.over_trading||'',revenge:r.revenge||'',
+    mistake:r.mistake||'',note:r.note||'',shot:''
+  });
+}
+function tradesQuery(){
+  return sb.from('trades').select(TRADE_COLS)
+    .order('trade_date',{ascending:false}).order('trade_time',{ascending:false}).order('id',{ascending:false});
+}
+async function loadTrades(){
+  const step=1000;
+  /* Fetch page 1 with an exact count, then fetch every remaining page in parallel
+     instead of one-after-another (this is what makes accounts with lots of trades load fast) */
+  const first=await tradesQuery().select(TRADE_COLS,{count:'exact'}).range(0,step-1);
+  if(first.error)throw first.error;
+  const all=first.data.slice();
+  const total=typeof first.count==='number'?first.count:all.length;
+  if(total>step){
+    const pages=[];
+    for(let from=step;from<total;from+=step)pages.push(tradesQuery().range(from,from+step-1));
+    const results=await Promise.all(pages);
+    for(const r of results){if(r.error)throw r.error;all.push(...r.data);}
+  }
+  S.trades=all.map(dbToTrade);
+}
+/* Mirrors what the database's subscription_status() function decides, purely for display.
+   The actual access control happens server-side (RLS), so a user tampering with this
+   in devtools cannot get to their journal data - the database will still refuse it. */
+function computeSubStatus(row){
+  const now=Date.now();
+  const subEnd=row&&row.subscription_ends_at?new Date(row.subscription_ends_at).getTime():0;
+  const trialEnd=row&&row.trial_ends_at?new Date(row.trial_ends_at).getTime():0;
+  if(subEnd&&subEnd>now)return{status:'active',daysLeft:0};
+  if(trialEnd&&trialEnd>now)return{status:'trial',daysLeft:Math.max(1,Math.ceil((trialEnd-now)/86400000))};
+  return{status:'expired',daysLeft:0};
+}
+async function loadAll(session){
+  const u=session.user;
+  S.connected=false;S.broker=null;
+  /* Start all four requests together instead of one after another (this is what makes login fast) */
+  const pProfile=sb.from('profiles').select('*').eq('id',u.id).maybeSingle().then(r=>r.data,()=>null);
+  const pPlan=sb.from('user_profiles').select('plan,trial_ends_at,subscription_ends_at').eq('id',u.id).maybeSingle().then(r=>r.data,()=>null);
+  const pBroker=refreshBroker();
+  const [p,pr]=await Promise.all([pProfile,pPlan,pBroker]);
+  const m=u.user_metadata||{};
+  S.profHasGender=!!(p&&Object.prototype.hasOwnProperty.call(p,'gender'));
+  let plan='free';
+  if(pr&&pr.plan)plan=String(pr.plan).toLowerCase();
+  S.subscriptionPlan=plan;
+  S.trialEndsAt=(pr&&pr.trial_ends_at)||null;
+  S.subscriptionEndsAt=(pr&&pr.subscription_ends_at)||null;
+  const st=computeSubStatus(pr);
+  S.subStatus=st.status;S.subDaysLeft=st.daysLeft;
+  S.user={id:u.id,first:(p&&p.first_name)||m.first_name||'',last:(p&&p.last_name)||m.last_name||'',gender:String((p&&p.gender)||m.gender||'').toLowerCase(),dob:(p&&p.dob)||m.dob||'',email:u.email||'',plan:plan};
+  S.acct=S.user;
+  S.trades=[];
+  /* Trade history can be large, so it no longer blocks login: the dashboard opens right away
+     and the trade list fills in a moment later, re-rendering once it's ready */
+  S.tradesLoading=true;
+  loadTrades().catch(e=>{S.trades=[];console.error(e)}).then(()=>{S.tradesLoading=false;render(true)});
+}
+
+function friendlyError(e){
+  const m=(e&&e.message)||'Something went wrong';
+  if(/email not confirmed|email_not_confirmed/i.test(m))return 'Please confirm your email from the link we sent you, then login';
+  if(/invalid login/i.test(m))return 'Wrong email or password';
+  if(/already registered/i.test(m))return 'This email is already registered. Please login';
+  if(/rate limit/i.test(m))return 'Too many attempts. Please wait a few minutes and try again';
+  if(/only request this after|security purposes/i.test(m))return 'Please wait a minute before asking for another link';
+  if(/failed to fetch|network/i.test(m))return 'No internet connection. Please try again';
+  return m;
+}
+/* Google login on an account that was first registered with email + password:
+   show "already registered" and sign this Google session out (other devices stay logged in) */
+const MSG_EMAIL_ACCOUNT='This email is already registered with a password. Please login using your email and password.';
+function jwtAmr(t){try{let p=String(t||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';const j=JSON.parse(atob(p));return Array.isArray(j.amr)?j.amr:[]}catch(e){return []}}
+function googleOnEmailAccount(sess){
+  try{
+    const u=sess&&sess.user;if(!u)return false;
+    const amr=jwtAmr(sess.access_token).slice().sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    if(!amr.length||amr[0].method!=='oauth')return false;
+    const ids=u.identities||[];
+    const em=ids.find(i=>i.provider==='email'),go=ids.find(i=>i.provider==='google');
+    if(!em||!go||!em.created_at||!go.created_at)return false;
+    return new Date(em.created_at)<new Date(go.created_at);
+  }catch(e){return false}
+}
+async function initSession(){
+  if(!sb){S.error='App could not connect. Please reload';return render();}
+  S.busy='Loading';render();
+  try{
+    try{
+      const hash=window.location.hash||'';
+      const params=new URLSearchParams(hash.replace(/^#/,''));
+      const packed=params.get('syt_session');
+      if(packed){
+        const b64=packed.replace(/-/g,'+').replace(/_/g,'/');
+        const padded=b64+'==='.slice((b64.length+3)%4);
+        const data=JSON.parse(atob(padded));
+        if(data&&data.a&&data.r){
+          await sb.auth.setSession({access_token:data.a,refresh_token:data.r});
+          history.replaceState(null,'',window.location.pathname+window.location.search);
+        }
+      }
+    }catch(e){console.error('Session transfer failed',e)}
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session){
+      if(IS_RECOVERY){
+        S.authMode='reset';S.form={};S.error='';
+      }else if(googleOnEmailAccount(data.session)){
+        try{await sb.auth.signOut({scope:'local'})}catch(e){console.error(e)}
+        S.authMode='login';S.error=MSG_EMAIL_ACCOUNT;
+      }else{await loadAll(data.session);S.tab='dashboard';}
+    }else if(HASH_ERR){
+      S.error='This email link is invalid or has expired. To reset your password, tap Forget password and ask for a new link.';
+      try{history.replaceState(null,'',window.location.pathname+window.location.search)}catch(e){}
+    }
+  }catch(e){console.error(e)}
+  S.busy=null;render(true);
+  if(S.user)handleBrokerReturn();
+}
+
+const sorted=l=>[...l].sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+function stats(list){
+  const total=list.reduce((s,t)=>s+pnl(t),0);
+  const w=list.filter(t=>pnl(t)>0).length,l=list.filter(t=>pnl(t)<0).length;
+  const gp=list.reduce((s,t)=>{const p=pnl(t);return s+(p>0?p:0)},0);
+  const gl=list.reduce((s,t)=>{const p=pnl(t);return s+(p<0?-p:0)},0);
+  const pf=gl>0?gp/gl:(gp>0?Infinity:0);
+  const days={};list.forEach(t=>days[t.date]=(days[t.date]||0)+pnl(t));
+  const dk=Object.keys(days);
+  let best=null,worst=null;
+  dk.forEach(k=>{if(!best||days[k]>days[best])best=k;if(!worst||days[k]<days[worst])worst=k});
+  return {total,w,l,rate:(w+l)?Math.round(w/(w+l)*100):0,best:best?{d:best,v:days[best]}:null,worst:worst?{d:worst,v:days[worst]}:null,days,gp,gl,pf};
+}
+const pfStr=v=>v===Infinity?'∞':v.toFixed(2);
+const moneyShort=v=>{
+  const a=Math.abs(Math.round(v));
+  const s=a>=1000000?(a/1000000).toFixed(1).replace(/\.0$/,'')+'M':a>=1000?(a/1000).toFixed(1).replace(/\.0$/,'')+'k':String(a);
+  return (v>0?'+':v<0?'−':'')+'₹'+s;
+};
+
+function field(icon,type,key,ph,extra=''){
+  return `<label class="field">${I(icon,20)}<input type="${type}" data-f="${key}" placeholder="${ph}" value="${esc(S.form[key]||'')}" ${extra}></label>`;
+}
+
+function pwField(icon,key,ph,autocomplete){
+  const id='pw-'+key;
+  return `<label class="field">${I(icon,20)}<input id="${id}" type="password" data-f="${key}" placeholder="${ph}" value="${esc(S.form[key]||'')}" autocomplete="${autocomplete}"><button type="button" class="pw-toggle" data-act="toggle-pw" data-target="${id}" aria-label="Show password">${I('eye',20)}</button></label>`;
+}
+function forgotView(){
+  return `<div class="screen auth"><div class="grow">
+    <div class="brand"><div class="logo">${logoMark(72)}</div><h1>Forgot password</h1><p>We will email you a link to set a new password</p></div>
+    ${field('mail','email','email','Email address','autocomplete="email" inputmode="email"')}
+    ${S.info?`<div class="note" style="color:var(--green-d);margin:0 2px 10px;font-size:13px">${esc(S.info)}</div>`:''}
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    <button class="btn" data-act="send-reset">Send reset link</button>
+    <div class="swap">Remembered it? <button class="link" data-act="mode-login">Back to login</button></div>
+  </div>${foot()}</div>`;
+}
+function resetView(){
+  return `<div class="screen auth"><div class="grow">
+    <div class="brand"><div class="logo">${logoMark(72)}</div><h1>Set new password</h1><p>Choose a new password for your account</p></div>
+    ${pwField('lock','npw','New password *','new-password')}
+    ${pwField('lock','ncf','Confirm new password *','new-password')}
+    <div class="note" style="margin:2px 4px 14px">Use at least 8 characters.</div>
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    <button class="btn" data-act="save-reset">Update password</button>
+  </div>${foot()}</div>`;
+}
+async function sendReset(){
+  if(!sb){S.error='App could not connect. Please reload';return render();}
+  const email=String(S.form.email||'').trim().toLowerCase();
+  if(!/^\S+@\S+\.\S+$/.test(email)){S.error='Enter your registered email address';S.info='';return render()}
+  S.error='';S.info='';S.busy='Sending link';render();
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href.split('#')[0].split('?')[0]});
+    S.busy=null;
+    if(error){S.error=friendlyError(error);return render()}
+    S.info='If this email is registered, a reset link has been sent. Please check your inbox and spam folder.';
+    render();
+  }catch(e){S.busy=null;S.error=friendlyError(e);render()}
+}
+async function saveReset(){
+  if(!sb){S.error='App could not connect. Please reload';return render();}
+  const f=S.form;
+  if(!f.npw||!f.ncf){S.error='Fill in both password fields';return render()}
+  if(f.npw.length<8){S.error='Password needs at least 8 characters';return render()}
+  if(f.npw!==f.ncf){S.error='Passwords do not match';return render()}
+  S.error='';S.busy='Updating password';render();
+  try{
+    const up=await sb.auth.updateUser({password:f.npw});
+    if(up.error){S.busy=null;S.error=friendlyError(up.error);return render()}
+    const {data}=await sb.auth.getSession();
+    S.form={};S.info='';S.authMode='login';
+    if(data&&data.session){await loadAll(data.session);S.tab='dashboard';S.busy=null;render(true);toast('Password updated');return}
+    S.busy=null;render(true);
+  }catch(e){console.error(e);S.busy=null;S.error=friendlyError(e);render()}
+}
+function authView(){
+  if(S.authMode==='forgot')return forgotView();
+  if(S.authMode==='reset')return resetView();
+  const login=S.authMode==='login';
+  return `<div class="screen auth"><div class="grow">
+    <div class="brand"><div class="logo">${logoMark(72)}</div><h1>Save Your Trade</h1><p>Trading journal & discipline tracker</p></div>
+    <div class="seg" role="tablist"><button class="${login?'on':''}" data-act="mode-login">Login</button><button class="${login?'':'on'}" data-act="mode-signup">Signup</button></div>
+    ${login?`
+      ${field('mail','email','email','Email address','autocomplete="email" inputmode="email"')}
+      ${pwField('lock','password','Password','current-password')}
+      <div class="row-between">
+        <label class="check"><input type="checkbox" data-f="remember" ${S.form.remember?'checked':''}>Remember me</label>
+        <button class="link" data-act="forgot">Forget password</button>
+      </div>
+      ${S.error?`<div class="err">${S.error}</div>`:''}
+      <button class="btn" data-act="submit">Login</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:12px"><span style="height:1px;background:var(--line);flex:1"></span><span>OR</span><span style="height:1px;background:var(--line);flex:1"></span></div>
+      <button class="btn" data-act="google-login" style="background:var(--surface);border:1px solid var(--line);color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.27c0-.71-.06-1.4-.18-2.05H12v3.88h5.23a4.47 4.47 0 0 1-1.94 2.93v2.42h3.14c1.84-1.69 2.92-4.18 2.92-7.18z"/><path fill="#34A853" d="M12 21.6c2.64 0 4.86-.87 6.48-2.35l-3.14-2.42c-.87.58-1.98.92-3.34.92-2.56 0-4.73-1.73-5.51-4.05H3.25v2.5A9.8 9.8 0 0 0 12 21.6z"/><path fill="#FBBC05" d="M6.49 13.7A5.9 5.9 0 0 1 6.18 12c0-.59.1-1.16.31-1.7V7.8H3.25A9.8 9.8 0 0 0 2.2 12c0 1.58.38 3.08 1.05 4.2l3.24-2.5z"/><path fill="#EA4335" d="M12 6.25c1.44 0 2.73.5 3.75 1.49l2.8-2.8C16.85 3.35 14.63 2.4 12 2.4a9.8 9.8 0 0 0-8.75 5.4l3.24 2.5C7.27 7.98 9.44 6.25 12 6.25z"/></svg>
+        Continue with Google
+      </button>
+      <div class="swap">Not a member? <button class="link" data-act="mode-signup">Create an account</button></div>
+    `:`
+      ${field('user','text','first','First name *','autocomplete="given-name"')}
+      ${field('user','text','last','Last name *','autocomplete="family-name"')}
+      ${field('mail','email','email','Email address *','autocomplete="email" inputmode="email"')}
+      <div class="lbl">Gender</div>
+      <label class="field">${I('user',20)}<select data-f="gender" class="sel" style="border:0;background:none;padding:15px 0;outline:0;flex:1"><option value="">Select gender</option><option value="male" ${S.form.gender==='male'?'selected':''}>Male</option><option value="female" ${S.form.gender==='female'?'selected':''}>Female</option><option value="other" ${S.form.gender==='other'?'selected':''}>Other</option></select></label>
+      <div class="lbl">Date of birth</div>
+      <label class="field">${I('calendar',20)}<input type="date" data-f="dob" value="${esc(S.form.dob||'')}" max="${today()}"></label>
+      ${pwField('lock','password','Password *','new-password')}
+      ${pwField('lock','confirm','Confirm password *','new-password')}
+      <p class="terms">By clicking create an account your are accepting our <button class="link" data-act="open-terms">Terms</button> &amp; <button class="link" data-act="open-privacy">Privacy Policy</button> kindly read it before proceeding.</p>
+      ${S.error?`<div class="err">${S.error}</div>`:''}
+      <button class="btn" data-act="submit">Create an account</button>
+      <div class="swap">Already member? <button class="link" data-act="mode-login">Login</button></div>
+    `}
+  </div>${foot()}</div>`;
+}
+
+function greeting(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
+function dateStr(){return new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+function timeStr(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}).toUpperCase()}
+
+function tradeRow(t,withEdit=true){
+  const p=pnl(t);
+  const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge;
+  return `<div class="trade"><i class="bar3 ${p>0?'gbg':p<0?'rbg':'nbg'}"></i>
+    <div class="tl">
+      <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}</div>
+      <div class="px">${fmtD(t.date)} • ${t.time} &nbsp; Entry <b>${num(t.entry)}</b> &nbsp; Exit <b>${num(t.exit)}</b></div>
+      ${journaled?`<div class="tag">Journal added</div>`:''}
+    </div>
+    <div class="tr"><div class="amt ${cls(p)}">${money(p)}</div><div class="sub">${p>0?'Profit':p<0?'Loss':'No gain, no loss'}</div></div>
+    ${withEdit?`<button class="editb" data-act="edit" data-id="${t.id}" aria-label="Edit trade">${I('pencil',20)}</button>`:''}
+  </div>`;
+}
+
+function syncBtn(){
+  return S.connected
+    ?`<button class="sync active" data-act="sheet">${S.broker?bIcon(S.broker,22):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</button>`
+    :`<button class="sync" data-act="sheet">${I('refresh',18)}Sync with broker</button>`;
+}
+
+function disciplineCard(key){
+  const inDash=key==='discipline';
+  const rng=S.trades.filter(t=>inR(key,t));
+  const cnt=k=>rng.filter(t=>t[k]==='yes').length;
+  return `<div class="card ${inDash?'d-disc':'a-disc'}">
+    <div class="card-h"><h2>${I('shield',22)}Discipline</h2></div>
+    ${inDash?filterUI('discipline'):''}
+    <div class="disc">
+      <div class="it ${cnt('ruleBreak')?'bad':''}">${I('flag',22)}<span class="k">Rule break</span><b class="${cnt('ruleBreak')?'neg':'zero'}">${cnt('ruleBreak')}</b></div>
+      <div class="it ${cnt('anticipation')?'bad':''}">${I('clock',22)}<span class="k">Anticipation</span><b class="${cnt('anticipation')?'neg':'zero'}">${cnt('anticipation')}</b></div>
+      <div class="it ${cnt('revenge')?'bad':''}">${I('flame',22)}<span class="k">Revenge trades</span><b class="${cnt('revenge')?'neg':'zero'}">${cnt('revenge')}</b></div>
+      <div class="it ${cnt('overTrading')?'bad':''}">${I('repeat',22)}<span class="k">Over trading</span><b class="${cnt('overTrading')?'neg':'zero'}">${cnt('overTrading')}</b></div>
+    </div>
+  </div>`;
+}
+
+function dashboard(){
+  const td=stats(S.trades.filter(t=>t.date===today()));
+  const mo=stats(S.trades.filter(t=>inR('monthly',t)));
+  const recent=sorted(S.trades).slice(0,3);
+  return `<div class="dash">
+  <div class="top">
+    <div><div class="hello">${greeting()},</div><div class="name">${esc(S.user.first)}</div>
+      <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
+    ${syncBtn()}
+  </div>
+
+  <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
+    <div class="card-h"><h2>${I('trend',22)}Today's performance</h2></div>
+    <div class="k">Total P&amp;L</div>
+    <div class="big ${cls(td.total)}">${money(td.total)}</div>
+    <div class="stats">
+      <div class="stat"><div class="k">Win trades</div><div class="v ${td.w?'pos':'zero'}">${td.w}</div></div>
+      <div class="stat"><div class="k">Loss trades</div><div class="v ${td.l?'neg':'zero'}">${td.l}</div></div>
+    </div>
+  </div>
+
+  ${disciplineCard('discipline')}
+
+  <div class="card d-month">
+    <div class="card-h"><h2>${I('calendar2',22)}Monthly performance</h2></div>
+    ${filterUI('monthly')}
+    <div class="k">Total P&amp;L</div>
+    <div class="mid ${cls(mo.total)}">${money(mo.total)}</div>
+    ${curveChart(mo.days)}
+    <div class="stats">
+      <div class="stat"><div class="k">Win rates</div><div class="v ${mo.w+mo.l?'':'zero'}">${mo.rate}%</div></div>
+      <div class="stat"><div class="k">Profit factor</div><div class="v ${mo.w+mo.l?(mo.pf>1?'pos':mo.pf<1?'neg':''):'zero'}">${mo.w+mo.l?pfStr(mo.pf):'–'}</div></div>
+      <div class="stat"><div class="k">Win trades</div><div class="v ${mo.w?'pos':'zero'}">${mo.w}</div></div>
+      <div class="stat"><div class="k">Loss trades</div><div class="v ${mo.l?'neg':'zero'}">${mo.l}</div></div>
+      <div class="stat"><div class="k">Best day</div><div class="v ${mo.best?cls(mo.best.v):'zero'}">${mo.best?money(mo.best.v):'–'}</div><div class="s">${mo.best?fmtD(mo.best.d):''}</div></div>
+      <div class="stat"><div class="k">Worst day</div><div class="v ${mo.worst?cls(mo.worst.v):'zero'}">${mo.worst?money(mo.worst.v):'–'}</div><div class="s">${mo.worst?fmtD(mo.worst.d):''}</div></div>
+    </div>
+  </div>
+
+  ${calendarCard()}
+
+  <div class="card d-recent">
+    <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
+    ${recent.length?recent.map(t=>tradeRow(t)).join('')+`<button class="btn ghost" style="margin-top:14px" data-act="tab" data-tab="trades">View all</button>`:`<div class="empty">${emptyMsg()}</div>`}
+  </div>
+  </div>`;
+}
+
+function tradesPage(){
+  const list=sorted(S.trades.filter(t=>inR('trades',t)));
+  const pages=Math.max(1,Math.ceil(list.length/10));
+  S.tpage=Math.min(Math.max(1,S.tpage),pages);
+  const rows=list.slice((S.tpage-1)*10,S.tpage*10);
+  return `<div class="title">Trades</div>
+  <div class="card">${filterUI('trades')}<div class="k" style="margin-top:-6px">${list.length} trade${list.length===1?'':'s'} • 10 per page</div></div>
+  ${rows.length?`<div class="card pagecard">${rows.map(t=>tradeRow(t)).join('')}</div>
+  ${pages>1?`<div class="pager"><button class="btn ghost small" data-act="pg" data-d="-1" ${S.tpage<=1?'disabled':''}>Previous</button><span class="k">Page ${S.tpage} of ${pages}</span><button class="btn ghost small" data-act="pg" data-d="1" ${S.tpage>=pages?'disabled':''}>Next</button></div>`:''}`
+  :`<div class="card"><div class="empty">${emptyMsg()}</div></div>`}`;
+}
+
+function smooth(p){
+  if(p.length<2)return '';
+  let d=`M${p[0][0]},${p[0][1]}`;
+  for(let i=0;i<p.length-1;i++){
+    const p0=p[i-1]||p[i],p1=p[i],p2=p[i+1],p3=p[i+2]||p2;
+    d+=` C${p1[0]+(p2[0]-p0[0])/6},${p1[1]+(p2[1]-p0[1])/6} ${p2[0]-(p3[0]-p1[0])/6},${p2[1]-(p3[1]-p1[1])/6} ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
+function netChart(){
+  const st=stats(S.trades.filter(t=>inR('analytics',t)));const ks=Object.keys(st.days).sort();
+  if(!ks.length)return `<div class="empty">${emptyMsg()}</div>`;
+  let run=0;const vals=ks.map(k=>run+=st.days[k]);
+  const W=curBp==='d'?720:curBp==='t'?420:340,H=200,L=10,R=10,T=14,B=30;
+  const mn=Math.min(0,...vals),mx=Math.max(0,...vals),span=(mx-mn)||1;
+  const X=i=>ks.length===1?W/2:L+i*(W-L-R)/(ks.length-1);
+  const Y=v=>T+(mx-v)*(H-T-B)/span;
+  const pts=vals.map((v,i)=>[X(i),Y(v)]);
+  const col=vals[vals.length-1]>=0?'var(--green)':'var(--red)';
+  const y0=Y(0);
+  const line=smooth(pts);
+  const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
+  return `<div class="k">Net P&amp;L over time</div>
+  <div class="mid ${cls(run)}" style="margin-bottom:8px">${money(run)}</div>
+  <div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net P&amp;L curve">
+    <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
+    ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
+    ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="4.5" fill="${col}"/>
+    <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
+    <text x="${W-R}" y="${H-8}" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif" text-anchor="end">${fmtD(ks[ks.length-1])}</text>
+  </svg></div>`;
+}
+function curveChart(daysObj,height){
+  const ks=Object.keys(daysObj||{}).sort();
+  if(!ks.length)return '';
+  let run=0;const vals=ks.map(k=>run+=daysObj[k]);
+  const W=curBp==='d'?720:curBp==='t'?420:340,H=height||160,L=10,R=10,T=12,B=26;
+  const mn=Math.min(0,...vals),mx=Math.max(0,...vals),span=(mx-mn)||1;
+  const X=i=>ks.length===1?W/2:L+i*(W-L-R)/(ks.length-1);
+  const Y=v=>T+(mx-v)*(H-T-B)/span;
+  const pts=vals.map((v,i)=>[X(i),Y(v)]);
+  const col=vals[vals.length-1]>=0?'var(--green)':'var(--red)';
+  const y0=Y(0);
+  const line=smooth(pts);
+  const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
+  return `<div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly P&amp;L curve">
+    <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
+    ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
+    ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="4.5" fill="${col}"/>
+    <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
+    <text x="${W-R}" y="${H-8}" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif" text-anchor="end">${fmtD(ks[ks.length-1])}</text>
+  </svg></div>`;
+}
+
+function shiftMonth(ym,delta){
+  const [y,m]=(ym||today().slice(0,7)).split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function calPnlByDate(){
+  const map={};
+  S.trades.forEach(t=>{map[t.date]=(map[t.date]||0)+pnl(t)});
+  return map;
+}
+function calendarCard(){
+  const ym=S.calMonth||today().slice(0,7);
+  const [y,m]=ym.split('-').map(Number);
+  const startDow=new Date(y,m-1,1).getDay();
+  const dayCount=new Date(y,m,0).getDate();
+  const map=calPnlByDate();
+  let maxAbs=0;
+  for(let d=1;d<=dayCount;d++){
+    const ds=ym+'-'+String(d).padStart(2,'0');
+    if(map[ds]!==undefined)maxAbs=Math.max(maxAbs,Math.abs(map[ds]));
+  }
+  const monthLabel=new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const cells=[];
+  for(let i=0;i<startDow;i++)cells.push('<div class="calday empty"></div>');
+  for(let d=1;d<=dayCount;d++){
+    const ds=ym+'-'+String(d).padStart(2,'0');
+    const v=map[ds];
+    const has=v!==undefined;
+    let cls='calday',style='';
+    if(has&&v!==0){
+      const pct=maxAbs?Math.round(28+72*Math.abs(v)/maxAbs):60;
+      const base=v>0?'var(--green)':'var(--red)';
+      style=` style="background-color:color-mix(in srgb, ${base} ${pct}%, var(--surface))"`;
+      cls+=v>0?' gd':' rd';
+      if(pct>52)cls+=' light';
+    }else if(has){
+      cls+=' zero';
+    }
+    if(ds===today())cls+=' today';
+    const title=has?`${fmtD(ds)}: ${money(v)}`:fmtD(ds);
+    cells.push(`<button class="${cls}"${style} data-act="${has?'cal-day':''}" data-date="${ds}" title="${esc(title)}" aria-label="${esc(title)}" ${has?'':'disabled'}>
+      <span class="cd-n">${d}</span>${has?`<span class="cd-v">${moneyShort(v)}</span>`:''}
+    </button>`);
+  }
+  return `<div class="card d-cal">
+    <div class="card-h"><h2>${I('calendar2',22)}Calendar</h2>
+      <div class="calnav"><button class="calnb" data-act="cal-prev" aria-label="Previous month">${I('back',16)}</button><span class="calm">${monthLabel}</span><button class="calnb" data-act="cal-next" aria-label="Next month">${I('chev',16)}</button></div>
+    </div>
+    <div class="calgrid calhead">${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div class="calh">${d}</div>`).join('')}</div>
+    <div class="calgrid">${cells.join('')}</div>
+    <div class="callegend"><span><i class="lg" style="background:var(--green)"></i>Profitable day</span><span><i class="lg" style="background:var(--red)"></i>Loss day</span></div>
+  </div>`;
+}
+function dayPage(){
+  const ds=S.calDay||today();
+  const list=sorted(S.trades.filter(t=>t.date===ds));
+  const st=stats(list);
+  return `<div class="screen"><div class="grow">${bar(fmtD(ds))}
+    <div class="card hero ${st.total>0?'g':st.total<0?'r':''}">
+      <div class="k">Total P&amp;L</div>
+      <div class="big ${cls(st.total)}">${money(st.total)}</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Win trades</div><div class="v ${st.w?'pos':'zero'}">${st.w}</div></div>
+        <div class="stat"><div class="k">Loss trades</div><div class="v ${st.l?'neg':'zero'}">${st.l}</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-h"><h2>${I('trades',22)}Activity</h2></div>
+    ${list.length?list.map(t=>tradeRow(t,false)).join(''):`<div class="empty">${emptyMsg()}</div>`}</div>
+  </div>${foot()}</div>`;
+}
+function setupGroups(key){
+  const g={};
+  S.trades.filter(t=>inR(key,t)).forEach(t=>{const k=t.setup&&t.setup.trim()?t.setup.trim():'No setup';g[k]=g[k]||{n:0,p:0};g[k].n++;g[k].p+=pnl(t)});
+  return Object.entries(g).map(([k,v])=>({k,n:v.n,p:v.p}));
+}
+function profitSetup(){
+  const g=setupGroups('analytics').sort((a,b)=>b.p-a.p);
+  if(!g.length)return `<div class="empty">${emptyMsg()}</div>`;
+  const m=Math.max(...g.map(x=>Math.abs(x.p)))||1;
+  return `<div class="bars">${g.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}">${money(x.p)}</b></div>
+    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'}"></i></div></div>`).join('')}</div>`;
+}
+function mostTraded(){
+  const g=setupGroups('analytics').sort((a,b)=>b.n-a.n);
+  if(!g.length)return `<div class="empty">${emptyMsg()}</div>`;
+  const m=Math.max(...g.map(x=>x.n))||1;
+  return `<div class="bars">${g.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b>${x.n}</b></div>
+    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey)"></i></div></div>`).join('')}</div>`;
+}
+function donut(){
+  const L=S.trades.filter(t=>inR('analytics',t));
+  const w=L.filter(t=>pnl(t)>0).length,l=L.filter(t=>pnl(t)<0).length,z=L.length-w-l;
+  const tot=L.length;
+  if(!tot)return `<div class="empty">${emptyMsg()}</div>`;
+  const r=54,C=2*Math.PI*r;let off=0;
+  const seg=(n,c)=>{if(!n)return '';const len=n/tot*C;const s=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="${Math.max(0,len-2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return s};
+  return `<div style="display:flex;justify-content:center"><svg width="180" height="180" style="max-width:100%;height:auto" viewBox="0 0 140 140" role="img" aria-label="Win loss donut">
+    <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--line)" stroke-width="18"/>
+    ${seg(w,'var(--green)')}${seg(l,'var(--red)')}${seg(z,'var(--grey)')}
+    <text x="70" y="68" text-anchor="middle" fill="var(--text)" font-size="26" font-weight="700" font-family="Roboto,sans-serif">${tot}</text>
+    <text x="70" y="88" text-anchor="middle" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif">Trades</text>
+  </svg></div>
+  <div class="legend"><div><span class="sw" style="background:var(--green)"></span>Win trades <b>${w}</b></div><div><span class="sw" style="background:var(--red)"></span>Loss trades <b>${l}</b></div>${z?`<div><span class="sw" style="background:var(--grey)"></span>No gain, no loss <b>${z}</b></div>`:''}</div>`;
+}
+function analyticsPage(){
+  return `<div class="title">Analytics</div>
+  <div class="agrid">
+  <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
+  <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
+  <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
+  <div class="card a-most"><div class="card-h"><h2>${I('bars',22)}Most traded setup</h2></div>${mostTraded()}</div>
+  <div class="card a-win"><div class="card-h"><h2>${I('pie',22)}Win loss trades</h2></div>${donut()}</div>
+  ${disciplineCard('analytics')}
+  </div>`;
+}
+
+function planDisplay(plan){
+  const p=String(plan||'free').trim();
+  return p ? p.charAt(0).toUpperCase()+p.slice(1) : 'Free';
+}
+
+function subLabel(){
+  if(S.subStatus==='active')return`<span class="r" style="color:var(--green-d);font-weight:500">Subscribed</span>`;
+  if(S.subStatus==='trial')return`<span class="r" style="color:var(--green-d);font-weight:500">Trial active</span>`;
+  return`<span class="r" style="color:var(--red-d,#e5484d);font-weight:500">Plan expired</span>`;
+}
+function settingsPage(){
+  const li=(ic,label,act,right='')=>`<button class="li" data-act="${act}">${I(ic,22)}<span class="grow">${label}</span>${right}${I('chev',20)}</button>`;
+  return `<div class="title">Settings</div>
+  <div class="setwrap">
+  <div class="sec" style="margin-top:0">Account</div>
+  <div class="list">
+    ${li('user','User profile','sub-profile')}
+    ${S.subStatus==='active'
+      ?`<div class="li" style="cursor:default">${I('card',22)}<span class="grow">Subscription</span>${subLabel()}</div>`
+      :`<a class="li" href="${subscribeUrl()}">${I('card',22)}<span class="grow">Subscription</span>${subLabel()}</a>`}
+    ${li('refresh',`Sync with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
+  </div>
+  <div class="sec">Appearance</div>
+  <div class="seg appearance" style="margin-bottom:0">${[['auto','Auto','auto'],['light','Light','sun'],['dark','Dark','moon']].map(([k,l,ic])=>`<button class="${S.theme===k?'on':''}" data-act="theme" data-t="${k}">${I(ic,15)}<span>${l}</span></button>`).join('')}</div>
+  <div class="sec">Information</div>
+  <div class="list">
+    ${li('file','Terms and conditions','sub-terms')}
+    ${li('db','User data management','sub-data')}
+    ${li('shield','Privacy and policy','sub-privacy')}
+    ${li('info','About us','sub-about')}
+    ${li('phone','Contact us','sub-contact')}
+  </div>
+  <div class="sec">Help us improve</div>
+  <div class="list">
+    ${li('chat','Send feedback','sub-feedback')}
+  </div>
+  <div class="list" style="margin-top:20px"><button class="li danger" data-act="logout">${I('logout',22)}<span class="grow">Logout</span></button></div>
+  </div>`;
+}
+
+const NAV=[['dashboard','home','Dashboard'],['trades','trades','Trades'],['analytics','analytics','Analytics'],['settings','settings','Settings']];
+function bottomNav(){
+  return `<nav class="bnav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,22)}</span>${lb}</button>`).join('')}</nav>`;
+}
+function shell(inner,withNav){
+  const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
+  const full=esc(((S.user.first||'')+' '+(S.user.last||'')).trim()||'My account');
+  return `<div class="shell">
+    <aside class="side">
+      <div class="sbrand">${logoMark(30,'s')}<span class="sname">Save Your Trade</span></div>
+      <div class="snav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,20)}</span><span class="lb">${lb}</span></button>`).join('')}</div>
+      <div class="sfoot">${syncBtn()}
+        <button class="suser" data-act="sub-profile" aria-label="User profile"><span class="av">${ini}</span><span class="stx"><b>${full}</b><span>${esc(S.user.email)}</span></span></button>
+      </div>
+    </aside>
+    <main class="main">${inner}</main>
+  </div>${withNav?bottomNav():''}`;
+}
+function subscribeUrl(){return 'https://saveyourtrade.in/profile'}
+function expiredPage(){
+  return `<div class="screen"><div class="grow"><div class="card" style="text-align:center;padding:48px 24px;max-width:420px;margin:40px auto">
+    ${I('card',40)}
+    <h2 style="margin:16px 0 8px">Your plan has expired</h2>
+    <p class="k" style="margin-bottom:22px">Your free trial or subscription has ended. Subscribe to keep using your trading journal and analytics.</p>
+    <a class="btn primary" style="display:inline-flex" href="${subscribeUrl()}">Subscribe now</a>
+  </div></div></div>`;
+}
+function mainView(){
+  const gated=new Set(['dashboard','trades','analytics']);
+  const blocked=S.subStatus==='expired'&&gated.has(S.tab);
+  const pages={dashboard,trades:tradesPage,analytics:analyticsPage,settings:settingsPage};
+  const content=blocked?expiredPage():pages[S.tab]();
+  return shell(`<div class="screen hasnav"><div class="grow">${content}</div>${foot()}</div>`,true);
+}
+
+function bar(title){return `<div class="bar"><button class="bk" data-act="back" aria-label="Back">${I('back',22)}</button><h1>${title}</h1></div>`}
+function docPage(title,key){
+  const c=CONTENT[key];
+  return `<div class="screen"><div class="grow">${bar(title)}<div class="card doc">${c?c.split('\n').map(p=>`<p>${esc(p)}</p>`).join(''):`<div class="empty">Content will be added soon</div>`}</div></div>${foot()}</div>`;
+}
+function profilePage(){
+  const f=S.draft;
+  return `<div class="screen"><div class="grow">${bar('User profile')}
+    <div class="lbl">First name *</div><label class="field">${I('user',20)}<input data-d="first" value="${esc(f.first)}"></label>
+    <div class="lbl">Last name *</div><label class="field">${I('user',20)}<input data-d="last" value="${esc(f.last)}"></label>
+    <div class="lbl">Email</div><label class="field">${I('mail',20)}<input type="email" data-d="email" value="${esc(f.email)}" readonly style="opacity:.6"><button type="button" class="textbtn" data-act="sub-email" style="flex:none;padding:12px 0">Change</button></label>
+    <div class="lbl">Gender</div><label class="field">${I('user',20)}<select data-d="gender" class="sel" style="border:0;background:none;padding:15px 0;outline:0;flex:1;box-shadow:none"><option value="">Select gender</option><option value="male" ${f.gender==='male'?'selected':''}>Male</option><option value="female" ${f.gender==='female'?'selected':''}>Female</option><option value="other" ${f.gender==='other'?'selected':''}>Other</option></select></label>
+    <div class="lbl">Date of birth (optional)</div><label class="field">${I('calendar',20)}<input type="date" data-d="dob" value="${esc(f.dob)}" max="${today()}"></label>
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    <button class="btn" data-act="save-profile" style="margin-top:8px">Save changes</button>
+    <div class="list" style="margin-top:22px"><button class="li" data-act="sub-password">${I('lock',22)}<span class="grow">Change your password</span>${I('chev',20)}</button></div>
+  </div>${foot()}</div>`;
+}
+function emailPage(){
+  if(S.emSent){
+    return `<div class="screen"><div class="grow">${bar('Change email')}
+      <div class="card"><div class="connect"><div class="okc">${checkSvg(92)}</div><div class="ct">Check your inbox</div><div class="note">We sent a confirmation link to <b>${esc(S.emSent)}</b>. Your email will change after you open that link. Until then, keep using your current email to login.</div>
+      <button class="btn" style="margin-top:12px" data-act="em-done">Back to profile</button></div></div>
+    </div>${foot()}</div>`;
+  }
+  const e=S.em;
+  return `<div class="screen"><div class="grow">${bar('Change email')}
+    <div class="lbl">Current email</div><label class="field">${I('mail',20)}<input type="email" value="${esc(S.user.email)}" readonly style="opacity:.6"></label>
+    <div class="lbl">New email *</div><label class="field">${I('mail',20)}<input type="email" data-e="nw" autocomplete="email" inputmode="email" placeholder="Enter new email address" value="${esc(e.nw)}"></label>
+    <div class="lbl">Password *</div><label class="field">${I('lock',20)}<input type="password" data-e="pw" autocomplete="current-password" placeholder="Enter your password" value="${esc(e.pw)}"></label>
+    <div class="note" style="margin:2px 4px 14px">We will send a confirmation link to your new email. Your email changes only after you confirm it.</div>
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    <button class="btn" data-act="save-email">Send confirmation email</button>
+  </div>${foot()}</div>`;
+}
+function passwordPage(){
+  const p=S.pw;
+  return `<div class="screen"><div class="grow">${bar('Change password')}
+    <div class="lbl">Current password *</div><label class="field">${I('lock',20)}<input type="password" data-p="cur" autocomplete="current-password" value="${esc(p.cur)}"></label>
+    <div class="lbl">New password *</div><label class="field">${I('lock',20)}<input type="password" data-p="nw" autocomplete="new-password" value="${esc(p.nw)}"></label>
+    <div class="lbl">Confirm new password *</div><label class="field">${I('lock',20)}<input type="password" data-p="cf" autocomplete="new-password" value="${esc(p.cf)}"></label>
+    <div class="note" style="margin:2px 4px 14px">Use at least 8 characters.</div>
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    <button class="btn" data-act="save-pw">Update password</button>
+  </div>${foot()}</div>`;
+}
+function feedbackPage(){
+  if(S.fbSent){
+    return `<div class="screen"><div class="grow">${bar('Send feedback')}
+      <div class="card"><div class="connect"><div class="okc">${checkSvg(92)}</div><div class="ct">Thank you!</div><div class="note">Your feedback helps make Save Your Trade better.</div>
+      <button class="btn" style="margin-top:12px" data-act="fb-done">Back to settings</button></div></div>
+    </div>${foot()}</div>`;
+  }
+  const opts=[['glitch','App glitch or bug'],['improve','Improvement idea'],['other','Something else']];
+  return `<div class="screen"><div class="grow">${bar('Send feedback')}
+    <div class="card">
+      <div class="hd">${I('chat',22)}Tell us what you think</div>
+      <div class="lbl">Feedback type</div>
+      <select class="sel" data-fb="type" style="margin-bottom:14px">${opts.map(([v,l])=>`<option value="${v}" ${S.fb.type===v?'selected':''}>${l}</option>`).join('')}</select>
+      <div class="lbl">Your message</div>
+      <textarea class="ta" data-fb="msg" placeholder="Describe the glitch you found, or tell us how we can make the app better">${esc(S.fb.msg)}</textarea>
+      ${S.error?`<div class="err" style="margin-top:10px">${S.error}</div>`:''}
+      <button class="btn" style="margin-top:14px" data-act="send-fb">Send feedback</button>
+    </div>
+    <div class="note" style="padding:0 4px">Your feedback is sent directly to the Save Your Trade team.</div>
+  </div>${foot()}</div>`;
+}
+function aboutPage(){
+  const pts=[
+    ['pencil','Record every trade in one safe place, so nothing ever gets lost.'],
+    ['refresh','Connect your broker and fetch your trades without typing them in. Zerodha and Upstox are live now, more brokers are coming soon.'],
+    ['file','Add your own journal for each trade: setup, mistakes, notes and screenshots.'],
+    ['trend','Review your statistics and build better discipline, one trade at a time.']
+  ];
+  return `<div class="screen"><div class="grow">${bar('About us')}
+    <div class="card about">
+      <div class="ab-h"><span class="logo">${logoMark(44,'a')}</span><div><h2>Welcome to Save Your Trade</h2><div class="k">Trading journal & discipline tracker</div></div></div>
+      <p>Hi, I'm Sukhendu Roy, the person behind Save Your Trade. I'm really happy you're here!</p>
+      <p>Save Your Trade started from a simple idea: if we keep every trade safely in the cloud, it becomes much easier to look back, understand our statistics and keep our trading journey organised, without ever worrying about losing our records.</p>
+      <h3>What you can do here</h3>
+      <ul>${pts.map(([ic,tx])=>`<li>${I(ic,18)}<span>${tx}</span></li>`).join('')}</ul>
+      <h3>Made for intraday traders</h3>
+      <p>Save Your Trade is a perfect fit for intraday traders. Every feature, from your daily performance and discipline tracking to your setup analytics, is shaped around the intraday trading day, so you can log each session, review it with a clear head and grow a little stronger with every trade.</p>
+      <h3>How it was built</h3>
+      <p>I built Save Your Trade with the help of AI and some of my friends, and I'm happy to have them use it and share their feedback.</p>
+      <h3>Your feedback matters</h3>
+      <p>If you use the app, please don't forget to share your feedback. It genuinely helps us make it better.</p>
+      <p>Thank you for being here and for being part of the Save Your Trade journey. Happy journaling!</p>
+      <div class="ab-acts"><button class="btn small" data-act="sub-feedback">Send feedback</button><button class="btn ghost small" data-act="sub-contact">Contact us</button></div>
+    </div>
+  </div>${foot()}</div>`;
+}
+function contactPage(){
+  const c=CONTENT.contact||'';
+  const lines=c.split('\n').map(x=>x.trim()).filter(Boolean);
+  const iconFor=l=>/whatsapp/i.test(l)?'whatsapp':/^e-?mail/i.test(l)?'mail':'';
+  return `<div class="screen"><div class="grow">${bar('Contact us')}
+    <div class="card">${lines.map(line=>{const ic=iconFor(line);const inner=`${ic?`<span class="cico">${I(ic,22)}</span>`:''}<span class="ct2">${esc(line)}</span>`;
+      if(ic==='whatsapp'){const num=line.replace(/\(.*?\)/g,'').replace(/\D/g,'');if(num)return `<a class="crow link" href="https://wa.me/${num}" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat">${inner}</a>`}
+      return `<div class="crow">${inner}</div>`}).join('')}</div>
+  </div>${foot()}</div>`;
+}
+function ynRow(label,k){
+  const v=S.draft[k]||'';
+  return `<div class="yn"><span>${label}</span><div class="seg2"><button class="${v==='yes'?'on':''}" data-act="yn" data-k="${k}" data-v="yes">Yes</button><button class="${v==='no'?'on':''}" data-act="yn" data-k="${k}" data-v="no">No</button></div></div>`;
+}
+function editPage(){
+  const t=S.trades.find(x=>x.id===S.editId);const d=S.draft;const p=pnl(t);
+  const setups=[...new Set(S.trades.map(x=>x.setup).filter(Boolean))];
+  return `<div class="screen"><div class="grow">${bar('Trade journal')}
+    <div class="editgrid">
+    <div class="card">
+      <div class="hd">${I('bank',22)}From broker <span class="tag">• Read only</span></div>
+      <div class="kv"><span>Broker</span><span class="bwrap">${brokerLabel(t.broker)?bIcon(t.broker,20):''}${esc(brokerLabel(t.broker)||'—')}</span></div>
+      <div class="kv"><span>Scrip name</span><span>${esc(t.scripName||'—')}</span></div>
+      <div class="kv"><span>Entry date</span><span>${fmtD(t.date)}</span></div>
+      <div class="kv"><span>Entry time</span><span>${t.time}</span></div>
+      <div class="kv"><span>Buy/Sell</span><span>${cap(t.side)}</span></div>
+      <div class="kv"><span>Entry price</span><span>${num(t.entry)}</span></div>
+      <div class="kv"><span>Exit price</span><span>${num(t.exit)}</span></div>
+      <div class="kv"><span>${p>0?'Profit':p<0?'Loss':'Profit / Loss'}</span><span class="${cls(p)}">${money(p)}</span></div>
+    </div>
+    <div>
+    <div class="card">
+      <div class="hd">${I('pencil',22)}Your journal</div>
+      <div class="lbl">Setup</div>
+      <label class="field"><input data-d="setup" list="setups" placeholder="Setup" value="${esc(d.setup)}"></label>
+      <datalist id="setups">${setups.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+      <div class="two">
+        <div><div class="lbl">Planned SL</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="sl" placeholder="0.00" value="${esc(d.sl)}"></label></div>
+        <div><div class="lbl">Planned target</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="target" placeholder="0.00" value="${esc(d.target)}"></label></div>
+      </div>
+      ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}
+      <div class="lbl" style="margin-top:14px">Mistake</div>
+      <label class="field"><input data-d="mistake" placeholder="Mistake" value="${esc(d.mistake)}"></label>
+      <div class="lbl">Note</div>
+      <textarea class="ta" data-d="note" placeholder="Note">${esc(d.note)}</textarea>
+      <div class="lbl" style="margin-top:14px">Screen shot</div>
+      <div class="shot">
+        ${d.shot?`<img src="${d.shot}" alt="Screen shot">`:''}
+        <label class="fileb">${I('image',20)}${d.shot?'Change':'Add screen shot'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-shot="1"></label>
+      </div>
+    </div>
+    <button class="btn" data-act="save-trade">Save journal</button>
+    </div>
+    </div>
+  </div>${foot()}</div>`;
+}
+
+function subView(){
+  switch(S.sub){
+    case 'terms':return docPage('Terms and conditions','terms');
+    case 'data':return docPage('User data management','data');
+    case 'privacy':return docPage('Privacy and policy','privacy');
+    case 'about':return aboutPage();
+    case 'contact':return contactPage();
+    case 'profile':return profilePage();
+    case 'password':return passwordPage();
+    case 'email':return emailPage();
+    case 'feedback':return feedbackPage();
+    case 'edit':return editPage();
+    case 'day':return dayPage();
+  }
+  return '';
+}
+
+function sheetView(fresh){
+  let body;
+  if(S.conn==='connecting'){
+    body=`<div class="connect"><div class="rings"><span></span><span></span><span></span><div class="core">${I('bank',30)}</div></div><div class="ct">${esc(S.connTitle||'Connecting to Zerodha')}</div><div class="note">${esc(S.connNote||'Please wait a moment')}</div></div>`;
+  }else if(S.conn==='done'){
+    body=`<div class="connect"><div class="okc">${checkSvg(92)}</div><div class="ct pos">${esc(S.connTitle||'Zerodha connected')}</div>${S.connNote?`<div class="note">${esc(S.connNote)}</div>`:''}</div>`;
+  }else{
+    body=`<div class="bm-h"><div class="hd" style="margin:0">${I('refresh',22)}Sync with broker</div><button class="xbtn" data-act="close-ov-btn" aria-label="Close">${I('x',20)}</button></div>
+    <div class="note">Choose your broker. Upstox and Zerodha are available right now; more brokers will be connected later.</div>
+    <div class="bgrid">${BROKERS.map(b=>{
+      const isZ=LIVE_BROKERS.includes(b);
+      const on=S.connected&&S.broker===b;
+      const st=on?`<span class="st g">Connected</span>`:(isZ?'':`<span class="st">Coming soon</span>`);
+      return `<button class="bt ${on?'on':''}" data-act="broker" data-b="${b}">${bIcon(b,44)}<span class="bn">${b}</span>${st}</button>`;
+    }).join('')}</div>
+    ${S.connected?`<button class="btn ghost" style="margin-top:14px" data-act="change-broker">Change broker</button>`:''}
+    <div class="note" style="margin-top:14px">Tap your broker to login and fetch today's trades. We need a fresh login once every day.</div>`;
+  }
+  return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="sheet bm">${body}</div></div>`;
+}
+function loaderView(){
+  return `<div class="loader"><div class="lg">${logoMark(50)}</div><div class="ltxt">${S.busy}</div></div>`;
+}
+function changeBrokerView(fresh){
+  const n=esc(S.broker||'your broker');
+  return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="modal"><h3>Change broker?</h3><p>This will log you out of ${n}. You can then login with another broker to fetch trades.</p>
+    <div class="acts"><button class="btn ghost" data-act="close-ov-btn">Cancel</button><button class="btn danger" data-act="confirm-change-broker">Change</button></div></div></div>`;
+}
+function logoutView(fresh){
+  return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="modal"><h3>Log out?</h3><p>Are you sure you want to log out of Save Your Trade?</p>
+    <div class="acts"><button class="btn ghost" data-act="close-ov-btn">Cancel</button><button class="btn danger" data-act="confirm-logout">Logout</button></div></div></div>`;
+}
+
+let ovFresh=false;
+function render(top=false){
+  const y=window.scrollY;
+  const fresh=ovFresh;ovFresh=false;
+  let html;
+  if(S.sub)html=S.user?shell(`<div class="subwrap${S.sub==='edit'?' wide':''}">${subView()}</div>`,false):subView();
+  else if(S.user)html=mainView();else html=authView();
+  if(S.sheet)html+=sheetView(fresh);
+  if(S.logoutModal)html+=logoutView(fresh);
+  if(S.changeModal)html+=changeBrokerView(fresh);
+  if(S.busy)html+=loaderView();
+  app.classList.toggle('enter',top);
+  app.classList.toggle('noshell',!S.user);
+  app.innerHTML=html;
+  window.scrollTo(0,top?0:y);
+}
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2400);
+}
+function go(fn){fn();S.error='';render(true)}
+/* Open a website page (Terms, Privacy, About, Contact, User data management) in a new tab, so the journal stays open */
+function openSite(u){const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';document.body.appendChild(a);a.click();a.remove()}
+
+function openEdit(id){
+  const t=S.trades.find(x=>x.id===id);
+  S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,mistake:t.mistake,note:t.note,shot:t.shot};
+  S.sub='edit';S.subFrom='main';
+  S.shotReady=false;
+  sb.from('trades').select('screenshot_url').eq('id',id).maybeSingle().then(r=>{
+    if(S.editId!==id||S.sub!=='edit')return;
+    if(!r.error){S.draft.shot=(r.data&&r.data.screenshot_url)||'';S.shotReady=true;render();}
+  });
+}
+async function signInWithGoogle(){
+  if(!sb){S.error='App could not connect. Please reload';return render();}
+  S.error='';S.busy='Opening Google login';render();
+  try{
+    const {error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:window.location.href.split('#')[0].split('?')[0]}
+    });
+    if(error){S.busy=null;S.error=friendlyError(error);return render();}
+  }catch(e){S.busy=null;S.error=friendlyError(e);render();}
+}
+async function submitAuth(){
+  if(!sb){S.error='App could not connect. Please reload';return render();}
+  const f=S.form;
+  try{
+    if(S.authMode==='login'){
+      if(!f.email||!f.password){S.error='Enter your email and password';return render()}
+      S.error='';S.busy='Logging in';render();
+      const {data,error}=await sb.auth.signInWithPassword({email:f.email.trim().toLowerCase(),password:f.password});
+      if(error){S.busy=null;S.error=friendlyError(error);return render()}
+      await loadAll(data.session);
+      S.form={};S.tab='dashboard';S.busy=null;render(true);
+      return;
+    }
+    if(!f.first||!f.last||!f.gender||!f.password||!f.confirm){S.error='Fill in all the required fields';return render()}
+    if(!/^\S+@\S+\.\S+$/.test(f.email||'')){S.error='Enter a valid email address';return render()}
+    if(f.password.length<8){S.error='Password needs at least 8 characters';return render()}
+    if(f.password!==f.confirm){S.error='Passwords do not match';return render()}
+    S.error='';S.busy='Creating your account';render();
+    const {data,error}=await sb.auth.signUp({
+      email:f.email.trim().toLowerCase(),password:f.password,
+      options:{
+        data:{first_name:f.first.trim(),last_name:f.last.trim(),gender:f.gender,dob:f.dob||''},
+        emailRedirectTo:window.location.href.split('#')[0].split('?')[0]
+      }
+    });
+    if(error){S.busy=null;S.error=friendlyError(error);return render()}
+    if(!data.session){
+      S.busy=null;S.authMode='login';S.form={email:f.email.trim().toLowerCase()};
+      S.error='Account created. Check your email and click the confirmation link before logging in.';return render(true);
+    }
+    await loadAll(data.session);
+    S.form={};S.tab='dashboard';S.busy=null;render(true);
+  }catch(e){
+    console.error(e);S.busy=null;S.error=friendlyError(e);render();
+  }
+}
+const PENDING_KEY='syt-broker-pending';
+let leaving=false;
+/* Broker login now runs in this same tab. The callback function redirects back here with ?zerodha=connected (or upstox=...). */
+const BROKER_RETURN=(()=>{
+  let name=null,result=null;
+  try{
+    const q=new URLSearchParams(window.location.search);
+    BROKERS.forEach(b=>{const k=b.toLowerCase().replace(/\s+/g,'');if(q.has(k)){name=b;result=String(q.get(k)||'').toLowerCase();q.delete(k)}});
+    if(name){const rest=q.toString();history.replaceState(null,'',window.location.pathname+(rest?'?'+rest:'')+window.location.hash)}
+  }catch(e){}
+  try{
+    const pend=JSON.parse(safeStorage.getItem(PENDING_KEY)||'null');
+    safeStorage.removeItem(PENDING_KEY);
+    if(!name&&pend&&pend.b&&Date.now()-pend.t<30*60*1000)name=pend.b;
+  }catch(e){}
+  return name?{broker:name,result}:null;
+})();
+function goToBrokerLogin(name,url){
+  leaving=true;
+  try{safeStorage.setItem(PENDING_KEY,JSON.stringify({b:name,t:Date.now()}))}catch(e){}
+  try{window.top.location.href=url}catch(e){window.location.href=url}
+}
+async function handleBrokerReturn(){
+  const r=BROKER_RETURN;
+  if(!r||!S.user)return;
+  const name=r.broker;
+  let result=r.result;
+  if(!result){await refreshBroker();result=S.connected?'connected':'';}
+  if(result==='connected'){
+    await refreshBroker();
+    if(S.connected){
+      S.sheet=true;ovFresh=true;render();
+      return name==='Upstox'?syncUpstox():syncZerodha();
+    }
+    result='failed';
+  }
+  if(result==='expired')toast('Login session expired. Please try again');
+  else if(result)toast('Could not connect to '+name+'. Please try again');
+}
+window.addEventListener('pageshow',e=>{if(e.persisted&&leaving){leaving=false;resetConn();S.sheet=false;render()}});
+function callZ(action){return callBroker('zerodha',action)}
+function callU(action){return callBroker('upstox',action)}
+async function callBroker(fn,action){
+  const {data,error}=await sb.functions.invoke(fn,{body:{action}});
+  if(error){
+    let msg=error.message||'Something went wrong';
+    try{const j=await error.context.json();if(j&&j.error)msg=j.error}catch(e){}
+    throw new Error(msg);
+  }
+  if(data&&data.error)throw new Error(data.error);
+  return data;
+}
+async function refreshBroker(){
+  try{
+    const {data,error}=await sb.rpc('broker_status');
+    if(error)throw error;
+    const c=(data||[]).find(r=>r.connected);
+    S.connected=!!c;
+    S.broker=c?c.broker:null;
+  }catch(e){console.error(e)}
+  return S.connected;
+}
+async function changeBroker(){
+  if(!sb)return;
+  const name=S.broker||'broker';
+  S.changeModal=false;
+  S.conn='connecting';S.connTitle='Logging out of '+name;S.connNote='Please wait a moment';render();
+  try{
+    await (S.broker==='Upstox'?callU('disconnect'):callZ('disconnect'));
+    await refreshBroker();
+    if(S.connected)throw new Error('Could not log out of '+name+'. Please try again');
+    resetConn();render();
+    toast('Logged out of '+name+'. Choose a broker to login');
+  }catch(e){
+    resetConn();render();toast(e.message||'Something went wrong');
+  }
+}
+function resetConn(){S.conn=null;S.connTitle='';S.connNote=''}
+async function upstoxAction(){
+  if(!sb)return;
+  if(S.connected)return syncUpstox();
+  S.conn='connecting';S.connTitle='Opening Upstox login';S.connNote='Please wait a moment';render();
+  try{
+    const d=await callU('start');
+    openUpstoxLogin(d.login_url);
+  }catch(e){
+    resetConn();render();toast(e.message||'Something went wrong');
+  }
+}
+function openUpstoxLogin(url){goToBrokerLogin('Upstox',url)}
+async function syncUpstox(){
+  S.conn='connecting';S.connTitle='Syncing trades';S.connNote="Fetching today's trades from Upstox";render();
+  try{
+    const d=await callU('sync');
+    if(d.status==='login_required'){
+      S.connected=false;resetConn();S.sheet=false;render();
+      toast('Please login to Upstox first');
+      return upstoxAction();
+    }
+    await loadTrades();
+    S.conn='done';S.connTitle='Trades synced';
+    S.connNote=d.added+(d.added===1?' new trade added':' new trades added');
+    if(d.open)S.connNote+=' ('+d.open+' still open)';
+    render();
+    setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
+  }catch(e){
+    resetConn();render();toast(e.message||'Sync failed');
+  }
+}
+async function zerodhaAction(){
+  if(!sb)return;
+  if(S.connected)return syncZerodha();
+  S.conn='connecting';S.connTitle='Opening Zerodha login';S.connNote='Please wait a moment';render();
+  try{
+    const d=await callZ('start');
+    openZerodhaLogin(d.login_url);
+  }catch(e){
+    resetConn();render();toast(e.message||'Something went wrong');
+  }
+}
+function openZerodhaLogin(url){goToBrokerLogin('Zerodha',url)}
+async function syncZerodha(){
+  S.conn='connecting';S.connTitle='Syncing trades';S.connNote="Fetching today's trades from Zerodha";render();
+  try{
+    const d=await callZ('sync');
+    if(d.status==='login_required'){
+      S.connected=false;resetConn();S.sheet=false;render();
+      toast('Please login to Zerodha first');
+      return zerodhaAction();
+    }
+    await loadTrades();
+    S.conn='done';S.connTitle='Trades synced';
+    S.connNote=d.added+(d.added===1?' new trade added':' new trades added');
+    if(d.open)S.connNote+=' ('+d.open+' still open)';
+    render();
+    setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
+  }catch(e){
+    resetConn();render();toast(e.message||'Sync failed');
+  }
+}
+async function saveProfile(){
+  const d=S.draft;
+  if(!d.first||!d.last){S.error='Fill in all the required fields';return render()}
+  S.busy='Saving';render();
+  const upd={first_name:d.first.trim(),last_name:d.last.trim(),dob:d.dob||null};
+  if(S.profHasGender)upd.gender=d.gender||null;
+  const {error}=await sb.from('profiles').update(upd).eq('id',S.user.id);
+  S.busy=null;
+  if(error){S.error=friendlyError(error);return render()}
+  try{await sb.auth.updateUser({data:{first_name:d.first.trim(),last_name:d.last.trim(),gender:d.gender||'',dob:d.dob||''}})}catch(e){console.error(e)}
+  S.user={...S.user,first:d.first.trim(),last:d.last.trim(),gender:d.gender||'',dob:d.dob||''};S.acct=S.user;
+  S.error='';S.sub=null;render(true);toast('Changes saved');
+}
+async function saveEmail(){
+  const e=S.em;const nw=(e.nw||'').trim().toLowerCase();
+  if(!nw||!e.pw){S.error='Fill in all the fields';return render()}
+  if(!/^\S+@\S+\.\S+$/.test(nw)){S.error='Enter a valid email address';return render()}
+  if(nw===String(S.user.email||'').toLowerCase()){S.error='New email must be different from your current email';return render()}
+  S.error='';S.busy='Sending email';render();
+  try{
+    const chk=await sb.auth.signInWithPassword({email:S.user.email,password:e.pw});
+    if(chk.error){S.busy=null;S.error=/invalid login|credentials/i.test(chk.error.message||'')?'Password is wrong':friendlyError(chk.error);return render()}
+    const up=await sb.auth.updateUser({email:nw},{emailRedirectTo:window.location.href.split('#')[0].split('?')[0]});
+    S.busy=null;
+    if(up.error){S.error=/already|registered|exists/i.test(up.error.message||'')?'This email is already used by another account':friendlyError(up.error);return render()}
+    S.em={nw:'',pw:''};S.emSent=nw;render(true);
+  }catch(err){S.busy=null;S.error=friendlyError(err);render()}
+}
+async function savePassword(){
+  const p=S.pw;
+  if(!p.cur||!p.nw||!p.cf){S.error='Fill in all the fields';return render()}
+  if(p.nw.length<8){S.error='New password needs at least 8 characters';return render()}
+  if(p.nw===p.cur){S.error='New password must be different from the current one';return render()}
+  if(p.nw!==p.cf){S.error='New passwords do not match';return render()}
+  S.error='';S.busy='Updating password';render();
+  const chk=await sb.auth.signInWithPassword({email:S.user.email,password:p.cur});
+  if(chk.error){S.busy=null;S.error='Current password is wrong';return render()}
+  const up=await sb.auth.updateUser({password:p.nw});
+  S.busy=null;
+  if(up.error){S.error=friendlyError(up.error);return render()}
+  S.pw={cur:'',nw:'',cf:''};S.sub='profile';render(true);toast('Password updated');
+}
+async function saveTrade(){
+  const t=S.trades.find(x=>x.id===S.editId);const d=S.draft;
+  const num=v=>(v===''||v===null||v===undefined||isNaN(+v))?null:+v;
+  const row={setup:d.setup||null,planned_sl:num(d.sl),planned_target:num(d.target),
+    anticipation:d.anticipation||'no',rule_break:d.ruleBreak||'no',over_trading:d.overTrading||'no',revenge:d.revenge||'no',
+    mistake:d.mistake||null,note:d.note||null};
+  if(S.shotReady)row.screenshot_url=d.shot||null;
+  S.busy='Saving';render();
+  const {error}=await sb.from('trades').update(row).eq('id',S.editId);
+  S.busy=null;
+  if(error){toast('Could not save. Try again');return render()}
+  Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
+  S.sub=null;render(true);toast('Journal saved');
+}
+async function sendFeedback(){
+  if((S.fb.msg||'').trim().length<5){S.error='Please write a few words about your feedback';return render()}
+  S.busy='Sending';render();
+  const {error}=await sb.from('feedbacks').insert({type:S.fb.type,message:S.fb.msg.trim()});
+  S.busy=null;
+  if(error){S.error='Could not send. Try again';return render()}
+  S.error='';S.fbSent=true;render(true);
+}
+function doLogout(){
+  S.logoutModal=false;
+  /* Clear the session locally and switch screens immediately; the sign-out call to
+     Supabase (scope:'local', so it only clears this device, no server round-trip to wait on)
+     runs in the background instead of blocking the UI */
+  S.user=null;S.acct=null;S.trades=[];S.tradesLoading=false;S.connected=false;S.broker=null;S.changeModal=false;S.sheet=false;S.sub=null;S.authMode='login';S.form={};S.tab='dashboard';S.busy=null;render(true);
+  sb.auth.signOut({scope:'local'}).catch(e=>console.error(e));
+}
+
+function act(a,el){
+  switch(a){
+    case 'mode-login':return go(()=>{S.authMode='login';S.info=''});
+    case 'mode-signup':return go(()=>{S.authMode='signup';S.info=''});
+    case 'forgot':return go(()=>{S.authMode='forgot';S.info=''});
+    case 'send-reset':return sendReset();
+    case 'save-reset':return saveReset();
+    case 'google-login':return signInWithGoogle();
+    case 'submit':return submitAuth();
+    case 'toggle-pw':{
+      const input=document.getElementById(el.dataset.target);
+      if(!input)return;
+      const show=input.type==='password';
+      input.type=show?'text':'password';
+      el.innerHTML=I(show?'eyeoff':'eye',20);
+      el.setAttribute('aria-label',show?'Hide password':'Show password');
+      return;
+    }
+    case 'open-terms':return openSite('https://saveyourtrade.in/terms');
+    case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
+    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
+    case 'sheet':S.sheet=true;ovFresh=true;return render();
+    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;return render();
+    case 'broker':{
+      const b=el.dataset.b;
+      if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
+      if(S.conn)return;
+      if(S.connected&&S.broker!==b)return toast('Change broker first to connect '+b);
+      return b==='Upstox'?upstoxAction():zerodhaAction();}
+    case 'edit':return go(()=>openEdit(+el.dataset.id));
+    case 'pg':S.tpage+=+el.dataset.d;return render(true);
+    case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
+    case 'save-trade':return saveTrade();
+    case 'back':
+      if(S.sub==='password'||S.sub==='email'){S.sub='profile';}else{S.sub=null;}
+      return go(()=>{});
+    case 'sub-profile':return go(()=>{S.draft={...S.user};S.sub='profile'});
+    case 'sub-password':return go(()=>{S.pw={cur:'',nw:'',cf:''};S.sub='password'});
+    case 'sub-email':return go(()=>{S.em={nw:'',pw:''};S.emSent='';S.sub='email'});
+    case 'save-email':return saveEmail();
+    case 'em-done':return go(()=>{S.emSent='';S.sub='profile'});
+    case 'sub-feedback':return go(()=>{S.fb={type:'glitch',msg:''};S.fbSent=false;S.sub='feedback';S.subFrom='main'});
+    case 'sub-terms':return openSite('https://saveyourtrade.in/terms');
+    case 'sub-data':return openSite('/user-data-management');
+    case 'sub-privacy':return openSite('https://saveyourtrade.in/privacy');
+    case 'sub-about':return openSite('https://saveyourtrade.in/about');
+    case 'sub-contact':return openSite('https://saveyourtrade.in/contact');
+    case 'save-profile':return saveProfile();
+    case 'save-pw':return savePassword();
+    case 'send-fb':return sendFeedback();
+    case 'fb-done':return go(()=>{S.sub=null});
+    case 'change-broker':if(S.conn)return;S.changeModal=true;ovFresh=true;return render();
+    case 'confirm-change-broker':return changeBroker();
+    case 'cal-prev':return go(()=>{S.calMonth=shiftMonth(S.calMonth,-1)});
+    case 'cal-next':return go(()=>{S.calMonth=shiftMonth(S.calMonth,1)});
+    case 'cal-day':return go(()=>{S.calDay=el.dataset.date;S.sub='day'});
+    case 'theme':S.theme=el.dataset.t;try{safeStorage.setItem('tj-theme',S.theme)}catch(e){}applyTheme();return render();
+    case 'logout':S.logoutModal=true;ovFresh=true;return render();
+    case 'confirm-logout':return doLogout();
+  }
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  if(el.dataset.act==='close-ov'&&e.target!==el)return;
+  act(el.dataset.act,el);
+});
+function onField(e){
+  const t=e.target;
+  if(t.dataset.f)S.form[t.dataset.f]=t.type==='checkbox'?t.checked:t.value;
+  if(t.dataset.d)S.draft[t.dataset.d]=t.value;
+  if(t.dataset.p)S.pw[t.dataset.p]=t.value;
+  if(t.dataset.e)S.em[t.dataset.e]=t.value;
+  if(t.dataset.fb)S.fb[t.dataset.fb]=t.value;
+}
+document.addEventListener('input',onField);
+document.addEventListener('change',e=>{
+  onField(e);const t=e.target;
+  if(t.dataset.per){
+    const k=t.dataset.per;S.R[k].mode=t.value;
+    if(k==='trades')S.tpage=1;
+    render();
+  }
+  if(t.dataset.rng){
+    const k=t.dataset.rng;S.R[k][t.dataset.side]=t.value;
+    if(k==='trades')S.tpage=1;
+    render();
+  }
+  if(t.dataset.shot&&t.files&&t.files[0]){
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1000;const k=Math.min(1,max/Math.max(img.width,img.height));
+        const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        S.draft.shot=c.toDataURL('image/jpeg',0.7);S.shotReady=true;render();
+      };
+      img.onerror=()=>toast('Could not read this image');
+      img.src=r.result;
+    };
+    r.readAsDataURL(t.files[0]);
+  }
+});
+/* Deep links from the profile page: app.html#terms and app.html#privacy open those pages */
+try{const h=(window.location.hash||'').slice(1).toLowerCase();if(h==='terms'||h==='privacy'){S.sub=h;S.subFrom='auth'}}catch(e){}
+setInterval(()=>{const c=document.getElementById('clock');if(c)c.textContent=timeStr()},20000);
+render(true);
+initSession();
+</script>
+</body>
+</html>
