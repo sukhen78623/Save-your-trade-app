@@ -769,12 +769,17 @@ async function loadTrades(){
 /* Mirrors what the database's subscription_status() function decides, purely for display.
    The actual access control happens server-side (RLS), so a user tampering with this
    in devtools cannot get to their journal data - the database will still refuse it. */
+function daysBetween(endMs,nowMs){
+  const end=new Date(endMs);end.setHours(0,0,0,0);
+  const now=new Date(nowMs);now.setHours(0,0,0,0);
+  return Math.round((end-now)/86400000);
+}
 function computeSubStatus(row){
   const now=Date.now();
   const subEnd=row&&row.subscription_ends_at?new Date(row.subscription_ends_at).getTime():0;
   const trialEnd=row&&row.trial_ends_at?new Date(row.trial_ends_at).getTime():0;
-  if(subEnd&&subEnd>now)return{status:'active',daysLeft:Math.max(1,Math.ceil((subEnd-now)/86400000))};
-  if(trialEnd&&trialEnd>now)return{status:'trial',daysLeft:Math.max(1,Math.ceil((trialEnd-now)/86400000))};
+  if(subEnd&&subEnd>now)return{status:'active',daysLeft:Math.max(1,daysBetween(subEnd,now))};
+  if(trialEnd&&trialEnd>now)return{status:'trial',daysLeft:Math.max(1,daysBetween(trialEnd,now))};
   return{status:'expired',daysLeft:0};
 }
 async function loadAll(session){
