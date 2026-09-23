@@ -1575,12 +1575,19 @@ function openSite(u){const a=document.createElement('a');a.href=u;a.target='_bla
 
 function openEdit(id){
   const t=S.trades.find(x=>x.id===id);
+  if(S.draftShotUrl)URL.revokeObjectURL(S.draftShotUrl);
+  S.draftShotBlob=null;S.draftShotUrl=null;
   S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,mistake:t.mistake,note:t.note,shot:t.shot};
   S.sub='edit';S.subFrom='main';
   S.shotReady=false;
-  sb.from('trades').select('screenshot_url').eq('id',id).maybeSingle().then(r=>{
+  sb.from('trades').select('screenshot_url').eq('id',id).maybeSingle().then(async r=>{
     if(S.editId!==id||S.sub!=='edit')return;
-    if(!r.error){S.draft.shot=(r.data&&r.data.screenshot_url)||'';S.shotReady=true;render();}
+    if(r.error){S.shotReady=true;return render();}
+    const path=r.data&&r.data.screenshot_url;
+    if(!path){S.draft.shot='';S.shotReady=true;return render();}
+    const {data:signed}=await sb.storage.from('screenshots').createSignedUrl(path,3600);
+    if(S.editId!==id||S.sub!=='edit')return;
+    S.draft.shot=(signed&&signed.signedUrl)||'';S.shotReady=true;render();
   });
 }
 async function signInWithGoogle(){
@@ -1818,11 +1825,18 @@ async function saveTrade(){
   const row={setup:d.setup||null,planned_sl:num(d.sl),planned_target:num(d.target),
     anticipation:d.anticipation||'no',rule_break:d.ruleBreak||'no',over_trading:d.overTrading||'no',revenge:d.revenge||'no',
     mistake:d.mistake||null,note:d.note||null};
-  if(S.shotReady)row.screenshot_url=d.shot||null;
   S.busy='Saving';render();
+  if(S.draftShotBlob){
+    const path=`${S.user.id}/${S.editId}-${Date.now()}.jpg`;
+    const {error:upErr}=await sb.storage.from('screenshots').upload(path,S.draftShotBlob,{contentType:'image/jpeg',upsert:false});
+    if(upErr){S.busy=null;toast('Could not upload screenshot. Try again');return render()}
+    row.screenshot_url=path;
+  }
   const {error}=await sb.from('trades').update(row).eq('id',S.editId);
   S.busy=null;
   if(error){toast('Could not save. Try again');return render()}
+  if(S.draftShotUrl){URL.revokeObjectURL(S.draftShotUrl);S.draftShotUrl=null;}
+  S.draftShotBlob=null;
   Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
   S.sub=null;render(true);toast('Journal saved');
 }
@@ -1919,6 +1933,23 @@ function onField(e){
   if(t.dataset.fb)S.fb[t.dataset.fb]=t.value;
 }
 document.addEventListener('input',onField);
+function canvasToBlob(c,type,q){return new Promise(res=>c.toBlob(res,type,q));}
+/* Resize to a readable max dimension, then step JPEG quality down only as
+   far as needed to fit under a size cap. Keeps screenshots crisp while
+   capping how much storage each one uses. Returns a Blob (not a data URL)
+   so it can be uploaded to Storage directly. */
+async function compressShot(file){
+  const maxDim=1280,maxBytes=350*1024,minQuality=0.5;
+  const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=dataUrl;});
+  const k=Math.min(1,maxDim/Math.max(img.width,img.height));
+  const c=document.createElement('canvas');
+  c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  let q=0.85,blob=await canvasToBlob(c,'image/jpeg',q);
+  while(blob.size>maxBytes&&q>minQuality){q=Math.max(minQuality,q-0.07);blob=await canvasToBlob(c,'image/jpeg',q);}
+  return blob;
+}
 document.addEventListener('change',e=>{
   onField(e);const t=e.target;
   if(t.dataset.per){
@@ -1932,19 +1963,12 @@ document.addEventListener('change',e=>{
     render();
   }
   if(t.dataset.shot&&t.files&&t.files[0]){
-    const r=new FileReader();
-    r.onload=()=>{
-      const img=new Image();
-      img.onload=()=>{
-        const max=1000;const k=Math.min(1,max/Math.max(img.width,img.height));
-        const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        S.draft.shot=c.toDataURL('image/jpeg',0.7);S.shotReady=true;render();
-      };
-      img.onerror=()=>toast('Could not read this image');
-      img.src=r.result;
-    };
-    r.readAsDataURL(t.files[0]);
+    compressShot(t.files[0]).then(blob=>{
+      if(S.draftShotUrl)URL.revokeObjectURL(S.draftShotUrl);
+      S.draftShotBlob=blob;
+      S.draftShotUrl=URL.createObjectURL(blob);
+      S.draft.shot=S.draftShotUrl;S.shotReady=true;render();
+    }).catch(()=>toast('Could not read this image'));
   }
 });
 /* Deep links from the profile page: app.html#terms and app.html#privacy open those pages */
