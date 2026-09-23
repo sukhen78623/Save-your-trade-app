@@ -1252,10 +1252,13 @@ function analyticsPage(){
   </div>`;
 }
 
+const PLAN_NAMES={'3m':'3 Months Plan','6m':'6 Months Plan','1y':'1 Year Plan'};
 function planDisplay(plan){
-  const p=String(plan||'free').trim();
-  return p ? p.charAt(0).toUpperCase()+p.slice(1) : 'Free';
+  const p=String(plan||'').trim();
+  if(PLAN_NAMES[p])return PLAN_NAMES[p];
+  return p ? p.charAt(0).toUpperCase()+p.slice(1) : 'Save Your Trade';
 }
+function fmtFullDate(s){if(!s)return'';const d=new Date(s);return isNaN(d)?'':d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
 
 function subLabel(){
   if(S.subStatus==='active')return`<span class="r" style="color:var(--green-d);font-weight:500">Subscribed</span>`;
@@ -1269,9 +1272,7 @@ function settingsPage(){
   <div class="sec" style="margin-top:0">Account</div>
   <div class="list">
     ${li('user','User profile','sub-profile')}
-    ${S.subStatus==='active'
-      ?`<div class="li" style="cursor:default">${I('card',22)}<span class="grow">Subscription</span>${subLabel()}</div>`
-      :`<a class="li" href="${subscribeUrl()}">${I('card',22)}<span class="grow">Subscription</span>${subLabel()}</a>`}
+    ${li('card','Subscription','sub-subscription',subLabel())}
     ${li('refresh',`Sync with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
   </div>
   <div class="sec">Appearance</div>
@@ -1371,6 +1372,22 @@ function passwordPage(){
     <div class="note" style="margin:2px 4px 14px">Use at least 8 characters.</div>
     ${S.error?`<div class="err">${S.error}</div>`:''}
     <button class="btn" data-act="save-pw">Update password</button>
+  </div>${foot()}</div>`;
+}
+function subscriptionPage(){
+  const endsAt=S.subStatus==='active'?S.subscriptionEndsAt:S.trialEndsAt;
+  const validLine=endsAt?fmtFullDate(endsAt):'';
+  const showDays=S.subStatus==='active'||S.subStatus==='trial';
+  return `<div class="screen"><div class="grow">${bar('Subscription')}
+    <div class="card" style="text-align:center;padding:30px 22px">
+      <div class="lbl" style="margin-bottom:6px">Status</div>
+      <div style="font-size:16px;margin-bottom:18px">${subLabel()}</div>
+      <div class="lbl" style="margin-bottom:6px">Plan</div>
+      <div style="font-weight:600;font-size:18px;margin-bottom:18px">${esc(planDisplay(S.subscriptionPlan))}</div>
+      ${validLine?`<div class="lbl" style="margin-bottom:6px">${S.subStatus==='active'?'Valid until':'Trial ends'}</div><div style="font-weight:600;font-size:16px;margin-bottom:4px">${esc(validLine)}</div>`:''}
+      ${showDays?`<div class="note" style="margin-bottom:20px">${S.subDaysLeft} day${S.subDaysLeft===1?'':'s'} left</div>`:'<div style="margin-bottom:20px"></div>'}
+      <a class="btn ${S.subStatus==='active'?'':'primary'}" style="display:inline-flex" href="${subscribeUrl()}">${S.subStatus==='active'?'Manage subscription':'Subscribe now'}</a>
+    </div>
   </div>${foot()}</div>`;
 }
 function feedbackPage(){
@@ -1486,6 +1503,7 @@ function subView(){
     case 'profile':return profilePage();
     case 'password':return passwordPage();
     case 'email':return emailPage();
+    case 'subscription':return subscriptionPage();
     case 'feedback':return feedbackPage();
     case 'edit':return editPage();
     case 'day':return dayPage();
@@ -1857,6 +1875,7 @@ function act(a,el){
       if(S.sub==='password'||S.sub==='email'){S.sub='profile';}else{S.sub=null;}
       return go(()=>{});
     case 'sub-profile':return go(()=>{S.draft={...S.user};S.sub='profile'});
+    case 'sub-subscription':return go(()=>{S.sub='subscription'});
     case 'sub-password':return go(()=>{S.pw={cur:'',nw:'',cf:''};S.sub='password'});
     case 'sub-email':return go(()=>{S.em={nw:'',pw:''};S.emSent='';S.sub='email'});
     case 'save-email':return saveEmail();
