@@ -1041,6 +1041,11 @@ function dashboard(){
     </div>
   </div>
 
+  <div class="card d-recent">
+    <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
+    ${recent.length?recent.map(t=>tradeRow(t)).join('')+`<button class="btn ghost" style="margin-top:14px" data-act="tab" data-tab="trades">View all</button>`:`<div class="empty">${emptyMsg()}</div>`}
+  </div>
+
   ${disciplineCard('discipline')}
 
   <div class="card d-month">
@@ -1060,11 +1065,6 @@ function dashboard(){
   </div>
 
   ${calendarCard()}
-
-  <div class="card d-recent">
-    <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
-    ${recent.length?recent.map(t=>tradeRow(t)).join('')+`<button class="btn ghost" style="margin-top:14px" data-act="tab" data-tab="trades">View all</button>`:`<div class="empty">${emptyMsg()}</div>`}
-  </div>
   </div>`;
 }
 
