@@ -208,6 +208,12 @@ h1,h2,h3{letter-spacing:-.01em}
 .pill.bk{color:var(--green-d);background:var(--green-bg);border-color:var(--green-line)}
 .tag{color:var(--muted);font-size:11px}
 .editb{width:38px;height:38px;border-radius:var(--r2);background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--green);flex:none}
+.addb{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#5d9d67 0%,#45834f 100%);border:1px solid #43804d;display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.addb:active{filter:brightness(.94)}
+.titlerow{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
+.titlerow .title{margin:0}
+.delrow{margin-top:14px}
+.pill.mn{color:var(--muted);background:var(--surface2);border-color:var(--line)}
 .editb svg.ic{width:18px;height:18px}
 .pagecard{padding:4px 16px}
 .pagecard .trade:first-child{padding-top:12px}
@@ -555,7 +561,9 @@ const ICONS={
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
   chat:'<path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5v-3.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z"/><path d="M8 9h8M8 12.5h5"/>',
   eye:'<path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5z"/><circle cx="12" cy="12" r="2.5"/>',
-  eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.9A10.7 10.7 0 0 1 12 6.8c6 0 9.5 5.2 9.5 5.2a18 18 0 0 1-3.2 3.4M6.2 6.3C3.9 7.9 2.5 12 2.5 12s3.5 5.2 9.5 5.2c1.3 0 2.5-.2 3.6-.6"/>'
+  eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.9A10.7 10.7 0 0 1 12 6.8c6 0 9.5 5.2 9.5 5.2a18 18 0 0 1-3.2 3.4M6.2 6.3C3.9 7.9 2.5 12 2.5 12s3.5 5.2 9.5 5.2c1.3 0 2.5-.2 3.6-.6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/>'
 };
 const I=(n,s=22)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
 const logoMark=(s=72,uid='')=>{const an=s>=40;return `<svg width="${s}" height="${s}" viewBox="0 0 64 64" role="img" aria-label="Save Your Trade" class="tjm${an?' tja':''}"><defs><linearGradient id="tjg${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--mark-a)"/><stop offset="1" style="stop-color:var(--mark-b)"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#tjg${uid})"/><path d="M22 11H42Q45 11 45 14V53L32 43.5L19 53V14Q19 11 22 11Z" fill="#fff" fill-opacity=".97"/><path class="tj-line" d="M25 35L30.5 29.5L34.5 33L40 25.5" fill="none" stroke="var(--mark-b)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="30" stroke-dashoffset="0"/></svg>`};
@@ -719,7 +727,7 @@ const S={
   subStatus:'trial', subDaysLeft:0, trialEndsAt:null, subscriptionEndsAt:null,
   tab:'dashboard', sub:null, subFrom:'main',
   connected:false, broker:null, changeModal:false, trades:[], tradesLoading:false, R:initR(),
-  editId:null, draft:{}, sheet:false, logoutModal:false, busy:null, conn:null, tpage:1,
+  editId:null, draft:{}, mform:{}, delModal:false, sheet:false, logoutModal:false, busy:null, conn:null, tpage:1,
   pw:{cur:'',nw:'',cf:''}, em:{nw:'',pw:''}, emSent:'', fb:{type:'glitch',msg:''}, fbSent:false, feedbacks:[], shotReady:false, connTitle:'', connNote:'',
   calMonth:today().slice(0,7), calDay:null
 };
@@ -734,7 +742,7 @@ function applyTheme(){
 applyTheme();
 try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.theme==='auto')applyTheme()})}catch(e){}
 
-const TRADE_COLS='id,broker,broker_trade_id,trade_date,trade_time,scrip_name,side,entry_price,exit_price,qty,setup,planned_sl,planned_target,anticipation,rule_break,over_trading,revenge,mistake,note';
+const TRADE_COLS='id,broker,broker_trade_id,trade_date,trade_time,scrip_name,side,entry_price,exit_price,qty,setup,planned_sl,planned_target,anticipation,rule_break,over_trading,revenge,mistake,note,source';
 const numOrBlank=v=>(v===null||v===undefined||v==='')?'':+v;
 function dbToTrade(r){
   return normalizeBrokerTrade({
@@ -743,7 +751,8 @@ function dbToTrade(r){
     scripName:r.scrip_name||'',setup:r.setup||'',
     sl:numOrBlank(r.planned_sl),target:numOrBlank(r.planned_target),
     anticipation:r.anticipation||'',ruleBreak:r.rule_break||'',overTrading:r.over_trading||'',revenge:r.revenge||'',
-    mistake:r.mistake||'',note:r.note||'',shot:''
+    mistake:r.mistake||'',note:r.note||'',shot:'',
+    source:r.source||'auto'
   });
 }
 function tradesQuery(){
@@ -994,7 +1003,7 @@ function tradeRow(t,withEdit=true){
   const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge;
   return `<div class="trade"><i class="bar3 ${p>0?'gbg':p<0?'rbg':'nbg'}"></i>
     <div class="tl">
-      <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}</div>
+      <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}${t.source==='manual'?`<span class="pill mn">Manual</span>`:''}</div>
       <div class="px">${fmtD(t.date)} • ${t.time} &nbsp; Entry <b>${num(t.entry)}</b> &nbsp; Exit <b>${num(t.exit)}</b></div>
       ${journaled?`<div class="tag">Journal added</div>`:''}
     </div>
@@ -1078,7 +1087,7 @@ function tradesPage(){
   const pages=Math.max(1,Math.ceil(list.length/10));
   S.tpage=Math.min(Math.max(1,S.tpage),pages);
   const rows=list.slice((S.tpage-1)*10,S.tpage*10);
-  return `<div class="title">Trades</div>
+  return `<div class="titlerow"><div class="title">Trades</div><button class="addb" data-act="add-trade" aria-label="Add manual trade">${I('plus',22)}</button></div>
   <div class="card">${filterUI('trades')}<div class="k" style="margin-top:-6px">${list.length} trade${list.length===1?'':'s'} • 10 per page</div></div>
   ${rows.length?`<div class="card pagecard">${rows.map(t=>tradeRow(t)).join('')}</div>
   ${pages>1?`<div class="pager"><button class="btn ghost small" data-act="pg" data-d="-1" ${S.tpage<=1?'disabled':''}>Previous</button><span class="k">Page ${S.tpage} of ${pages}</span><button class="btn ghost small" data-act="pg" data-d="1" ${S.tpage>=pages?'disabled':''}>Next</button></div>`:''}`
@@ -1498,6 +1507,40 @@ function editPage(){
   </div>${foot()}</div>`;
 }
 
+function addTradePage(){
+  const m=S.mform;
+  return `<div class="screen"><div class="grow">${bar('Add manual trade')}
+    <div class="card">
+      <div class="hd">${I('pencil',22)}Trade details</div>
+      <div class="lbl">Broker</div>
+      <label class="field">${I('bank',20)}<select data-m="broker" class="sel" style="border:0;background:none;padding:15px 0;outline:0;flex:1">
+        <option value="">Select broker</option>
+        ${BROKERS.map(b=>`<option value="${esc(b)}" ${m.broker===b?'selected':''}>${b}</option>`).join('')}
+        <option value="Manual" ${m.broker==='Manual'?'selected':''}>Other / Manual</option>
+      </select></label>
+      <div class="lbl">Scrip name</div>
+      <label class="field"><input data-m="scripName" placeholder="e.g. RELIANCE" value="${esc(m.scripName||'')}"></label>
+      <div class="lbl">Buy / Sell</div>
+      <div class="seg" style="margin-bottom:10px">
+        <button data-act="mside" data-v="buy" class="${(m.side||'buy')==='buy'?'on':''}">Buy</button>
+        <button data-act="mside" data-v="sell" class="${m.side==='sell'?'on':''}">Sell</button>
+      </div>
+      <div class="two">
+        <div><div class="lbl">Entry price</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-m="entry" placeholder="0.00" value="${esc(m.entry||'')}"></label></div>
+        <div><div class="lbl">Exit price</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-m="exit" placeholder="0.00" value="${esc(m.exit||'')}"></label></div>
+      </div>
+      <div class="lbl">Quantity</div>
+      <label class="field"><input type="number" inputmode="numeric" step="1" data-m="qty" placeholder="0" value="${esc(m.qty||'')}"></label>
+      <div class="two">
+        <div><div class="lbl">Trade date</div><label class="field"><input type="date" data-m="date" value="${esc(m.date||today())}" max="${today()}"></label></div>
+        <div><div class="lbl">Trade time</div><label class="field"><input type="time" data-m="time" value="${esc(m.time||'')}"></label></div>
+      </div>
+      ${S.error?`<div class="err">${S.error}</div>`:''}
+    </div>
+    <button class="btn" data-act="save-manual-trade">Add trade</button>
+  </div>${foot()}</div>`;
+}
+
 function subView(){
   switch(S.sub){
     case 'terms':return docPage('Terms and conditions','terms');
@@ -1511,6 +1554,7 @@ function subView(){
     case 'subscription':return subscriptionPage();
     case 'feedback':return feedbackPage();
     case 'edit':return editPage();
+    case 'addtrade':return addTradePage();
     case 'day':return dayPage();
   }
   return '';
@@ -1840,6 +1884,27 @@ async function saveTrade(){
   Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
   S.sub=null;render(true);toast('Journal saved');
 }
+/* Manual trade entry. Inserted with source:'manual' so it is entirely separate from
+   broker-synced rows: loadTrades()/sync never write here, and the auto-fetch trades
+   this app pulls from the broker are never edited or touched by this flow. */
+async function saveManualTrade(){
+  const m=S.mform;
+  const num=v=>(v===''||v===null||v===undefined||isNaN(+v))?null:+v;
+  if(!m.broker||!(m.scripName||'').trim()||num(m.entry)===null||num(m.exit)===null||num(m.qty)===null||!m.date){
+    S.error='Please fill broker, scrip name, entry, exit, quantity and date';return render();
+  }
+  S.error='';S.busy='Saving';render();
+  const row={
+    user_id:S.user.id, source:'manual', broker:m.broker, scrip_name:m.scripName.trim(),
+    side:m.side||'buy', entry_price:num(m.entry), exit_price:num(m.exit), qty:num(m.qty),
+    trade_date:m.date, trade_time:m.time||null
+  };
+  const {data,error}=await sb.from('trades').insert(row).select(TRADE_COLS).maybeSingle();
+  S.busy=null;
+  if(error){toast('Could not save. Try again');return render()}
+  S.trades.unshift(dbToTrade(data));
+  S.mform={};S.sub=null;render(true);toast('Trade added');
+}
 async function sendFeedback(){
   if((S.fb.msg||'').trim().length<5){S.error='Please write a few words about your feedback';return render()}
   S.busy='Sending';render();
@@ -1887,6 +1952,9 @@ function act(a,el){
       if(S.connected&&S.broker!==b)return toast('Change broker first to connect '+b);
       return b==='Upstox'?upstoxAction():zerodhaAction();}
     case 'edit':return go(()=>openEdit(+el.dataset.id));
+    case 'add-trade':return go(()=>{S.mform={broker:S.broker||'',scripName:'',side:'buy',entry:'',exit:'',qty:'',date:today(),time:''};S.error='';S.sub='addtrade'});
+    case 'mside':S.mform.side=el.dataset.v;return render();
+    case 'save-manual-trade':return saveManualTrade();
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
     case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
     case 'save-trade':return saveTrade();
@@ -1928,6 +1996,7 @@ function onField(e){
   const t=e.target;
   if(t.dataset.f)S.form[t.dataset.f]=t.type==='checkbox'?t.checked:t.value;
   if(t.dataset.d)S.draft[t.dataset.d]=t.value;
+  if(t.dataset.m)S.mform[t.dataset.m]=t.value;
   if(t.dataset.p)S.pw[t.dataset.p]=t.value;
   if(t.dataset.e)S.em[t.dataset.e]=t.value;
   if(t.dataset.fb)S.fb[t.dataset.fb]=t.value;
