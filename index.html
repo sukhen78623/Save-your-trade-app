@@ -1464,12 +1464,45 @@ function ynRow(label,k){
   const v=S.draft[k]||'';
   return `<div class="yn"><span>${label}</span><div class="seg2"><button class="${v==='yes'?'on':''}" data-act="yn" data-k="${k}" data-v="yes">Yes</button><button class="${v==='no'?'on':''}" data-act="yn" data-k="${k}" data-v="no">No</button></div></div>`;
 }
+function manualEditCard(d){
+  return `<div class="card">
+      <div class="hd">${I('bank',22)}Trade details <span class="tag">• Manual, you can edit</span></div>
+      <div class="lbl">Broker</div>
+      <label class="field">${I('bank',20)}<select data-d="broker" class="sel" style="border:0;background:none;padding:15px 0;outline:0;flex:1">
+        <option value="">Select broker</option>
+        ${BROKERS.map(b=>`<option value="${esc(b)}" ${brokerLabel(d.broker)===b?'selected':''}>${b}</option>`).join('')}
+        <option value="Manual" ${brokerLabel(d.broker)==='Manual'?'selected':''}>Other / Manual</option>
+      </select></label>
+      <div class="lbl">Scrip name</div>
+      <label class="field"><input data-d="scripName" placeholder="e.g. RELIANCE" value="${esc(d.scripName||'')}"></label>
+      <div class="lbl">Buy / Sell</div>
+      <div class="seg" style="margin-bottom:10px">
+        <button data-act="yn" data-k="side" data-v="buy" class="${d.side!=='sell'?'on':''}">Buy</button>
+        <button data-act="yn" data-k="side" data-v="sell" class="${d.side==='sell'?'on':''}">Sell</button>
+      </div>
+      <div class="two">
+        <div><div class="lbl">Entry price</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="entry" placeholder="0.00" value="${esc(d.entry)}"></label></div>
+        <div><div class="lbl">Exit price</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="exit" placeholder="0.00" value="${esc(d.exit)}"></label></div>
+      </div>
+      <div class="lbl">Quantity</div>
+      <label class="field"><input type="number" inputmode="numeric" step="1" data-d="qty" placeholder="0" value="${esc(d.qty)}"></label>
+      <div class="two">
+        <div><div class="lbl">Trade date</div><label class="field"><input type="date" data-d="date" value="${esc(d.date||today())}" max="${today()}"></label></div>
+        <div><div class="lbl">Trade time</div><label class="field"><input type="time" data-d="time" value="${esc(d.time||'')}"></label></div>
+      </div>
+    </div>`;
+}
+function deleteView(fresh){
+  return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="modal"><h3>Delete this trade?</h3><p>This manual trade and its journal notes will be deleted permanently. This cannot be undone.</p>
+    <div class="acts"><button class="btn ghost" data-act="close-ov-btn">Cancel</button><button class="btn danger" data-act="confirm-del-trade">Delete</button></div></div></div>`;
+}
 function editPage(){
   const t=S.trades.find(x=>x.id===S.editId);const d=S.draft;const p=pnl(t);
   const setups=[...new Set(S.trades.map(x=>x.setup).filter(Boolean))];
+  const manual=t.source==='manual';
   return `<div class="screen"><div class="grow">${bar('Trade journal')}
     <div class="editgrid">
-    <div class="card">
+    ${manual?manualEditCard(d):`<div class="card">
       <div class="hd">${I('bank',22)}From broker <span class="tag">• Read only</span></div>
       <div class="kv"><span>Broker</span><span class="bwrap">${brokerLabel(t.broker)?bIcon(t.broker,20):''}${esc(brokerLabel(t.broker)||'—')}</span></div>
       <div class="kv"><span>Scrip name</span><span>${esc(t.scripName||'—')}</span></div>
@@ -1479,7 +1512,7 @@ function editPage(){
       <div class="kv"><span>Entry price</span><span>${num(t.entry)}</span></div>
       <div class="kv"><span>Exit price</span><span>${num(t.exit)}</span></div>
       <div class="kv"><span>${p>0?'Profit':p<0?'Loss':'Profit / Loss'}</span><span class="${cls(p)}">${money(p)}</span></div>
-    </div>
+    </div>`}
     <div>
     <div class="card">
       <div class="hd">${I('pencil',22)}Your journal</div>
@@ -1501,7 +1534,8 @@ function editPage(){
         <label class="fileb">${I('image',20)}${d.shot?'Change':'Add screen shot'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-shot="1"></label>
       </div>
     </div>
-    <button class="btn" data-act="save-trade">Save journal</button>
+    <button class="btn" data-act="save-trade">${manual?'Save changes':'Save journal'}</button>
+    ${manual?`<button class="btn danger" style="margin-top:10px" data-act="del-trade">Delete trade</button>`:''}
     </div>
     </div>
   </div>${foot()}</div>`;
@@ -1602,6 +1636,7 @@ function render(top=false){
   else if(S.user)html=mainView();else html=authView();
   if(S.sheet)html+=sheetView(fresh);
   if(S.logoutModal)html+=logoutView(fresh);
+  if(S.delModal)html+=deleteView(fresh);
   if(S.changeModal)html+=changeBrokerView(fresh);
   if(S.busy)html+=loaderView();
   app.classList.toggle('enter',top);
@@ -1621,7 +1656,8 @@ function openEdit(id){
   const t=S.trades.find(x=>x.id===id);
   if(S.draftShotUrl)URL.revokeObjectURL(S.draftShotUrl);
   S.draftShotBlob=null;S.draftShotUrl=null;
-  S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,mistake:t.mistake,note:t.note,shot:t.shot};
+  S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,mistake:t.mistake,note:t.note,shot:t.shot,
+    ...(t.source==='manual'?{broker:t.broker,scripName:t.scripName,side:t.side,entry:t.entry,exit:t.exit,qty:t.qty,date:t.date,time:String(t.time||'').slice(0,5)}:{})};
   S.sub='edit';S.subFrom='main';
   S.shotReady=false;
   sb.from('trades').select('screenshot_url').eq('id',id).maybeSingle().then(async r=>{
@@ -1869,6 +1905,11 @@ async function saveTrade(){
   const row={setup:d.setup||null,planned_sl:num(d.sl),planned_target:num(d.target),
     anticipation:d.anticipation||'no',rule_break:d.ruleBreak||'no',over_trading:d.overTrading||'no',revenge:d.revenge||'no',
     mistake:d.mistake||null,note:d.note||null};
+  const manual=t.source==='manual';
+  if(manual){
+    if(!d.broker||!(d.scripName||'').trim()||num(d.entry)===null||num(d.exit)===null||num(d.qty)===null||!d.date){toast('Please fill broker, scrip name, entry, exit, quantity and date');return}
+    Object.assign(row,{broker:d.broker,scrip_name:d.scripName.trim(),side:d.side||'buy',entry_price:num(d.entry),exit_price:num(d.exit),qty:num(d.qty),trade_date:d.date,trade_time:d.time||null});
+  }
   S.busy='Saving';render();
   if(S.draftShotBlob){
     const path=`${S.user.id}/${S.editId}-${Date.now()}.jpg`;
@@ -1876,13 +1917,33 @@ async function saveTrade(){
     if(upErr){S.busy=null;toast('Could not upload screenshot. Try again');return render()}
     row.screenshot_url=path;
   }
-  const {error}=await sb.from('trades').update(row).eq('id',S.editId);
+  const {data:upd,error}=await sb.from('trades').update(row).eq('id',S.editId).select('id');
   S.busy=null;
-  if(error){toast('Could not save. Try again');return render()}
+  if(error||!upd||!upd.length){toast('Could not save. Try again');return render()}
   if(S.draftShotUrl){URL.revokeObjectURL(S.draftShotUrl);S.draftShotUrl=null;}
   S.draftShotBlob=null;
   Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
-  S.sub=null;render(true);toast('Journal saved');
+  if(manual){
+    Object.assign(t,{broker:d.broker,scripName:d.scripName.trim(),side:d.side||'buy',entry:+d.entry,exit:+d.exit,qty:+d.qty,date:d.date,time:d.time||''});
+    S.trades.sort((a,b)=>(a.date<b.date?1:a.date>b.date?-1:0)||(String(a.time)<String(b.time)?1:String(a.time)>String(b.time)?-1:0)||(b.id-a.id));
+  }
+  S.sub=null;render(true);toast(manual?'Trade saved':'Journal saved');
+}
+/* Delete a trade. Only manual trades can be deleted; auto-fetched broker trades never can
+   (checked here in the app, and again in the database). */
+async function deleteManualTrade(){
+  const t=S.trades.find(x=>x.id===S.editId);
+  S.delModal=false;
+  if(!t||t.source!=='manual'){return render()}
+  S.busy='Deleting';render();
+  let path=null;
+  try{const r=await sb.from('trades').select('screenshot_url').eq('id',t.id).maybeSingle();path=r.data&&r.data.screenshot_url}catch(e){}
+  const {data,error}=await sb.from('trades').delete().eq('id',t.id).eq('source','manual').select('id');
+  S.busy=null;
+  if(error||!data||!data.length){toast('Could not delete. Try again');return render()}
+  if(path){try{await sb.storage.from('screenshots').remove([path])}catch(e){}}
+  S.trades=S.trades.filter(x=>x.id!==t.id);
+  S.editId=null;S.sub=null;render(true);toast('Trade deleted');
 }
 /* Manual trade entry. Inserted with source:'manual' so it is entirely separate from
    broker-synced rows: loadTrades()/sync never write here, and the auto-fetch trades
@@ -1944,7 +2005,7 @@ function act(a,el){
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
     case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
     case 'sheet':S.sheet=true;ovFresh=true;return render();
-    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;return render();
+    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;S.delModal=false;return render();
     case 'broker':{
       const b=el.dataset.b;
       if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
@@ -1958,6 +2019,8 @@ function act(a,el){
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
     case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
     case 'save-trade':return saveTrade();
+    case 'del-trade':S.delModal=true;ovFresh=true;return render();
+    case 'confirm-del-trade':return deleteManualTrade();
     case 'back':
       if(S.sub==='password'||S.sub==='email'){S.sub='profile';}else{S.sub=null;}
       return go(()=>{});
