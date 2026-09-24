@@ -189,6 +189,9 @@ h1,h2,h3{letter-spacing:-.01em}
 .disc .it.bad svg{color:var(--red)}
 .disc .it b{font-size:18px;font-weight:500}
 .disc .it.md{grid-column:1/-1}
+.disc .ynr{display:flex;align-items:center;flex-wrap:wrap;gap:6px 18px}
+.disc .ynr>div{display:flex;align-items:baseline;gap:8px}
+.disc .ynr i{width:1px;align-self:stretch;min-height:22px;background:var(--line)}
 .disc .it.good{background:var(--green-bg);border-color:var(--green-line)}
 .disc .it.good svg{color:var(--green)}
 .ov-cols{display:grid;grid-template-columns:1fr;gap:0}
@@ -1100,6 +1103,7 @@ function disciplineCard(key){
   const inDash=key==='discipline';
   const rng=S.trades.filter(t=>inR(key,t));
   const cnt=k=>rng.filter(t=>t[k]==='yes').length;
+  const cntNo=k=>rng.filter(t=>t[k]==='no').length;
   return `<div class="card ${inDash?'d-disc':'a-disc'}">
     <div class="card-h"><h2>${I('shield',22)}Discipline</h2></div>
     ${inDash?filterUI('discipline'):''}
@@ -1108,7 +1112,7 @@ function disciplineCard(key){
       <div class="it ${cnt('anticipation')?'bad':''}">${I('clock',22)}<span class="k">Anticipation</span><b class="${cnt('anticipation')?'neg':'zero'}">${cnt('anticipation')}</b></div>
       <div class="it ${cnt('revenge')?'bad':''}">${I('flame',22)}<span class="k">Revenge trades</span><b class="${cnt('revenge')?'neg':'zero'}">${cnt('revenge')}</b></div>
       <div class="it ${cnt('overTrading')?'bad':''}">${I('repeat',22)}<span class="k">Over trading</span><b class="${cnt('overTrading')?'neg':'zero'}">${cnt('overTrading')}</b></div>
-      ${S.noMD?'':`<div class="it md ${cnt('maintain')?'good':''}">${I('check',22)}<span class="k">Maintained discipline</span><b class="${cnt('maintain')?'pos':'zero'}">${cnt('maintain')}</b></div>`}
+      ${S.noMD?'':`<div class="it md ${cnt('maintain')?'good':''}">${I('check',22)}<span class="k">Maintain discipline</span><div class="ynr"><div><span class="k">Yes</span><b class="${cnt('maintain')?'pos':'zero'}">${cnt('maintain')}</b></div><i></i><div><span class="k">No</span><b class="${cntNo('maintain')?'neg':'zero'}">${cntNo('maintain')}</b></div></div></div>`}
     </div>
   </div>`;
 }
@@ -1512,7 +1516,7 @@ function overallReport(){
   const avgWin=avg(P.filter(v=>v>0)),avgLoss=Math.abs(avg(P.filter(v=>v<0)));
   const payoff=avgLoss?avgWin/avgLoss:0;
   const yes=k=>L.filter(t=>t[k]==='yes').length;
-  const D={maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
+  const D={notMaintained:L.filter(t=>t.maintain==='no').length,maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
   const noted=L.filter(t=>t.anticipation||t.ruleBreak||t.overTrading||t.revenge).length;
   const slN=L.filter(t=>t.sl!==''&&t.sl!=null).length;
   const jr=L.filter(t=>t.setup||t.note||t.mistake||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain).length;
@@ -1533,6 +1537,7 @@ function overallReport(){
   if(n>=3&&jr/n>=0.7)good.push(`You journaled ${jr} of ${n} trades`);
   if(st.total<0)bad.push(`Net loss of <b class="neg">${money(st.total)}</b> across ${tr(n)}`);
   c.top.slice(0,2).forEach(x=>bad.push(`Mistake: <b>${esc(x.label)}</b> in ${tr(x.n)} (${money(x.p)})`));
+  if(D.notMaintained)bad.push(`Discipline not maintained in <b>${tr(D.notMaintained)}</b>`);
   if(D.ruleBreak)bad.push(`Rule break in ${tr(D.ruleBreak)}`);
   if(D.revenge)bad.push(`Revenge trading in ${tr(D.revenge)}`);
   if(D.overTrading)bad.push(`Over trading in ${tr(D.overTrading)}`);
@@ -1550,7 +1555,7 @@ function overallReport(){
     const notes=[];
     L.forEach((t,i)=>{const x=misClean(t.note);if(x&&notes.length<25)notes.push({r:P[i]>0?'win':P[i]<0?'loss':'flat',t:x})});
     const payload={trades:n,netPnl:Math.round(st.total),wins:st.w,losses:st.l,winRatePct:st.rate,avgWin:Math.round(avgWin),avgLoss:Math.round(avgLoss),tradesWithPlannedSl:slN,tradesJournaled:jr,
-      discipline:{maintained:D.maintained,ruleBreak:D.ruleBreak,anticipation:D.anticipation,revenge:D.revenge,overTrading:D.overTrading,tradesWithDisciplineNoted:noted},
+      discipline:{maintained:D.maintained,notMaintained:D.notMaintained,ruleBreak:D.ruleBreak,anticipation:D.anticipation,revenge:D.revenge,overTrading:D.overTrading,tradesWithDisciplineNoted:noted},
       mistakes:{tradesWithMistake:c.M,themes:c.top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:c.otherN},notes};
     const sk=misHash('o'+JSON.stringify(payload)),saved=misSumStore()[sk];
     sm=S.misSum[sk]||(saved&&saved.g?(S.misSum[sk]={st:'ok',g:saved.g,i:saved.i}):null);
