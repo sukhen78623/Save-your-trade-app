@@ -455,10 +455,10 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .a-range{grid-column:1/-1;grid-row:1}
   .a-net{grid-column:1/8;grid-row:2}
   .a-win{grid-column:8/13;grid-row:2}
-  .a-prof{grid-column:1/7;grid-row:3}
-  .a-most{grid-column:7/13;grid-row:3}
-  .a-day{grid-column:1/-1;grid-row:4}
-  .a-disc{grid-column:1/-1;grid-row:5}
+  .a-prof{grid-column:1/7;grid-row:4}
+  .a-most{grid-column:7/13;grid-row:4}
+  .a-day{grid-column:1/-1;grid-row:5}
+  .a-disc{grid-column:1/-1;grid-row:3}
   .a-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
   .a-win svg{max-width:100%;height:auto}
 
@@ -1283,11 +1283,11 @@ function analyticsPage(){
   <div class="agrid">
   <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
+  ${disciplineCard('analytics')}
   <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
   <div class="card a-most"><div class="card-h"><h2>${I('bars',22)}Most traded setup</h2></div>${mostTraded()}</div>
   <div class="card a-win"><div class="card-h"><h2>${I('pie',22)}Win loss trades</h2></div>${donut()}</div>
   <div class="card a-day"><div class="card-h"><h2>${I('calendar2',22)}Day wise success rate</h2></div><div class="k" style="margin:-6px 0 14px">Win rate of your trades, Monday to Friday</div>${dayWise()}</div>
-  ${disciplineCard('analytics')}
   </div>`;
 }
 
