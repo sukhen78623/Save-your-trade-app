@@ -526,13 +526,48 @@ const safeStorage={
   setItem:(k,v)=>{try{window.localStorage.setItem(k,v)}catch(e){memStore[k]=v}},
   removeItem:k=>{try{window.localStorage.removeItem(k)}catch(e){delete memStore[k]}}
 };
+/* Shared login: the session is kept in a cookie for .saveyourtrade.in, so the journal app and the
+   profile page use the same login. If cookies are blocked it falls back to normal browser storage. */
+var authStorage=(function(){
+  var ROOT=/(^|\.)saveyourtrade\.in$/.test(location.hostname)?'.saveyourtrade.in':'';
+  var SIZE=3000,MAXAGE=60*60*24*365,mem={};
+  function put(n,v,age){try{document.cookie=n+'='+v+'; path=/; max-age='+age+'; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'')+(ROOT?'; domain='+ROOT:'')}catch(e){}}
+  function get(n){try{var parts=document.cookie?document.cookie.split('; '):[];for(var i=0;i<parts.length;i++){var p=parts[i],ix=p.indexOf('=');if(p.slice(0,ix)===n)return p.slice(ix+1)}}catch(e){}return null}
+  function enc(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+  function dec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
+  function clearCookie(k,from){for(var i=from||0;get(k+'.'+i)!==null;i++)put(k+'.'+i,'',0)}
+  function lsGet(k){try{return window.localStorage.getItem(k)}catch(e){return mem[k]==null?null:mem[k]}}
+  function lsSet(k,v){try{window.localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+  function lsDel(k){try{window.localStorage.removeItem(k)}catch(e){}delete mem[k]}
+  var api={
+    getItem:function(k){
+      if(get(k+'.0')!==null){
+        var all='',c;
+        for(var i=0;(c=get(k+'.'+i))!==null;i++)all+=c;
+        try{return dec(all)}catch(e){return null}
+      }
+      var old=lsGet(k);
+      if(old!==null){api.setItem(k,old)}
+      return old;
+    },
+    setItem:function(k,v){
+      var s=enc(String(v)),parts=[];
+      for(var i=0;i<s.length;i+=SIZE)parts.push(s.slice(i,i+SIZE));
+      for(var j=0;j<parts.length;j++)put(k+'.'+j,parts[j],MAXAGE);
+      clearCookie(k,parts.length);
+      if(get(k+'.0')===parts[0]){lsDel(k)}else{lsSet(k,v)}
+    },
+    removeItem:function(k){clearCookie(k);lsDel(k)}
+  };
+  return api;
+})();
 /* Read the link we were opened with BEFORE Supabase clears it (password reset link or an expired link) */
 const AUTH_HASH=window.location.hash||'';
 const IS_RECOVERY=/(^|[#&])type=recovery(&|$)/.test(AUTH_HASH);
 const HASH_ERR=(()=>{try{return new URLSearchParams(AUTH_HASH.replace(/^#/,'')).get('error_description')||''}catch(e){return ''}})();
 let sb=null;
 try{
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:safeStorage}});
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:authStorage}});
 }catch(e){console.error('Supabase failed to start',e)}
 
 const ICONS={
