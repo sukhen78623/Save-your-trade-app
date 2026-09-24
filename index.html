@@ -284,6 +284,8 @@ h1,h2,h3{letter-spacing:-.01em}
 .yn .seg2 button.on{color:var(--on-green)}
 .yn .seg2 button.on[data-v=yes]{background:var(--red);border-color:var(--red);color:var(--on-red)}
 .yn .seg2 button.on[data-v=no]{background:var(--green);border-color:var(--green)}
+.yn.good .seg2 button.on[data-v=yes]{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.yn.good .seg2 button.on[data-v=no]{background:var(--red);border-color:var(--red);color:var(--on-red)}
 textarea.ta{width:100%;min-height:96px;resize:vertical;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;outline:0;font-size:13px;color:var(--text)}
 textarea.ta::placeholder{color:var(--faint)}
 textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
@@ -1775,9 +1777,9 @@ function contactPage(){
       return `<div class="crow">${inner}</div>`}).join('')}</div>
   </div>${foot()}</div>`;
 }
-function ynRow(label,k){
-  const v=S.draft[k]||'';
-  return `<div class="yn"><span>${label}</span><div class="seg2"><button class="${v==='yes'?'on':''}" data-act="yn" data-k="${k}" data-v="yes">Yes</button><button class="${v==='no'?'on':''}" data-act="yn" data-k="${k}" data-v="no">No</button></div></div>`;
+function ynRow(label,k,good){
+  const v=S.draft[k]||(good?'yes':'');
+  return `<div class="yn ${good?'good':''}"><span>${label}</span><div class="seg2"><button class="${v==='yes'?'on':''}" data-act="yn" data-k="${k}" data-v="yes">Yes</button><button class="${v==='no'?'on':''}" data-act="yn" data-k="${k}" data-v="no">No</button></div></div>`;
 }
 function manualEditCard(d){
   return `<div class="card">
@@ -1838,7 +1840,7 @@ function editPage(){
         <div><div class="lbl">Planned SL</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="sl" placeholder="0.00" value="${esc(d.sl)}"></label></div>
         <div><div class="lbl">Planned target</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="target" placeholder="0.00" value="${esc(d.target)}"></label></div>
       </div>
-      ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}${S.noMD?'':ynRow('Maintain discipline','maintain')}
+      ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}${S.noMD?'':ynRow('Maintain discipline','maintain',true)}
       <div class="lbl" style="margin-top:14px">Mistake</div>
       <label class="field"><input data-d="mistake" list="mistakes" autocomplete="off" placeholder="Select or type your own mistake" value="${esc(d.mistake)}"></label>
       <datalist id="mistakes">${MISTAKE_OPTS.map(m=>`<option value="${esc(m)}">`).join('')}</datalist>
@@ -2222,7 +2224,8 @@ async function saveTrade(){
   const row={setup:d.setup||null,planned_sl:num(d.sl),planned_target:num(d.target),
     anticipation:d.anticipation||'no',rule_break:d.ruleBreak||'no',over_trading:d.overTrading||'no',revenge:d.revenge||'no',
     mistake:d.mistake||null,note:d.note||null};
-  if(!S.noMD)row.maintain_discipline=d.maintain||null;
+  const md=d.maintain||'yes';
+  if(!S.noMD)row.maintain_discipline=md;
   const manual=t.source==='manual';
   if(manual){
     if(!d.broker||!(d.scripName||'').trim()||num(d.entry)===null||num(d.exit)===null||num(d.qty)===null||!d.date){toast('Please fill broker, scrip name, entry, exit, quantity and date');return}
@@ -2235,17 +2238,24 @@ async function saveTrade(){
     if(upErr){S.busy=null;toast('Could not upload screenshot. Try again');return render()}
     row.screenshot_url=path;
   }
-  const {data:upd,error}=await sb.from('trades').update(row).eq('id',S.editId).select('id');
+  let {data:upd,error}=await sb.from('trades').update(row).eq('id',S.editId).select('id');
+  let mdSkipped=false;
+  if(error&&row.maintain_discipline!==undefined&&(error.code==='42501'||/permission denied/i.test(error.message||''))){
+    /* database has no permission for the new column yet: save everything else so the user is never blocked */
+    delete row.maintain_discipline;
+    ({data:upd,error}=await sb.from('trades').update(row).eq('id',S.editId).select('id'));
+    if(!error&&upd&&upd.length){S.noMD=true;mdSkipped=true}
+  }
   S.busy=null;
   if(error||!upd||!upd.length){toast('Could not save: '+(error?(error.message||'error'):'no permission to update'));return render()}
   if(S.draftShotUrl){URL.revokeObjectURL(S.draftShotUrl);S.draftShotUrl=null;}
   S.draftShotBlob=null;
-  Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,maintain:d.maintain,mistake:d.mistake,note:d.note});
+  Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,maintain:S.noMD?d.maintain:md,mistake:d.mistake,note:d.note});
   if(manual){
     Object.assign(t,{broker:d.broker,scripName:d.scripName.trim(),side:d.side||'buy',entry:+d.entry,exit:+d.exit,qty:+d.qty,date:d.date,time:d.time||''});
     S.trades.sort((a,b)=>(a.date<b.date?1:a.date>b.date?-1:0)||(String(a.time)<String(b.time)?1:String(a.time)>String(b.time)?-1:0)||(b.id-a.id));
   }
-  S.sub=null;render(true);toast(manual?'Trade saved':'Journal saved');
+  S.sub=null;render(true);toast(mdSkipped?'Saved. Maintain discipline is not available yet':manual?'Trade saved':'Journal saved');
 }
 /* Delete a trade. Only manual trades can be deleted; auto-fetched broker trades never can
    (checked here in the app, and again in the database). */
