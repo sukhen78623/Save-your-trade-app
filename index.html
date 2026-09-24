@@ -989,6 +989,7 @@ async function initSession(){
         }
       }
     }catch(e){console.error('Session transfer failed',e)}
+    await handleGoogleReturn();
     const {data}=await sb.auth.getSession();
     if(data&&data.session){
       if(IS_RECOVERY){
@@ -2045,16 +2046,45 @@ function openEdit(id){
     S.draft.shot=(signed&&signed.signedUrl)||'';S.shotReady=true;render();
   });
 }
+/* Script-free Google login (works in every browser): goes straight to Google and comes back with a Google ID token */
+function gKeep(k,v){try{localStorage.setItem(k,v)}catch(e){try{sessionStorage.setItem(k,v)}catch(e2){}}}
+function gTake(k){let v=null;try{v=localStorage.getItem(k);localStorage.removeItem(k)}catch(e){}if(v===null){try{v=sessionStorage.getItem(k);sessionStorage.removeItem(k)}catch(e){}}return v}
+function gRand(){const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a).map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function signInWithGoogle(){
   if(!sb){S.error='App could not connect. Please reload';return render();}
   S.error='';S.busy='Opening Google login';render();
   try{
-    const {error}=await sb.auth.signInWithOAuth({
-      provider:'google',
-      options:{redirectTo:window.location.href.split('#')[0].split('?')[0]}
-    });
-    if(error){S.busy=null;S.error=friendlyError(error);return render();}
+    const raw=gRand(),st=gRand();
+    gKeep('g_nonce',raw);gKeep('g_state',st);
+    const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
+    const hashed=Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('');
+    window.location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id='+encodeURIComponent(GOOGLE_CLIENT_ID)
+      +'&redirect_uri='+encodeURIComponent(window.location.origin+'/')
+      +'&response_type=id_token&scope='+encodeURIComponent('openid email profile')
+      +'&nonce='+hashed+'&state='+st+'&prompt=select_account';
   }catch(e){S.busy=null;S.error=friendlyError(e);render();}
+}
+/* When Google sends the person back with an ID token in the address, finish the login */
+async function handleGoogleReturn(){
+  try{
+    const h=window.location.hash||'';
+    if(h.indexOf('id_token=')<0)return;
+    const p=new URLSearchParams(h.replace(/^#/,''));
+    const idt=p.get('id_token'),st=p.get('state');
+    try{history.replaceState(null,'',window.location.pathname+window.location.search)}catch(e){}
+    const okSt=gTake('g_state'),raw=gTake('g_nonce');
+    if(!idt||!st||st!==okSt||!raw){S.error='Google login could not be verified. Please try again';return;}
+    const {data,error}=await sb.auth.signInWithIdToken({provider:'google',token:idt,nonce:raw});
+    if(error){S.error=friendlyError(error);return;}
+    let u=data&&data.user;
+    try{const ud=await sb.auth.getUser();if(ud&&ud.data&&ud.data.user)u=ud.data.user}catch(e){}
+    const ids=(u&&u.identities)||[];
+    const em=ids.find(x=>x.provider==='email'),go=ids.find(x=>x.provider==='google');
+    if(em&&go&&em.created_at&&go.created_at&&new Date(em.created_at)<new Date(go.created_at)){
+      try{await sb.auth.signOut({scope:'local'})}catch(e){console.error(e)}
+      S.authMode='login';S.error=MSG_EMAIL_ACCOUNT;
+    }
+  }catch(e){console.error(e);S.error=friendlyError(e)}
 }
 async function submitAuth(){
   if(!sb){S.error='App could not connect. Please reload';return render();}
