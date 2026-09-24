@@ -887,7 +887,7 @@ function stats(list){
   const days={};list.forEach(t=>days[t.date]=(days[t.date]||0)+pnl(t));
   const dk=Object.keys(days);
   let best=null,worst=null;
-  dk.forEach(k=>{if(!best||days[k]>days[best])best=k;if(!worst||days[k]<days[worst])worst=k});
+  dk.forEach(k=>{if(days[k]>0&&(!best||days[k]>days[best]))best=k;if(days[k]<0&&(!worst||days[k]<days[worst]))worst=k});
   return {total,w,l,rate:(w+l)?Math.round(w/(w+l)*100):0,best:best?{d:best,v:days[best]}:null,worst:worst?{d:worst,v:days[worst]}:null,days,gp,gl,pf};
 }
 const pfStr=v=>v===Infinity?'∞':v.toFixed(2);
@@ -1919,7 +1919,7 @@ async function saveTrade(){
   }
   const {data:upd,error}=await sb.from('trades').update(row).eq('id',S.editId).select('id');
   S.busy=null;
-  if(error||!upd||!upd.length){toast('Could not save. Try again');return render()}
+  if(error||!upd||!upd.length){toast('Could not save: '+(error?(error.message||'error'):'no permission to update'));return render()}
   if(S.draftShotUrl){URL.revokeObjectURL(S.draftShotUrl);S.draftShotUrl=null;}
   S.draftShotBlob=null;
   Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
@@ -1940,7 +1940,7 @@ async function deleteManualTrade(){
   try{const r=await sb.from('trades').select('screenshot_url').eq('id',t.id).maybeSingle();path=r.data&&r.data.screenshot_url}catch(e){}
   const {data,error}=await sb.from('trades').delete().eq('id',t.id).eq('source','manual').select('id');
   S.busy=null;
-  if(error||!data||!data.length){toast('Could not delete. Try again');return render()}
+  if(error||!data||!data.length){toast('Could not delete: '+(error?(error.message||'error'):'no permission to delete'));return render()}
   if(path){try{await sb.storage.from('screenshots').remove([path])}catch(e){}}
   S.trades=S.trades.filter(x=>x.id!==t.id);
   S.editId=null;S.sub=null;render(true);toast('Trade deleted');
