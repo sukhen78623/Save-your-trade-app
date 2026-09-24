@@ -541,6 +541,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 }
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important}}
+#gbtn{color-scheme:light}
 </style>
 </head>
 <body>
@@ -616,6 +617,12 @@ function gSetup(){
   })();
   return gInit;
 }
+function isDarkUI(){
+  const t=document.documentElement.getAttribute('data-theme');
+  if(t==='dark')return true;
+  if(t==='light')return false;
+  try{return window.matchMedia('(prefers-color-scheme: dark)').matches}catch(e){return false}
+}
 function drawGoogleBtn(){
   if(!document.getElementById('gbtn'))return;
   if(!(window.google&&google.accounts&&google.accounts.id))return;
@@ -624,7 +631,7 @@ function drawGoogleBtn(){
     if(!ok||!box)return;
     const w=Math.max(200,Math.min(400,Math.floor(box.getBoundingClientRect().width)||320));
     box.innerHTML='';
-    google.accounts.id.renderButton(box,{type:'standard',theme:'outline',size:'large',text:'continue_with',shape:'rectangular',width:w,logo_alignment:'left'});
+    google.accounts.id.renderButton(box,{type:'standard',theme:isDarkUI()?'filled_black':'outline',size:'large',text:'continue_with',shape:'rectangular',width:w,logo_alignment:'left'});
   }).catch(e=>console.error('Google button failed',e));
 }
 window.gisLoaded=function(){drawGoogleBtn()};
@@ -865,6 +872,7 @@ function applyTheme(){
   if(S.theme==='light'||S.theme==='dark')r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme');
   const m=document.querySelector('meta[name=theme-color]');
   if(m)m.setAttribute('content',getComputedStyle(r).getPropertyValue('--bg').trim()||'#111314');
+  try{if(typeof drawGoogleBtn==='function')drawGoogleBtn()}catch(e){}
 }
 applyTheme();
 try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.theme==='auto')applyTheme()})}catch(e){}
