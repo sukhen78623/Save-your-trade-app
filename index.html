@@ -188,6 +188,14 @@ h1,h2,h3{letter-spacing:-.01em}
 .disc .it.bad{background:var(--red-bg);border-color:var(--red-line)}
 .disc .it.bad svg{color:var(--red)}
 .disc .it b{font-size:18px;font-weight:500}
+.disc .it.md{grid-column:1/-1}
+.disc .it.good{background:var(--green-bg);border-color:var(--green-line)}
+.disc .it.good svg{color:var(--green)}
+.ov-cols{display:grid;grid-template-columns:1fr;gap:0}
+.ov-l{margin:0 0 16px;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5}
+.ov-l.good li::marker{color:var(--green)}
+.ov-l.bad li::marker{color:var(--red)}
+.ov-l .k{list-style:none;margin-left:-18px}
 .mis-key{margin:0 0 16px;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5}
 .mis-key li::marker{color:var(--green)}
 .mis-key b{font-weight:500}
@@ -458,7 +466,9 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.d-disc{grid-column:1/-1}
   .dash>.d-cal{grid-column:1/-1}
   .dash>.d-recent{grid-column:1/-1}
-  .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .disc .it.md{grid-column:auto}
+  .ov-cols{grid-template-columns:1fr 1fr;gap:28px}
 
   /* filters on trades / analytics sit in one row */
   .range.wide{grid-template-columns:repeat(3,minmax(0,240px))}
@@ -478,13 +488,14 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .a-range{grid-column:1/-1;grid-row:1}
   .a-net{grid-column:1/8;grid-row:2}
   .a-win{grid-column:8/13;grid-row:2}
-  .a-prof{grid-column:1/7;grid-row:5}
-  .a-most{grid-column:7/13;grid-row:5}
-  .a-day{grid-column:1/-1;grid-row:6}
+  .a-prof{grid-column:1/7;grid-row:6}
+  .a-most{grid-column:7/13;grid-row:6}
+  .a-day{grid-column:1/-1;grid-row:7}
   .a-disc{grid-column:1/-1;grid-row:3}
-  .a-mis{grid-column:1/-1;grid-row:4}
+  .a-all{grid-column:1/-1;grid-row:4}
+  .a-mis{grid-column:1/-1;grid-row:5}
   .mis-l{display:grid;grid-template-columns:1fr 1fr}
-  .a-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .a-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .a-win svg{max-width:100%;height:auto}
 
   .setwrap{max-width:640px}
@@ -513,7 +524,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
   .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
   .dash>.d-disc{grid-column:1/-1}
-  .dash>.d-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .dash>.d-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-cal{grid-column:1/-1}
   .dash>.d-recent{grid-column:1/-1}
@@ -584,6 +595,8 @@ try{
 }catch(e){console.error('Supabase failed to start',e)}
 
 const ICONS={
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  sparkle:'<path d="M11 3l1.9 5.6L18.5 10.5l-5.6 1.9L11 18l-1.9-5.6L3.5 10.5l5.6-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
   logo:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7.5 14.5l3-3.5 2.5 2.5L17 9"/>',
   auto:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 20h8M12 16v4"/>',
   sun:'<circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
@@ -803,7 +816,8 @@ function applyTheme(){
 applyTheme();
 try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.theme==='auto')applyTheme()})}catch(e){}
 
-const TRADE_COLS='id,broker,broker_trade_id,trade_date,trade_time,scrip_name,side,entry_price,exit_price,qty,setup,planned_sl,planned_target,anticipation,rule_break,over_trading,revenge,mistake,note,source';
+const TRADE_BASE='id,broker,broker_trade_id,trade_date,trade_time,scrip_name,side,entry_price,exit_price,qty,setup,planned_sl,planned_target,anticipation,rule_break,over_trading,revenge,mistake,note,source';
+let TRADE_COLS=TRADE_BASE+',maintain_discipline';
 const numOrBlank=v=>(v===null||v===undefined||v==='')?'':+v;
 function dbToTrade(r){
   return normalizeBrokerTrade({
@@ -811,7 +825,7 @@ function dbToTrade(r){
     entry:+r.entry_price,exit:+r.exit_price,qty:+r.qty,
     scripName:r.scrip_name||'',setup:r.setup||'',
     sl:numOrBlank(r.planned_sl),target:numOrBlank(r.planned_target),
-    anticipation:r.anticipation||'',ruleBreak:r.rule_break||'',overTrading:r.over_trading||'',revenge:r.revenge||'',
+    anticipation:r.anticipation||'',ruleBreak:r.rule_break||'',overTrading:r.over_trading||'',revenge:r.revenge||'',maintain:r.maintain_discipline||'',
     mistake:r.mistake||'',note:r.note||'',shot:'',
     source:r.source||'auto'
   });
@@ -824,7 +838,8 @@ async function loadTrades(){
   const step=1000;
   /* Fetch page 1 with an exact count, then fetch every remaining page in parallel
      instead of one-after-another (this is what makes accounts with lots of trades load fast) */
-  const first=await tradesQuery().select(TRADE_COLS,{count:'exact'}).range(0,step-1);
+  let first=await tradesQuery().select(TRADE_COLS,{count:'exact'}).range(0,step-1);
+  if(first.error&&/maintain_discipline/.test(first.error.message||'')){TRADE_COLS=TRADE_BASE;S.noMD=true;first=await tradesQuery().select(TRADE_COLS,{count:'exact'}).range(0,step-1)}
   if(first.error)throw first.error;
   const all=first.data.slice();
   const total=typeof first.count==='number'?first.count:all.length;
@@ -1061,7 +1076,7 @@ function timeStr(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',
 
 function tradeRow(t,withEdit=true){
   const p=pnl(t);
-  const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge;
+  const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain;
   return `<div class="trade"><i class="bar3 ${p>0?'gbg':p<0?'rbg':'nbg'}"></i>
     <div class="tl">
       <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}${t.source==='manual'?`<span class="pill mn">Manual</span>`:''}</div>
@@ -1091,6 +1106,7 @@ function disciplineCard(key){
       <div class="it ${cnt('anticipation')?'bad':''}">${I('clock',22)}<span class="k">Anticipation</span><b class="${cnt('anticipation')?'neg':'zero'}">${cnt('anticipation')}</b></div>
       <div class="it ${cnt('revenge')?'bad':''}">${I('flame',22)}<span class="k">Revenge trades</span><b class="${cnt('revenge')?'neg':'zero'}">${cnt('revenge')}</b></div>
       <div class="it ${cnt('overTrading')?'bad':''}">${I('repeat',22)}<span class="k">Over trading</span><b class="${cnt('overTrading')?'neg':'zero'}">${cnt('overTrading')}</b></div>
+      ${S.noMD?'':`<div class="it md ${cnt('maintain')?'good':''}">${I('check',22)}<span class="k">Maintained discipline</span><b class="${cnt('maintain')?'pos':'zero'}">${cnt('maintain')}</b></div>`}
     </div>
   </div>`;
 }
@@ -1386,16 +1402,17 @@ const MIS_AI_ON=true;
 function misAIMap(){if(!S.misAI){try{S.misAI=JSON.parse(safeStorage.getItem('sy-mis-ai')||'{}')||{}}catch(e){S.misAI={}}}return S.misAI}
 const misHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'h'+(h>>>0).toString(36)};
 function misSumStore(){try{return JSON.parse(safeStorage.getItem('sy-mis-sum')||'{}')||{}}catch(e){return {}}}
-/* Whole-report AI summary. Only totals and label counts are sent (no trade names, prices or personal data). */
-async function misSummarize(key,payload){
+/* Overall report AI text. Sent: totals, label counts and up to 25 short journal notes (emails and long numbers removed). Never sent: trade names, setup names, prices, name or email. */
+async function misOverallAI(key,payload){
   try{
-    const {data,error}=await sb.functions.invoke('mistake-classify',{body:{action:'summary',stats:payload}});
+    const {data,error}=await sb.functions.invoke('mistake-classify',{body:{action:'overall',stats:payload}});
     if(error){let m='';try{m=(await error.context.json()).error}catch(e){}throw new Error(m||'Could not reach AI')}
     if(data&&data.error)throw new Error(data.error);
-    const b=(data&&data.bullets||[]).filter(x=>typeof x==='string'&&x.trim()).slice(0,5);
-    if(!b.length)throw new Error('AI could not write the summary right now');
-    S.misSum[key]={st:'ok',b};
-    const st=misSumStore();st[key]=b;
+    const cl=x=>(Array.isArray(x)?x:[]).filter(v=>typeof v==='string'&&v.trim()).slice(0,4);
+    const g=cl(data&&data.good),i=cl(data&&data.improve);
+    if(!g.length&&!i.length)throw new Error('AI could not write the summary right now');
+    S.misSum[key]={st:'ok',g,i};
+    const st=misSumStore();st[key]={g,i};
     Object.keys(st).slice(0,Math.max(0,Object.keys(st).length-30)).forEach(k=>delete st[k]);
     safeStorage.setItem('sy-mis-sum',JSON.stringify(st));
   }catch(e){S.misSum[key]={st:'err',msg:(e&&e.message)||'Unavailable right now'}}
@@ -1428,9 +1445,9 @@ async function misAI(){
   }catch(e){S.misErr=(e&&e.message)||'Could not reach AI. Please try again'}
   S.misBusy=false;render();
 }
-function mistakesReport(){
-  const L=S.trades.filter(t=>inR('analytics',t));
-  if(!L.length)return `<div class="empty">${emptyMsg()}</div>`;
+/* Notes sent to AI: emails and long numbers removed, shortened to 160 characters */
+const misClean=s=>String(s||'').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,'[email]').replace(/\+?\d[\d\s-]{7,}\d/g,m=>m.replace(/\D/g,'').length>=9?'[number]':m).replace(/\s+/g,' ').trim().slice(0,160);
+function misCompute(L){
   const pv=t=>{const v=pnl(t);return isFinite(v)?v:0};
   const th=MIS_THEMES.map(x=>({label:x[0],tip:x[2],n:0,p:0}));
   const other={};let M=0,tot=0,otherN=0;
@@ -1451,9 +1468,19 @@ function mistakesReport(){
     hit.forEach(i=>{th[i].n++;th[i].p+=p});
     if(own.size)otherN++;
   });
+  S.misTried=S.misTried||{};S.misSum=S.misSum||{};
+  const pk=Object.keys(other).sort().join('|');
+  let sched=false;
+  if(MIS_AI_ON&&pk&&!S.misBusy&&!S.misTried[pk]){S.misTried[pk]=1;S.misQ=sched=true;setTimeout(misAI,0)}
+  const top=th.filter(x=>x.n).sort((a,b)=>b.n-a.n||a.p-b.p||a.label.localeCompare(b.label)).slice(0,6);
+  return {th,other,otherN,M,tot,pk,sched,top};
+}
+function mistakesReport(){
+  const L=S.trades.filter(t=>inR('analytics',t));
+  if(!L.length)return `<div class="empty">${emptyMsg()}</div>`;
+  const {th,other,otherN,M,tot,top}=misCompute(L);
   if(!M)return `<div class="empty">No mistakes noted in your journal for this period</div>`;
   const tr=n=>`${n} ${n===1?'trade':'trades'}`;
-  const top=th.filter(x=>x.n).sort((a,b)=>b.n-a.n||a.p-b.p||a.label.localeCompare(b.label)).slice(0,6);
   const rep=Object.values(other).filter(x=>x.n>1).sort((a,b)=>b.n-a.n).slice(0,2);
   const costly=th.filter(x=>x.n&&x.p<0).sort((a,b)=>a.p-b.p)[0];
   const key=[
@@ -1466,28 +1493,78 @@ function mistakesReport(){
   const items=top.map(x=>`<li><div class="mh"><b>${esc(x.label)}</b><span class="mc">${tr(x.n)}</span><span class="mp ${cls(x.p)}">${money(x.p)}</span></div><div class="mt">${esc(x.tip)}</div></li>`)
     .concat(rep.map(x=>`<li><div class="mh"><b>${esc(cap(x.raw.length>60?x.raw.slice(0,57)+'…':x.raw))}</b><span class="mc">${tr(x.n)}</span></div><div class="mt">This keeps repeating. Note what triggers it and write one simple rule to avoid it.</div></li>`));
   const pend=Object.keys(other).length;
-  S.misTried=S.misTried||{};S.misSum=S.misSum||{};
-  const pk=Object.keys(other).sort().join('|');
-  let sched=false;
-  if(MIS_AI_ON&&pk&&!S.misBusy&&!S.misTried[pk]){S.misTried[pk]=1;S.misQ=sched=true;setTimeout(misAI,0)}
-  let sm=null;
-  if(MIS_AI_ON&&top.length&&!sched&&!S.misQ&&!S.misBusy&&(!pk||S.misTried[pk])){
-    const dc=k=>L.filter(t=>t[k]==='yes').length;
-    const payload={trades:L.length,withMistake:M,netPnl:Math.round(tot),themes:top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:otherN,discipline:{ruleBreak:dc('ruleBreak'),anticipation:dc('anticipation'),revenge:dc('revenge'),overTrading:dc('overTrading')}};
-    const sk=misHash(JSON.stringify(payload)),saved=misSumStore()[sk];
-    sm=S.misSum[sk]||(saved?(S.misSum[sk]={st:'ok',b:saved}):null);
-    if(!sm){sm=S.misSum[sk]={st:'load'};setTimeout(()=>misSummarize(sk,payload),0)}
-    sm.k=sk;
-  }
-  const stat=`Mistake noted in <b>${M}</b> of <b>${L.length}</b> trades (${Math.round(M/L.length*100)}%) · Net P&amp;L <b class="${cls(tot)}">${money(tot)}</b>`;
-  const head=sm&&sm.st==='ok'
-    ?`<div class="k" style="margin-bottom:10px">${stat}</div><div class="lbl">AI summary</div><ul class="mis-key">${sm.b.map(b=>`<li>${esc(b)}</li>`).join('')}</ul><div class="k" style="margin:-6px 0 14px">AI can make mistakes. Please double-check important points.</div>`
-    :`<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>${sm&&sm.st==='load'?'<div class="k" style="margin:-8px 0 14px">Writing your AI summary…</div>':''}${sm&&sm.st==='err'?`<div class="k" style="margin:-8px 0 14px">AI summary is unavailable right now (${esc(sm.msg)}). <button class="link" data-act="mis-sum-retry" data-k="${sm.k}">Try again</button></div>`:''}`;
   const aiUI=pend&&MIS_AI_ON&&(S.misBusy||S.misErr)?`<button class="btn ghost" style="margin-top:14px" data-act="mis-ai" ${S.misBusy?'disabled':''}>${S.misBusy?'Grouping…':'Try AI grouping again'}</button>${S.misErr?`<div class="k neg" style="margin-top:8px">${esc(S.misErr)}</div>`:''}`:'';
   if(!items.length)items.push(`<li><div class="mh"><b>Your mistake notes are all different</b></div><div class="mt">Pick from the suggestions or write each mistake in a few short words (like "early entry" or "no SL") so repeating patterns are easy to spot here.</div></li>`);
-  return `${head}
+  return `<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>
   <div class="lbl">What to work on</div>
   <ul class="mis-l">${items.join('')}</ul>${aiUI}`;
+}
+/* Overall report: strengths and things to improve. Numbers are always calculated here; AI only writes the wording. */
+function overallReport(){
+  const L=S.trades.filter(t=>inR('analytics',t));
+  if(!L.length)return `<div class="empty">${emptyMsg()}</div>`;
+  const n=L.length,st=stats(L),c=misCompute(L);
+  const tr=k=>`${k} ${k===1?'trade':'trades'}`;
+  const P=L.map(t=>{const v=pnl(t);return isFinite(v)?v:0});
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const avgWin=avg(P.filter(v=>v>0)),avgLoss=Math.abs(avg(P.filter(v=>v<0)));
+  const payoff=avgLoss?avgWin/avgLoss:0;
+  const yes=k=>L.filter(t=>t[k]==='yes').length;
+  const D={maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
+  const noted=L.filter(t=>t.anticipation||t.ruleBreak||t.overTrading||t.revenge).length;
+  const slN=L.filter(t=>t.sl!==''&&t.sl!=null).length;
+  const jr=L.filter(t=>t.setup||t.note||t.mistake||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain).length;
+  const su={};
+  L.forEach((t,i)=>{const nm=String(t.setup||'').trim();if(!nm)return;const k=nm.toLowerCase();(su[k]=su[k]||{nm,n:0,p:0});su[k].n++;su[k].p+=P[i]});
+  const sl=Object.values(su).filter(x=>x.n>=2);
+  const bestS=sl.filter(x=>x.p>0).sort((a,b)=>b.p-a.p)[0],worstS=sl.filter(x=>x.p<0).sort((a,b)=>a.p-b.p)[0];
+  const sGood=bestS?[`Best setup: <b>${esc(bestS.nm)}</b> with ${money(bestS.p)} over ${tr(bestS.n)}`]:[];
+  const sBad=worstS?[`Weakest setup: <b>${esc(worstS.nm)}</b> with ${money(worstS.p)} over ${tr(worstS.n)}`]:[];
+  const good=[],bad=[];
+  if(st.total>0)good.push(`Net profit of <b class="pos">${money(st.total)}</b> across ${tr(n)}`);
+  if(n>=5&&st.rate>=50)good.push(`Win rate of <b>${st.rate}%</b> (${st.w} winners, ${st.l} losers)`);
+  if(st.w>=3&&st.l>=3&&payoff>=1.5)good.push(`Your average win is about <b>${payoff.toFixed(1)}x</b> your average loss`);
+  good.push(...sGood);
+  if(D.maintained)good.push(`You maintained discipline in <b>${tr(D.maintained)}</b>`);
+  if(noted>=3&&!D.revenge&&!D.overTrading)good.push('No revenge trades or over trading noted');
+  if(n>=3&&slN/n>=0.7)good.push(`Planned stop loss noted in ${slN} of ${n} trades`);
+  if(n>=3&&jr/n>=0.7)good.push(`You journaled ${jr} of ${n} trades`);
+  if(st.total<0)bad.push(`Net loss of <b class="neg">${money(st.total)}</b> across ${tr(n)}`);
+  c.top.slice(0,2).forEach(x=>bad.push(`Mistake: <b>${esc(x.label)}</b> in ${tr(x.n)} (${money(x.p)})`));
+  if(D.ruleBreak)bad.push(`Rule break in ${tr(D.ruleBreak)}`);
+  if(D.revenge)bad.push(`Revenge trading in ${tr(D.revenge)}`);
+  if(D.overTrading)bad.push(`Over trading in ${tr(D.overTrading)}`);
+  if(D.anticipation)bad.push(`Anticipation in ${tr(D.anticipation)}`);
+  bad.push(...sBad);
+  if(st.w>=3&&st.l>=3&&payoff<1)bad.push('Your average loss is bigger than your average win');
+  if(n>=5&&st.rate<40)bad.push(`Win rate is only <b>${st.rate}%</b>`);
+  if(n>=3&&slN/n<0.5)bad.push(`Planned stop loss noted in only ${slN} of ${n} trades`);
+  if(n>=3&&jr/n<0.5)bad.push(`Only ${jr} of ${n} trades are journaled. Add setup and mistakes for better insights`);
+  const stat=`${tr(n)} · Net P&amp;L <b class="${cls(st.total)}">${money(st.total)}</b> · Win rate <b>${st.rate}%</b>`;
+  /* AI wording */
+  let sm=null,g=good.slice(0,5),b=bad.slice(0,5);
+  const ready=MIS_AI_ON&&n>=3&&!c.sched&&!S.misQ&&!S.misBusy&&(!c.pk||S.misTried[c.pk]);
+  if(ready){
+    const notes=[];
+    L.forEach((t,i)=>{const x=misClean(t.note);if(x&&notes.length<25)notes.push({r:P[i]>0?'win':P[i]<0?'loss':'flat',t:x})});
+    const payload={trades:n,netPnl:Math.round(st.total),wins:st.w,losses:st.l,winRatePct:st.rate,avgWin:Math.round(avgWin),avgLoss:Math.round(avgLoss),tradesWithPlannedSl:slN,tradesJournaled:jr,
+      discipline:{maintained:D.maintained,ruleBreak:D.ruleBreak,anticipation:D.anticipation,revenge:D.revenge,overTrading:D.overTrading,tradesWithDisciplineNoted:noted},
+      mistakes:{tradesWithMistake:c.M,themes:c.top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:c.otherN},notes};
+    const sk=misHash('o'+JSON.stringify(payload)),saved=misSumStore()[sk];
+    sm=S.misSum[sk]||(saved&&saved.g?(S.misSum[sk]={st:'ok',g:saved.g,i:saved.i}):null);
+    if(!sm){sm=S.misSum[sk]={st:'load'};setTimeout(()=>misOverallAI(sk,payload),0)}
+    sm.k=sk;
+  }
+  if(sm&&sm.st==='ok'){g=sm.g.map(esc).concat(sGood);b=sm.i.map(esc).concat(sBad)}
+  const li=(a,e)=>a.length?a.map(x=>`<li>${x}</li>`).join(''):`<li class="k">${e}</li>`;
+  const note=sm&&sm.st==='ok'?'<div class="k" style="margin-top:-4px">AI can make mistakes. Please double-check important points.</div>'
+    :sm&&sm.st==='load'?'<div class="k" style="margin-top:-4px">Writing your AI summary…</div>'
+    :sm&&sm.st==='err'?`<div class="k" style="margin-top:-4px">AI summary is unavailable right now (${esc(sm.msg)}). <button class="link" data-act="mis-sum-retry" data-k="${sm.k}">Try again</button></div>`:'';
+  return `<div class="k" style="margin:-6px 0 14px">${stat}</div>
+  <div class="ov-cols">
+    <div><div class="lbl">What's going well</div><ul class="ov-l good">${li(g,'No clear strengths yet. Keep logging and journaling your trades to see them here.')}</ul></div>
+    <div><div class="lbl">What to improve</div><ul class="ov-l bad">${li(b,'No clear problem areas found from your journal in this period.')}</ul></div>
+  </div>${note}`;
 }
 function analyticsPage(){
   return `<div class="title">Analytics</div>
@@ -1495,6 +1572,7 @@ function analyticsPage(){
   <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
   ${disciplineCard('analytics')}
+  <div class="card a-all"><div class="card-h"><h2>${I('sparkle',22)}Overall report</h2></div>${overallReport()}</div>
   <div class="card a-mis"><div class="card-h"><h2>${I('flag',22)}Mistakes report</h2></div><div class="k" style="margin:-6px 0 14px">Your journal mistakes, summarised</div>${mistakesReport()}</div>
   <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
   <div class="card a-most"><div class="card-h"><h2>${I('bars',22)}Most traded setup</h2></div>${mostTraded()}</div>
@@ -1760,12 +1838,13 @@ function editPage(){
         <div><div class="lbl">Planned SL</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="sl" placeholder="0.00" value="${esc(d.sl)}"></label></div>
         <div><div class="lbl">Planned target</div><label class="field"><input type="number" inputmode="decimal" step="0.05" data-d="target" placeholder="0.00" value="${esc(d.target)}"></label></div>
       </div>
-      ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}
+      ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}${S.noMD?'':ynRow('Maintain discipline','maintain')}
       <div class="lbl" style="margin-top:14px">Mistake</div>
       <label class="field"><input data-d="mistake" list="mistakes" autocomplete="off" placeholder="Select or type your own mistake" value="${esc(d.mistake)}"></label>
       <datalist id="mistakes">${MISTAKE_OPTS.map(m=>`<option value="${esc(m)}">`).join('')}</datalist>
       <div class="lbl">Note</div>
-      <textarea class="ta" data-d="note" placeholder="Note">${esc(d.note)}</textarea>
+      <textarea class="ta" data-d="note" placeholder="Note: your setup thinking, emotions, what you felt">${esc(d.note)}</textarea>
+      <div class="k" style="margin-top:6px">Your notes help create your AI report. Please avoid personal details.</div>
       <div class="lbl" style="margin-top:14px">Screen shot</div>
       <div class="shot">
         ${d.shot?`<img src="${d.shot}" alt="Screen shot">`:''}
@@ -1894,7 +1973,7 @@ function openEdit(id){
   const t=S.trades.find(x=>x.id===id);
   if(S.draftShotUrl)URL.revokeObjectURL(S.draftShotUrl);
   S.draftShotBlob=null;S.draftShotUrl=null;
-  S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,mistake:t.mistake,note:t.note,shot:t.shot,
+  S.editId=id;S.draft={setup:t.setup,sl:t.sl,target:t.target,anticipation:t.anticipation,ruleBreak:t.ruleBreak,overTrading:t.overTrading,revenge:t.revenge,maintain:t.maintain,mistake:t.mistake,note:t.note,shot:t.shot,
     ...(t.source==='manual'?{broker:t.broker,scripName:t.scripName,side:t.side,entry:t.entry,exit:t.exit,qty:t.qty,date:t.date,time:String(t.time||'').slice(0,5)}:{})};
   S.sub='edit';S.subFrom='main';
   S.shotReady=false;
@@ -2143,6 +2222,7 @@ async function saveTrade(){
   const row={setup:d.setup||null,planned_sl:num(d.sl),planned_target:num(d.target),
     anticipation:d.anticipation||'no',rule_break:d.ruleBreak||'no',over_trading:d.overTrading||'no',revenge:d.revenge||'no',
     mistake:d.mistake||null,note:d.note||null};
+  if(!S.noMD)row.maintain_discipline=d.maintain||null;
   const manual=t.source==='manual';
   if(manual){
     if(!d.broker||!(d.scripName||'').trim()||num(d.entry)===null||num(d.exit)===null||num(d.qty)===null||!d.date){toast('Please fill broker, scrip name, entry, exit, quantity and date');return}
@@ -2160,7 +2240,7 @@ async function saveTrade(){
   if(error||!upd||!upd.length){toast('Could not save: '+(error?(error.message||'error'):'no permission to update'));return render()}
   if(S.draftShotUrl){URL.revokeObjectURL(S.draftShotUrl);S.draftShotUrl=null;}
   S.draftShotBlob=null;
-  Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,mistake:d.mistake,note:d.note});
+  Object.assign(t,{setup:d.setup,sl:d.sl,target:d.target,anticipation:d.anticipation,ruleBreak:d.ruleBreak,overTrading:d.overTrading,revenge:d.revenge,maintain:d.maintain,mistake:d.mistake,note:d.note});
   if(manual){
     Object.assign(t,{broker:d.broker,scripName:d.scripName.trim(),side:d.side||'buy',entry:+d.entry,exit:+d.exit,qty:+d.qty,date:d.date,time:d.time||''});
     S.trades.sort((a,b)=>(a.date<b.date?1:a.date>b.date?-1:0)||(String(a.time)<String(b.time)?1:String(a.time)>String(b.time)?-1:0)||(b.id-a.id));
