@@ -487,7 +487,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .main .screen{padding:28px 36px 32px}
   .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
   .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
-  .dash>.d-disc{grid-column:span 8}
+  .dash>.d-disc{grid-column:1/-1}
   .dash>.d-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-cal{grid-column:1/-1}
@@ -682,7 +682,7 @@ function foot(){return `<div class="foot"><div>Made with ${HEART} For Traders</d
 const MONTH_PERIODS=[['this','This Month'],['lastmonth','Last Month'],['custom','Custom Date Range']];
 const DISC_PERIODS=[['today','Today'],['thisweek','This Week'],['this','This Month'],['lastweek','Last Week'],['lastmonth','Last Month'],['custom','Custom Date Range']];
 const TRADE_PERIODS=[['today','Today'],['thisweek','This Week'],['this','This Month'],['lastweek','Last Week'],['lastmonth','Last Month'],['custom','Custom Date Range']];
-const defRange=k=>({mode:(k==='monthly'||k==='discipline')?'this':'today',from:monthStart(),to:today()});
+const defRange=k=>({mode:(k==='monthly'||k==='discipline'||k==='analytics')?'this':'today',from:monthStart(),to:today()});
 const RKEYS=['monthly','discipline','trades','analytics'];
 const initR=()=>Object.fromEntries(RKEYS.map(k=>[k,defRange(k)]));
 function rangeOf(k){
@@ -1061,8 +1061,6 @@ function dashboard(){
     ${recent.length?recent.map(t=>tradeRow(t)).join('')+`<button class="btn ghost" style="margin-top:14px" data-act="tab" data-tab="trades">View all</button>`:`<div class="empty">${emptyMsg()}</div>`}
   </div>
 
-  ${disciplineCard('discipline')}
-
   <div class="card d-month">
     <div class="card-h"><h2>${I('calendar2',22)}Monthly performance</h2></div>
     ${filterUI('monthly')}
@@ -1078,6 +1076,8 @@ function dashboard(){
       <div class="stat"><div class="k">Worst day</div><div class="v ${mo.worst?cls(mo.worst.v):'zero'}">${mo.worst?money(mo.worst.v):'–'}</div><div class="s">${mo.worst?fmtD(mo.worst.d):''}</div></div>
     </div>
   </div>
+
+  ${disciplineCard('discipline')}
 
   ${calendarCard()}
   </div>`;
