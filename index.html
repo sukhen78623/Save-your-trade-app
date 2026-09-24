@@ -188,6 +188,17 @@ h1,h2,h3{letter-spacing:-.01em}
 .disc .it.bad{background:var(--red-bg);border-color:var(--red-line)}
 .disc .it.bad svg{color:var(--red)}
 .disc .it b{font-size:18px;font-weight:500}
+.mis-key{margin:0 0 16px;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5}
+.mis-key li::marker{color:var(--green)}
+.mis-key b{font-weight:500}
+.mis-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.mis-l li{position:relative;padding:12px 12px 12px 30px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r2)}
+.mis-l li::before{content:"";position:absolute;left:13px;top:19px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+.mis-l .mh{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;font-size:14px}
+.mis-l .mh b{font-weight:500}
+.mis-l .mh .mc{color:var(--muted);font-size:13px}
+.mis-l .mh .mp{margin-left:auto;font-size:13px}
+.mis-l .mt{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}
 .empty{color:var(--muted);text-align:center;padding:14px 6px}
 .empty svg.ic{display:block;margin:0 auto 8px;opacity:.75}
 .textbtn{color:var(--green-d);font-weight:500;font-size:12px;display:flex;align-items:center;gap:2px}
@@ -467,10 +478,12 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .a-range{grid-column:1/-1;grid-row:1}
   .a-net{grid-column:1/8;grid-row:2}
   .a-win{grid-column:8/13;grid-row:2}
-  .a-prof{grid-column:1/7;grid-row:4}
-  .a-most{grid-column:7/13;grid-row:4}
-  .a-day{grid-column:1/-1;grid-row:5}
+  .a-prof{grid-column:1/7;grid-row:5}
+  .a-most{grid-column:7/13;grid-row:5}
+  .a-day{grid-column:1/-1;grid-row:6}
   .a-disc{grid-column:1/-1;grid-row:3}
+  .a-mis{grid-column:1/-1;grid-row:4}
+  .mis-l{display:grid;grid-template-columns:1fr 1fr}
   .a-disc .disc{grid-template-columns:repeat(4,minmax(0,1fr))}
   .a-win svg{max-width:100%;height:auto}
 
@@ -1328,12 +1341,73 @@ function dayWise(){
     :`<div class="bar-i"><div class="top2"><span>${r.name} <span style="color:var(--muted)">• ${r.n} ${r.n===1?'trade':'trades'}</span></span><b>${r.rate}%</b></div><div class="track"><i style="width:${Math.max(3,r.rate)}%;background:${col(r)}"></i></div></div>`).join('')}</div>
   ${both?`<div class="legend"><div><span class="sw" style="background:${col(hi)}"></span>Highest <b>${hi.name} ${hi.rate}%</b></div><div><span class="sw" style="background:${col(lo)}"></span>Lowest <b>${lo.name} ${lo.rate}%</b></div></div>`:''}`;
 }
+const MISTAKE_OPTS=['Against trend','Emotional decision','Fear','FOMO','Greed','Lack of patience','Late entry','Misread resistance','Misread support','Misread trend','Missed planned entry','No SL','Overtrade','Poor trade analysis','Technical error','Trade without setup','Wrong side entry'].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+const MIS_THEMES=[
+  ['Entering too early',/early entr|entered early|entry early|too early|premature|jump(ed)? in|jaldi|without confirm|before (the )?(confirm|signal|setup)/,'Wait for your setup to fully confirm before you enter. If the signal is not there yet, the trade is not there yet.'],
+  ['Chasing / late entry',/late entr|entered late|entry late|too late|chas(e|ed|ing)|fomo|missed (the )?move/,'If price has already run away from your entry, skip it and wait for the next setup instead of chasing.'],
+  ['No stop loss',/no (sl|stop)|without (an? )?(sl|stop)|(sl|stop ?loss) (not|missed)|(didn'?t|did not|forgot to|failed to) (place|set|keep|put|use) (an? |the |my )?(sl|stop)|forgot (the |my )?(sl|stop)/,'Place your stop loss the moment you enter, before anything else. No SL, no trade.'],
+  ['Moving / removing stop loss',/(moved|shifted|widened|removed|cancell?ed|deleted) (the |my )?(sl|stop)|(sl|stop ?loss) (was )?(moved|shifted|widened|removed|cancell?ed)/,'Decide your SL before entry and never widen it. Only trail it in the direction of profit.'],
+  ['Holding losers too long',/held|holding|hoped|hoping|hope |(didn'?t|did not|not) (exit|book|cut)|late exit|exit(ed)? late|averag(e|ed|ing)/,'Exit at your planned SL. A small planned loss is better than a big hoped-for recovery, and never average a losing trade.'],
+  ['Exiting winners too early',/exit(ed)? (too )?early|early exit|booked (too )?early|premature exit|cut (the )?(profit|winner)|panic/,'Trust your target. If the trade is working, trail your SL instead of exiting out of fear.'],
+  ['Over trading',/over ?trad|too many trades|extra trades?|excess trades?|more trades/,'Set a maximum number of trades per day and stop for the day once you reach it.'],
+  ['Revenge trading',/revenge|recover|make up (for )?(the )?loss|get back/,'After a loss, step away for a few minutes and take the next trade only if it is a clean setup.'],
+  ['Position size too big',/(big|large|high|heavy|more|over|extra|double|increase[d]?) ?(qty|quantity|size|lots?|position)|(qty|quantity|size|lots?) (was )?(too )?(big|large|high|more)|over ?leverag/,'Fix your position size from your risk per trade (a fixed % of capital) so one bad trade cannot hurt much.'],
+  ['Trading against the trend',/against (the )?(trend|market)|counter ?trend|opposite (to )?(the )?trend/,'Trade in the direction of the higher time-frame trend. Counter-trend trades need much stronger confirmation.'],
+  ['Not following rules / plan',/(broke|break|ignored|skipped|didn'?t follow|did not follow|not follow(ed)?|no) .{0,12}(rule|plan|setup|strategy)|without (a )?plan|random|impulsive|impulse/,'Write your entry, SL and target before you click buy or sell, and take only trades that match your setup.'],
+  ['Fear',/fear|scared|afraid|hesitat/,'Fear usually means the size or the SL is wrong. Cut your size until the trade feels calm, then follow your plan.'],
+  ['Greed',/greed/,'Take your planned target. Adding size or holding past the target because it "may go more" is how profits turn into losses.'],
+  ['Lack of patience',/patien/,'Wait for your setup. If there is no setup, sitting out is a good trade.'],
+  ['Trading without a setup',/with ?out (a |any )?setup|no setup/,'Take only trades that match one of your setups. If you cannot name the setup, do not enter.'],
+  ['Missed planned entry',/missed planned|missed (the |my )?(entry|trade)/,'Keep alerts on your planned levels so you are ready. If you miss the entry, do not chase, wait for the next one.'],
+  ['Misreading trend',/misread(ing)? (the )?trend|wrong trend/,'Check the higher time-frame trend before every trade and trade only in its direction.'],
+  ['Misreading support',/misread(ing)? (the )?support|wrong support/,'Mark your key support levels before the session and wait for a clear reaction there before entering.'],
+  ['Misreading resistance',/misread(ing)? (the )?resistance|wrong resistance/,'Mark your key resistance levels before the session and wait for a clear reaction there before entering.'],
+  ['Poor trade analysis',/poor (trade )?analysis|bad analysis|wrong analysis|(no|lack of) analysis/,'Spend two minutes before entry on trend, levels, SL and target. Skip the trade if you cannot explain it in one line.'],
+  ['Wrong side entry',/wrong (side|direction)|(buy|bought) instead of sell|(sell|sold) instead of buy/,'Read the order ticket twice: buy or sell, quantity and price, before you confirm.'],
+  ['Technical error',/technical|platform|glitch|slippage|order (error|issue)|fat ?finger|wrong (order|qty|quantity)/,'Recheck order details before you confirm, and keep a backup way to exit (mobile app or broker call) if the platform fails.'],
+  ['Emotional decisions',/emotion|anxious|angry|frustrat|tilt|nervous/,'When emotions rise, pause. Take a short break and re-check the trade against your plan before acting.']
+];
+function mistakesReport(){
+  const L=S.trades.filter(t=>inR('analytics',t));
+  if(!L.length)return `<div class="empty">${emptyMsg()}</div>`;
+  const M=L.filter(t=>String(t.mistake||'').trim());
+  if(!M.length)return `<div class="empty">No mistakes noted in your journal for this period</div>`;
+  const tr=n=>`${n} ${n===1?'trade':'trades'}`;
+  const th=MIS_THEMES.map(([label,re,tip])=>({label,re,tip,n:0,p:0}));
+  const other={};
+  M.forEach(t=>{
+    const raw=String(t.mistake).trim(),txt=raw.toLowerCase();
+    let hit=false;
+    th.forEach(x=>{if(x.re.test(txt)){x.n++;x.p+=pnl(t);hit=true}});
+    if(!hit){
+      const key=txt.replace(/[^a-z0-9\u0980-\u09ff ]+/g,' ').replace(/\s+/g,' ').trim();
+      if(key){(other[key]=other[key]||{n:0,raw}).n++}
+    }
+  });
+  const top=th.filter(x=>x.n).sort((a,b)=>b.n-a.n||a.p-b.p).slice(0,5);
+  const rep=Object.values(other).filter(x=>x.n>1).sort((a,b)=>b.n-a.n).slice(0,2);
+  const tot=M.reduce((a,t)=>a+pnl(t),0);
+  const costly=th.filter(x=>x.n&&x.p<0).sort((a,b)=>a.p-b.p)[0];
+  const key=[
+    `Mistake noted in <b>${M.length}</b> of <b>${L.length}</b> trades (${Math.round(M.length/L.length*100)}%)`,
+    top[0]?`Most common: <b>${esc(top[0].label)}</b> (${tr(top[0].n)})`:'',
+    costly&&costly!==top[0]?`Costliest: <b>${esc(costly.label)}</b> <span class="neg">${money(costly.p)}</span>`:'',
+    `Net P&amp;L on trades with a mistake: <b class="${cls(tot)}">${money(tot)}</b>`
+  ].filter(Boolean);
+  const items=top.map(x=>`<li><div class="mh"><b>${esc(x.label)}</b><span class="mc">${tr(x.n)}</span><span class="mp ${cls(x.p)}">${money(x.p)}</span></div><div class="mt">${esc(x.tip)}</div></li>`)
+    .concat(rep.map(x=>`<li><div class="mh"><b>${esc(cap(x.raw.length>60?x.raw.slice(0,57)+'…':x.raw))}</b><span class="mc">${tr(x.n)}</span></div><div class="mt">This keeps repeating. Note what triggers it and write one simple rule to avoid it.</div></li>`));
+  if(!items.length)items.push(`<li><div class="mh"><b>Your mistake notes are all different</b></div><div class="mt">Write each mistake in a few short words (like "early entry" or "no SL") so repeating patterns are easy to spot here.</div></li>`);
+  return `<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>
+  <div class="lbl">What to work on</div>
+  <ul class="mis-l">${items.join('')}</ul>`;
+}
 function analyticsPage(){
   return `<div class="title">Analytics</div>
   <div class="agrid">
   <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
   ${disciplineCard('analytics')}
+  <div class="card a-mis"><div class="card-h"><h2>${I('flag',22)}Mistakes report</h2></div><div class="k" style="margin:-6px 0 14px">Your journal mistakes, summarised</div>${mistakesReport()}</div>
   <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
   <div class="card a-most"><div class="card-h"><h2>${I('bars',22)}Most traded setup</h2></div>${mostTraded()}</div>
   <div class="card a-win"><div class="card-h"><h2>${I('pie',22)}Win loss trades</h2></div>${donut()}</div>
@@ -1600,7 +1674,8 @@ function editPage(){
       </div>
       ${ynRow('Anticipation','anticipation')}${ynRow('Rule break','ruleBreak')}${ynRow('Over trading','overTrading')}${ynRow('Revenge trading','revenge')}
       <div class="lbl" style="margin-top:14px">Mistake</div>
-      <label class="field"><input data-d="mistake" placeholder="Mistake" value="${esc(d.mistake)}"></label>
+      <label class="field"><input data-d="mistake" list="mistakes" autocomplete="off" placeholder="Select or type your own mistake" value="${esc(d.mistake)}"></label>
+      <datalist id="mistakes">${MISTAKE_OPTS.map(m=>`<option value="${esc(m)}">`).join('')}</datalist>
       <div class="lbl">Note</div>
       <textarea class="ta" data-d="note" placeholder="Note">${esc(d.note)}</textarea>
       <div class="lbl" style="margin-top:14px">Screen shot</div>
