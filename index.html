@@ -1384,7 +1384,25 @@ function misSplit(v){
 /* Set to true after the mistake-classify edge function and ANTHROPIC_API_KEY are set up. While false the AI button stays hidden. */
 const MIS_AI_ON=true;
 function misAIMap(){if(!S.misAI){try{S.misAI=JSON.parse(safeStorage.getItem('sy-mis-ai')||'{}')||{}}catch(e){S.misAI={}}}return S.misAI}
+const misHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'h'+(h>>>0).toString(36)};
+function misSumStore(){try{return JSON.parse(safeStorage.getItem('sy-mis-sum')||'{}')||{}}catch(e){return {}}}
+/* Whole-report AI summary. Only totals and label counts are sent (no trade names, prices or personal data). */
+async function misSummarize(key,payload){
+  try{
+    const {data,error}=await sb.functions.invoke('mistake-classify',{body:{action:'summary',stats:payload}});
+    if(error){let m='';try{m=(await error.context.json()).error}catch(e){}throw new Error(m||'Could not reach AI')}
+    if(data&&data.error)throw new Error(data.error);
+    const b=(data&&data.bullets||[]).filter(x=>typeof x==='string'&&x.trim()).slice(0,5);
+    if(!b.length)throw new Error('AI could not write the summary right now');
+    S.misSum[key]={st:'ok',b};
+    const st=misSumStore();st[key]=b;
+    Object.keys(st).slice(0,Math.max(0,Object.keys(st).length-30)).forEach(k=>delete st[k]);
+    safeStorage.setItem('sy-mis-sum',JSON.stringify(st));
+  }catch(e){S.misSum[key]={st:'err',msg:(e&&e.message)||'Unavailable right now'}}
+  render();
+}
 async function misAI(){
+  S.misQ=false;
   if(S.misBusy)return;
   const ai=misAIMap(),seen={};
   S.trades.filter(t=>inR('analytics',t)).forEach(t=>misSplit(t.mistake).forEach(s=>{
@@ -1398,12 +1416,14 @@ async function misAI(){
     const {data,error}=await sb.functions.invoke('mistake-classify',{body:{texts:keys.map(k=>seen[k]),labels:MIS_THEMES.map(x=>x[0])}});
     if(error){let m='';try{m=(await error.context.json()).error}catch(e){}throw new Error(m||'Could not reach AI')}
     if(data&&data.error)throw new Error(data.error);
+    let got=0;
     (data&&data.items||[]).forEach(it=>{
-      const k=keys[it.i];if(k==null)return;
+      const k=keys[it.i];if(k==null)return;got++;
       const lb=String(it.label||'').trim();
       if(MIS_THEMES.some(x=>x[0]===lb))ai[k]={label:lb};
       else{const o=lb.replace(/^other:\s*/i,'').slice(0,40)||'Other';ai[k]={label:o,tip:String(it.tip||'Review these trades and note what triggered the mistake.').slice(0,200)}}
     });
+    if(!got)throw new Error('AI could not group these right now. Please try again');
     safeStorage.setItem('sy-mis-ai',JSON.stringify(ai));
   }catch(e){S.misErr=(e&&e.message)||'Could not reach AI. Please try again'}
   S.misBusy=false;render();
@@ -1446,9 +1466,26 @@ function mistakesReport(){
   const items=top.map(x=>`<li><div class="mh"><b>${esc(x.label)}</b><span class="mc">${tr(x.n)}</span><span class="mp ${cls(x.p)}">${money(x.p)}</span></div><div class="mt">${esc(x.tip)}</div></li>`)
     .concat(rep.map(x=>`<li><div class="mh"><b>${esc(cap(x.raw.length>60?x.raw.slice(0,57)+'…':x.raw))}</b><span class="mc">${tr(x.n)}</span></div><div class="mt">This keeps repeating. Note what triggers it and write one simple rule to avoid it.</div></li>`));
   const pend=Object.keys(other).length;
-  const aiUI=pend&&MIS_AI_ON?`<button class="btn ghost" style="margin-top:14px" data-act="mis-ai" ${S.misBusy?'disabled':''}>${S.misBusy?'Grouping…':`Group ${pend} own-word ${pend===1?'mistake':'mistakes'} with AI`}</button>${S.misErr?`<div class="k neg" style="margin-top:8px">${esc(S.misErr)}</div>`:''}`:'';
+  S.misTried=S.misTried||{};S.misSum=S.misSum||{};
+  const pk=Object.keys(other).sort().join('|');
+  let sched=false;
+  if(MIS_AI_ON&&pk&&!S.misBusy&&!S.misTried[pk]){S.misTried[pk]=1;S.misQ=sched=true;setTimeout(misAI,0)}
+  let sm=null;
+  if(MIS_AI_ON&&top.length&&!sched&&!S.misQ&&!S.misBusy&&(!pk||S.misTried[pk])){
+    const dc=k=>L.filter(t=>t[k]==='yes').length;
+    const payload={trades:L.length,withMistake:M,netPnl:Math.round(tot),themes:top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:otherN,discipline:{ruleBreak:dc('ruleBreak'),anticipation:dc('anticipation'),revenge:dc('revenge'),overTrading:dc('overTrading')}};
+    const sk=misHash(JSON.stringify(payload)),saved=misSumStore()[sk];
+    sm=S.misSum[sk]||(saved?(S.misSum[sk]={st:'ok',b:saved}):null);
+    if(!sm){sm=S.misSum[sk]={st:'load'};setTimeout(()=>misSummarize(sk,payload),0)}
+    sm.k=sk;
+  }
+  const stat=`Mistake noted in <b>${M}</b> of <b>${L.length}</b> trades (${Math.round(M/L.length*100)}%) · Net P&amp;L <b class="${cls(tot)}">${money(tot)}</b>`;
+  const head=sm&&sm.st==='ok'
+    ?`<div class="k" style="margin-bottom:10px">${stat}</div><div class="lbl">AI summary</div><ul class="mis-key">${sm.b.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`
+    :`<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>${sm&&sm.st==='load'?'<div class="k" style="margin:-8px 0 14px">Writing your AI summary…</div>':''}${sm&&sm.st==='err'?`<div class="k" style="margin:-8px 0 14px">AI summary is unavailable right now (${esc(sm.msg)}). <button class="link" data-act="mis-sum-retry" data-k="${sm.k}">Try again</button></div>`:''}`;
+  const aiUI=pend&&MIS_AI_ON&&(S.misBusy||S.misErr)?`<button class="btn ghost" style="margin-top:14px" data-act="mis-ai" ${S.misBusy?'disabled':''}>${S.misBusy?'Grouping…':'Try AI grouping again'}</button>${S.misErr?`<div class="k neg" style="margin-top:8px">${esc(S.misErr)}</div>`:''}`:'';
   if(!items.length)items.push(`<li><div class="mh"><b>Your mistake notes are all different</b></div><div class="mt">Pick from the suggestions or write each mistake in a few short words (like "early entry" or "no SL") so repeating patterns are easy to spot here.</div></li>`);
-  return `<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>
+  return `${head}
   <div class="lbl">What to work on</div>
   <ul class="mis-l">${items.join('')}</ul>${aiUI}`;
 }
@@ -2219,6 +2256,7 @@ function act(a,el){
     case 'save-manual-trade':return saveManualTrade();
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
     case 'mis-ai':return misAI();
+    case 'mis-sum-retry':{if(S.misSum)delete S.misSum[el.dataset.k];return render()}
     case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
     case 'save-trade':return saveTrade();
     case 'del-trade':S.delModal=true;ovFresh=true;return render();
