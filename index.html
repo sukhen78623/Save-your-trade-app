@@ -1481,7 +1481,7 @@ function mistakesReport(){
   }
   const stat=`Mistake noted in <b>${M}</b> of <b>${L.length}</b> trades (${Math.round(M/L.length*100)}%) · Net P&amp;L <b class="${cls(tot)}">${money(tot)}</b>`;
   const head=sm&&sm.st==='ok'
-    ?`<div class="k" style="margin-bottom:10px">${stat}</div><div class="lbl">AI summary</div><ul class="mis-key">${sm.b.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`
+    ?`<div class="k" style="margin-bottom:10px">${stat}</div><div class="lbl">AI summary</div><ul class="mis-key">${sm.b.map(b=>`<li>${esc(b)}</li>`).join('')}</ul><div class="k" style="margin:-6px 0 14px">AI can make mistakes. Please double-check important points.</div>`
     :`<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>${sm&&sm.st==='load'?'<div class="k" style="margin:-8px 0 14px">Writing your AI summary…</div>':''}${sm&&sm.st==='err'?`<div class="k" style="margin:-8px 0 14px">AI summary is unavailable right now (${esc(sm.msg)}). <button class="link" data-act="mis-sum-retry" data-k="${sm.k}">Try again</button></div>`:''}`;
   const aiUI=pend&&MIS_AI_ON&&(S.misBusy||S.misErr)?`<button class="btn ghost" style="margin-top:14px" data-act="mis-ai" ${S.misBusy?'disabled':''}>${S.misBusy?'Grouping…':'Try AI grouping again'}</button>${S.misErr?`<div class="k neg" style="margin-top:8px">${esc(S.misErr)}</div>`:''}`:'';
   if(!items.length)items.push(`<li><div class="mh"><b>Your mistake notes are all different</b></div><div class="mt">Pick from the suggestions or write each mistake in a few short words (like "early entry" or "no SL") so repeating patterns are easy to spot here.</div></li>`);
