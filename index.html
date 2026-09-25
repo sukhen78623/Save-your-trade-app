@@ -357,6 +357,9 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .modal .acts{display:flex;gap:10px}
 .modal .acts button{flex:1}
 .sheet.bm{max-width:440px;border-radius:var(--r3);padding:20px;max-height:calc(100vh - 48px);overflow-y:auto}
+.ov.shotov{background:#000;align-items:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.ov.shotov img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.shotov-x{position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);border:none;color:#fff;display:grid;place-items:center;cursor:pointer}
 .ov.fresh .sheet.bm{animation:pop .24s}
 .bgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .bt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 8px;min-height:104px;border:1px solid var(--line);background:var(--bg);border-radius:var(--r2);font-size:14px;font-weight:500;text-align:center;color:var(--text)}
@@ -1927,7 +1930,7 @@ function editPage(){
       <div class="k" style="margin-top:6px">Your notes help create your AI report. Please avoid personal details.</div>
       <div class="lbl" style="margin-top:14px">Screen shot</div>
       <div class="shot">
-        ${d.shot?`<img src="${d.shot}" alt="Screen shot">`:''}
+        ${d.shot?`<img src="${d.shot}" alt="Screen shot" data-act="view-shot" data-url="${esc(d.shot)}">`:''}
         <label class="fileb">${I('image',20)}${d.shot?'Change':'Add screen shot'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-shot="1"></label>
       </div>
     </div>
@@ -1991,6 +1994,9 @@ function subView(){
   return '';
 }
 
+function shotView(fresh){
+  return `<div class="ov center shotov ${fresh?'fresh':''}" data-act="close-ov"><button class="shotov-x" data-act="close-ov-btn" aria-label="Close">${I('x',22)}</button><img src="${esc(S.shotView)}" alt="Screen shot" data-act="stop"></div>`;
+}
 function sheetView(fresh){
   let body;
   if(S.conn==='connecting'){
@@ -2032,6 +2038,7 @@ function render(top=false){
   if(S.sub)html=S.user?shell(`<div class="subwrap${S.sub==='edit'?' wide':''}">${subView()}</div>`,false):subView();
   else if(S.user)html=mainView();else html=authView();
   if(S.sheet)html+=sheetView(fresh);
+  if(S.shotView)html+=shotView(fresh);
   if(S.logoutModal)html+=logoutView(fresh);
   if(S.delModal)html+=deleteView(fresh);
   if(S.changeModal)html+=changeBrokerView(fresh);
@@ -2474,7 +2481,9 @@ function act(a,el){
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
     case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
     case 'sheet':S.sheet=true;ovFresh=true;return render();
-    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;S.delModal=false;return render();
+    case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
+    case 'stop':return;
+    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
     case 'broker':{
       const b=el.dataset.b;
       if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
