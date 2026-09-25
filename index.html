@@ -1582,9 +1582,13 @@ function mistakesReport(){
   const pend=Object.keys(other).length;
   const aiUI=pend&&MIS_AI_ON&&misBlocked()?`<div class="k" style="margin-top:14px">AI limit reached for now. Mistakes written in your own words will be grouped when AI is available again.</div>`:pend&&MIS_AI_ON&&(S.misBusy||S.misErr)?`<button class="btn ghost" style="margin-top:14px" data-act="mis-ai" ${S.misBusy?'disabled':''}>${S.misBusy?'Grouping…':'Try AI grouping again'}</button>${S.misErr?`<div class="k neg" style="margin-top:8px">${esc(S.misErr)}</div>`:''}`:'';
   if(!items.length)items.push(`<li><div class="mh"><b>Your mistake notes are all different</b></div><div class="mt">Pick from the suggestions or write each mistake in a few short words (like "early entry" or "no SL") so repeating patterns are easy to spot here.</div></li>`);
+  const MIS_CAP=3;
+  const extra=items.length-MIS_CAP;
+  const shown=S.misExpand?items:items.slice(0,MIS_CAP);
+  const toggle=extra>0?`<button class="textbtn" data-act="mis-expand" style="margin-top:10px">${S.misExpand?'Show less':'View all ('+items.length+')'}${I('chev',18)}</button>`:'';
   return `<ul class="mis-key">${key.map(k=>`<li>${k}</li>`).join('')}</ul>
   <div class="lbl">What to work on</div>
-  <ul class="mis-l">${items.join('')}</ul>${aiUI}`;
+  <ul class="mis-l">${shown.join('')}</ul>${toggle}${aiUI}`;
 }
 /* Overall report: strengths and things to improve. Numbers are always calculated here; AI only writes the wording. */
 /* overallData() holds the numbers + the AI fetch (good/improve) for the Analytics "Overall report" card, for the selected date range. */
@@ -2536,7 +2540,7 @@ function doLogout(){
      runs in the background instead of blocking the UI */
   S.user=null;S.acct=null;S.trades=[];S.tradesLoading=false;S.connected=false;S.broker=null;S.changeModal=false;S.sheet=false;S.sub=null;S.authMode='login';S.form={};S.tab='dashboard';S.busy=null;render(true);
   ['sy-mis-ai','sy-mis-sum','sy-mis-block'].forEach(k=>safeStorage.removeItem(k));
-  S.misAI=null;S.misSum={};S.misTried={};S.misBusy=false;S.misQ=false;S.misErr='';
+  S.misAI=null;S.misSum={};S.misTried={};S.misBusy=false;S.misQ=false;S.misErr='';S.misExpand=false;
   sb.auth.signOut({scope:'local'}).catch(e=>console.error(e));
 }
 
@@ -2577,6 +2581,7 @@ function act(a,el){
     case 'save-manual-trade':return saveManualTrade();
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
     case 'mis-ai':return misAI();
+    case 'mis-expand':S.misExpand=!S.misExpand;return render();
     case 'mis-sum-retry':{if(S.misSum)delete S.misSum[el.dataset.k];return render()}
     case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
     case 'save-trade':return saveTrade();
