@@ -1706,7 +1706,7 @@ function disciplineGauge(){
   const r=76,cx=100,cy=100;
   const pt=v=>{const a=Math.PI*(1-v/100);return [cx+r*Math.cos(a),cy-r*Math.sin(a)]};
   const [sx,sy]=pt(0),[ex,ey]=pt(100);
-  const fg=score!=null?(()=>{const [fx,fy]=pt(score);return `<path d="M${sx},${sy} A${r},${r} 0 ${score>50?1:0} 1 ${fx},${fy}" fill="none" stroke="${tcol(tier)}" stroke-width="16" stroke-linecap="round"/>`})():'';
+  const fg=score!=null?(()=>{const [fx,fy]=pt(score);return `<path d="M${sx},${sy} A${r},${r} 0 0 1 ${fx},${fy}" fill="none" stroke="${tcol(tier)}" stroke-width="16" stroke-linecap="round"/>`})():'';
   const svg=`<svg width="220" height="140" viewBox="0 0 200 120" style="max-width:100%;height:auto" role="img" aria-label="Discipline score gauge">
     <path d="M${sx},${sy} A${r},${r} 0 0 1 ${ex},${ey}" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
     ${fg}
