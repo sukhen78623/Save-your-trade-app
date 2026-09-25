@@ -1690,12 +1690,15 @@ function todayDiscData(){
   const D={notMaintained:L.filter(t=>t.maintain==='no').length,maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
   if(!L.length)return {n:0,D,score:null};
   const scores=L.map(tradeDiscScore);
-  const score=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  let score=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  /* Revenge trading is the one mistake severe enough that no amount of other clean trades should be allowed to average it away — even a single revenge trade today pins the day at High Risk. */
+  if(D.revenge>0)score=Math.min(score,34);
   return {n:L.length,D,score};
 }
 function disciplineGauge(){
   const {n,D,score}=todayDiscData();
-  const infractions=D.ruleBreak+D.anticipation+D.revenge+D.overTrading;
+  const L=S.trades.filter(t=>t.date===today());
+  const tradesWithMistake=L.filter(t=>t.anticipation==='yes'||t.ruleBreak==='yes'||t.overTrading==='yes'||t.revenge==='yes').length;
   const tier=score!=null?riskTier(score):null;
   const tcol=t=>t.cls==='g'?'var(--green)':t.cls==='a'?'#d9a441':'var(--red)';
   const r=76,cx=100,cy=100;
@@ -1720,7 +1723,8 @@ function disciplineGauge(){
     ${statusNote}
     <div class="stats" style="margin-top:14px">
       <div class="stat"><div class="k">Not maintained</div><div class="v ${D.notMaintained?'neg':'zero'}">${D.notMaintained}</div></div>
-      <div class="stat"><div class="k">Infractions</div><div class="v ${infractions?'neg':'zero'}">${infractions}</div></div>
+      <div class="stat"><div class="k">Trades with mistakes</div><div class="v ${tradesWithMistake?'neg':'zero'}">${tradesWithMistake}/${n}</div></div>
+      <div class="stat"><div class="k">Discipline followed</div><div class="v ${D.maintained?'pos':'zero'}">${D.maintained}/${n}</div></div>
       <div class="stat"><div class="k">Risk tier</div><div class="v" style="${score!=null?`color:${tcol(tier)}`:''}">${score!=null?tier.label:'–'}</div></div>
     </div>
     <div class="k" style="margin-top:12px">This score simply reflects your trading activity and behaviour for today — it's here to help you improve, not to judge you. Please don't take it personally.</div>
