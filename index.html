@@ -435,6 +435,8 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .chart-sel{transform-box:fill-box;transform-origin:center;animation:selPulse 1.4s ease-in-out infinite}
 @keyframes selPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.55}}
 .chart-tip{transform-box:fill-box;transform-origin:center;animation:pop .22s cubic-bezier(.2,.8,.2,1) both}
+.track i{transform-origin:left;animation:barGrow .65s cubic-bezier(.22,.8,.25,1) both}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 
 /* ---------- page grids (single column on phone) ---------- */
 .dash,.agrid{display:block}
@@ -1406,8 +1408,8 @@ function profitSetup(){
   const CAP=3,extra=g.length-CAP;
   const shown=S.profExpand?g:g.slice(0,CAP);
   const toggle=extra>0?`<button class="textbtn" data-act="prof-expand" style="margin-top:10px">${S.profExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
-  return `<div class="bars">${shown.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}">${money(x.p)}</b></div>
-    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'}"></i></div></div>`).join('')}</div>${toggle}`;
+  return `<div class="bars">${shown.map((x,i)=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}" data-count="${x.p}" data-fmt="money">${money(0)}</b></div>
+    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'};animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function mostTraded(){
   const g=setupGroups('analytics').sort((a,b)=>b.n-a.n);
@@ -1416,23 +1418,23 @@ function mostTraded(){
   const CAP=3,extra=g.length-CAP;
   const shown=S.mostExpand?g:g.slice(0,CAP);
   const toggle=extra>0?`<button class="textbtn" data-act="most-expand" style="margin-top:10px">${S.mostExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
-  return `<div class="bars">${shown.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b>${x.n}</b></div>
-    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey)"></i></div></div>`).join('')}</div>${toggle}`;
+  return `<div class="bars">${shown.map((x,i)=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b data-count="${x.n}" data-fmt="int">0</b></div>
+    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey);animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function donut(){
   const L=S.trades.filter(t=>inR('analytics',t));
   const w=L.filter(t=>pnl(t)>0).length,l=L.filter(t=>pnl(t)<0).length,z=L.length-w-l;
   const tot=L.length;
   if(!tot)return `<div class="empty">${emptyMsg()}</div>`;
-  const r=54,C=2*Math.PI*r;let off=0;
-  const seg=(n,c)=>{if(!n)return '';const len=n/tot*C;const s=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="${Math.max(0,len-2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return s};
+  const r=54,C=2*Math.PI*r;let off=0,idx=0;
+  const seg=(n,c)=>{if(!n)return '';const len=n/tot*C;const s=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="0 ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" class="donut-arc" data-len="${Math.max(0,len-2)}" data-c="${C}" data-delay="${idx*150}"/>`;off+=len;idx++;return s};
   return `<div style="display:flex;justify-content:center"><svg width="180" height="180" style="max-width:100%;height:auto" viewBox="0 0 140 140" role="img" aria-label="Win loss donut">
     <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--line)" stroke-width="18"/>
     ${seg(w,'var(--green)')}${seg(l,'var(--red)')}${seg(z,'var(--grey)')}
-    <text x="70" y="68" text-anchor="middle" fill="var(--text)" font-size="26" font-weight="700" font-family="Roboto,sans-serif">${tot}</text>
+    <text x="70" y="68" text-anchor="middle" fill="var(--text)" font-size="26" font-weight="700" font-family="Roboto,sans-serif" data-count="${tot}" data-fmt="int">0</text>
     <text x="70" y="88" text-anchor="middle" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif">Trades</text>
   </svg></div>
-  <div class="legend"><div><span class="sw" style="background:var(--green)"></span>Win trades <b>${w}</b></div><div><span class="sw" style="background:var(--red)"></span>Loss trades <b>${l}</b></div>${z?`<div><span class="sw" style="background:var(--grey)"></span>No gain, no loss <b>${z}</b></div>`:''}</div>`;
+  <div class="legend"><div><span class="sw" style="background:var(--green)"></span>Win trades <b data-count="${w}" data-fmt="int">0</b></div><div><span class="sw" style="background:var(--red)"></span>Loss trades <b data-count="${l}" data-fmt="int">0</b></div>${z?`<div><span class="sw" style="background:var(--grey)"></span>No gain, no loss <b data-count="${z}" data-fmt="int">0</b></div>`:''}</div>`;
 }
 function dayWise(){
   const L=S.trades.filter(t=>inR('analytics',t));
@@ -1455,9 +1457,9 @@ function dayWise(){
   const mix=(a,b,t)=>{const h=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16));const A=h(a),B=h(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
   const colFor=v=>v>=30?mix('#a9d6b0','#2b6a38',(v-30)/70):mix('#a3271f','#eaa7a1',v/29);
   const col=r=>colFor(r.rate);
-  return `<div class="bars">${rows.map(r=>r.rate===null
+  return `<div class="bars">${rows.map((r,i)=>r.rate===null
     ?`<div class="bar-i"><div class="top2"><span>${r.name}</span><b class="zero">–</b></div><div class="track"><i style="width:0"></i></div></div>`
-    :`<div class="bar-i"><div class="top2"><span>${r.name} <span style="color:var(--muted)">• ${r.n} ${r.n===1?'trade':'trades'}</span></span><b>${r.rate}%</b></div><div class="track"><i style="width:${Math.max(3,r.rate)}%;background:${col(r)}"></i></div></div>`).join('')}</div>
+    :`<div class="bar-i"><div class="top2"><span>${r.name} <span style="color:var(--muted)">• ${r.n} ${r.n===1?'trade':'trades'}</span></span><b data-count="${r.rate}" data-fmt="pct">0%</b></div><div class="track"><i style="width:${Math.max(3,r.rate)}%;background:${col(r)};animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>
   ${both?`<div class="legend"><div><span class="sw" style="background:${col(hi)}"></span>Highest <b>${hi.name} ${hi.rate}%</b></div><div><span class="sw" style="background:${col(lo)}"></span>Lowest <b>${lo.name} ${lo.rate}%</b></div></div>`:''}`;
 }
 const MISTAKE_OPTS=['Against trend','Emotional decision','Fear','FOMO','Greed','Lack of patience','Late entry','Misread resistance','Misread support','Misread trend','Missed planned entry','No SL','Overtrade','Poor trade analysis','Technical error','Trade without setup','Wrong side entry'].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
@@ -2162,6 +2164,8 @@ function render(top=false){
   window.scrollTo(0,top?0:y);
   drawGoogleBtn();
   animateGaugeNum();
+  animateCountUp();
+  animateArcs();
 }
 function toast(msg){
   const el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);
@@ -2178,6 +2182,36 @@ function animateGaugeNum(){
       if(p<1)requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
+  });
+}
+function animateCountUp(){
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target=+el.dataset.count;if(!isFinite(target))return;
+    const fmt=el.dataset.fmt||'int',dur=650,start=performance.now();
+    const paint=v=>{el.textContent=fmt==='pct'?Math.round(v)+'%':fmt==='money'?money(Math.round(v)):Math.round(v)};
+    const step=now=>{
+      const p=Math.min(1,(now-start)/dur);
+      const eased=1-Math.pow(1-p,3);
+      paint(eased*target);
+      if(p<1)requestAnimationFrame(step);else paint(target);
+    };
+    requestAnimationFrame(step);
+  });
+}
+function animateArcs(){
+  document.querySelectorAll('.donut-arc[data-len]').forEach(el=>{
+    const target=+el.dataset.len,C=+el.dataset.c,delay=+el.dataset.delay||0;
+    if(!isFinite(target))return;
+    setTimeout(()=>{
+      const dur=550,start=performance.now();
+      const step=now=>{
+        const p=Math.min(1,(now-start)/dur);
+        const eased=1-Math.pow(1-p,3);
+        el.setAttribute('stroke-dasharray',`${Math.max(0,eased*target)} ${C}`);
+        if(p<1)requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    },delay);
   });
 }
 function go(fn){fn();S.error='';render(true)}
