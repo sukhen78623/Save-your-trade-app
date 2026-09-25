@@ -992,6 +992,14 @@
   </section>
 
   <section class="legal-card">
+    <h2>AI-summarised report (Google Gemini)</h2>
+    <p>The Overall report in your Analytics is summarised with AI. We use <strong>Google's Gemini AI model</strong> to group the mistakes you note in your journal and to write a short summary of what is going well and what to improve.</p>
+    <p><strong>What is sent to Gemini:</strong> the short mistake notes our app cannot group by itself, up to 25 of your recent trade notes (shortened, with email addresses and long numbers removed), and summary figures for the period you are viewing, such as trade counts, profit or loss, win rate and your discipline counts.</p>
+    <p><strong>What is not sent:</strong> your name, email address, account details, scrip or instrument names, broker details, individual trade prices and quantities, setup names, screenshots or payment information.</p>
+    <p>This information is processed by Google under its own terms and privacy policy for the Gemini API. The report text is kept only in your own browser, not on our servers, so it is cleared if you clear your browser data or use a different device. <strong>AI can make mistakes</strong>, so please treat it as a guide, not financial advice. Full details are in our <a class="legal-contact" href="https://saveyourtrade.in/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
+  </section>
+
+  <section class="legal-card">
     <h2>Your choices</h2>
     <p>You can ask us for a copy of your data, ask us to correct it, or ask us to delete your account and data. Tap a button below and send the email that opens.</p>
     <div class="actions" style="margin-top:16px;flex-wrap:wrap;gap:10px">
@@ -1099,8 +1107,43 @@
     msg.innerHTML='Please login to the journal to view this page. Taking you to the login screen…';
     setTimeout(function(){window.location.replace('/')},1200);
   }
+  /* Shared login: the journal keeps its session in a cookie for .saveyourtrade.in (not localStorage),
+     so this page must read the SAME cookie storage, or it will never see that you are logged in. */
+  var authStorage=(function(){
+    var ROOT=/(^|\.)saveyourtrade\.in$/.test(location.hostname)?'.saveyourtrade.in':'';
+    var SIZE=3000,MAXAGE=60*60*24*365,mem={};
+    function put(n,v,age){try{document.cookie=n+'='+v+'; path=/; max-age='+age+'; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'')+(ROOT?'; domain='+ROOT:'')}catch(e){}}
+    function get(n){try{var parts=document.cookie?document.cookie.split('; '):[];for(var i=0;i<parts.length;i++){var p=parts[i],ix=p.indexOf('=');if(p.slice(0,ix)===n)return p.slice(ix+1)}}catch(e){}return null}
+    function enc(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+    function dec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
+    function clearCookie(k,from){for(var i=from||0;get(k+'.'+i)!==null;i++)put(k+'.'+i,'',0)}
+    function lsGet(k){try{return window.localStorage.getItem(k)}catch(e){return mem[k]==null?null:mem[k]}}
+    function lsSet(k,v){try{window.localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+    function lsDel(k){try{window.localStorage.removeItem(k)}catch(e){}delete mem[k]}
+    var api={
+      getItem:function(k){
+        if(get(k+'.0')!==null){
+          var all='',c;
+          for(var i=0;(c=get(k+'.'+i))!==null;i++)all+=c;
+          try{return dec(all)}catch(e){return null}
+        }
+        var old=lsGet(k);
+        if(old!==null){api.setItem(k,old)}
+        return old;
+      },
+      setItem:function(k,v){
+        var s=enc(String(v)),parts=[];
+        for(var i=0;i<s.length;i+=SIZE)parts.push(s.slice(i,i+SIZE));
+        for(var j=0;j<parts.length;j++)put(k+'.'+j,parts[j],MAXAGE);
+        clearCookie(k,parts.length);
+        if(get(k+'.0')===parts[0]){lsDel(k)}else{lsSet(k,v)}
+      },
+      removeItem:function(k){clearCookie(k);lsDel(k)}
+    };
+    return api;
+  })();
   var sb=null;
-  try{sb=window.supabase.createClient('https://clnhiudhlqwodrhinepg.supabase.co','sb_publishable_DST2x9Hm_a5WJkIu6z4u9w_yKmfC-OY',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}catch(e){}
+  try{sb=window.supabase.createClient('https://clnhiudhlqwodrhinepg.supabase.co','sb_publishable_DST2x9Hm_a5WJkIu6z4u9w_yKmfC-OY',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storage:authStorage}})}catch(e){}
   if(!sb){msg.innerHTML='Could not check your login. Please <a class="legal-contact" href="/">open the journal</a> and try again.';return}
   sb.auth.getSession().then(function(r){
     var s=r&&r.data&&r.data.session;
