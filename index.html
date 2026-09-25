@@ -1381,15 +1381,21 @@ function profitSetup(){
   const g=setupGroups('analytics').sort((a,b)=>b.p-a.p);
   if(!g.length)return `<div class="empty">${emptyMsg()}</div>`;
   const m=Math.max(...g.map(x=>Math.abs(x.p)))||1;
-  return `<div class="bars">${g.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}">${money(x.p)}</b></div>
-    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'}"></i></div></div>`).join('')}</div>`;
+  const CAP=3,extra=g.length-CAP;
+  const shown=S.profExpand?g:g.slice(0,CAP);
+  const toggle=extra>0?`<button class="textbtn" data-act="prof-expand" style="margin-top:10px">${S.profExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
+  return `<div class="bars">${shown.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}">${money(x.p)}</b></div>
+    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'}"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function mostTraded(){
   const g=setupGroups('analytics').sort((a,b)=>b.n-a.n);
   if(!g.length)return `<div class="empty">${emptyMsg()}</div>`;
   const m=Math.max(...g.map(x=>x.n))||1;
-  return `<div class="bars">${g.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b>${x.n}</b></div>
-    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey)"></i></div></div>`).join('')}</div>`;
+  const CAP=3,extra=g.length-CAP;
+  const shown=S.mostExpand?g:g.slice(0,CAP);
+  const toggle=extra>0?`<button class="textbtn" data-act="most-expand" style="margin-top:10px">${S.mostExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
+  return `<div class="bars">${shown.map(x=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b>${x.n}</b></div>
+    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey)"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function donut(){
   const L=S.trades.filter(t=>inR('analytics',t));
@@ -2540,7 +2546,7 @@ function doLogout(){
      runs in the background instead of blocking the UI */
   S.user=null;S.acct=null;S.trades=[];S.tradesLoading=false;S.connected=false;S.broker=null;S.changeModal=false;S.sheet=false;S.sub=null;S.authMode='login';S.form={};S.tab='dashboard';S.busy=null;render(true);
   ['sy-mis-ai','sy-mis-sum','sy-mis-block'].forEach(k=>safeStorage.removeItem(k));
-  S.misAI=null;S.misSum={};S.misTried={};S.misBusy=false;S.misQ=false;S.misErr='';S.misExpand=false;
+  S.misAI=null;S.misSum={};S.misTried={};S.misBusy=false;S.misQ=false;S.misErr='';S.misExpand=false;S.profExpand=false;S.mostExpand=false;
   sb.auth.signOut({scope:'local'}).catch(e=>console.error(e));
 }
 
@@ -2582,6 +2588,8 @@ function act(a,el){
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
     case 'mis-ai':return misAI();
     case 'mis-expand':S.misExpand=!S.misExpand;return render();
+    case 'prof-expand':S.profExpand=!S.profExpand;return render();
+    case 'most-expand':S.mostExpand=!S.mostExpand;return render();
     case 'mis-sum-retry':{if(S.misSum)delete S.misSum[el.dataset.k];return render()}
     case 'yn':S.draft[el.dataset.k]=el.dataset.v;return render();
     case 'save-trade':return saveTrade();
