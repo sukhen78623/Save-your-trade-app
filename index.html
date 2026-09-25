@@ -472,6 +472,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-month .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
   .dash>.d-disc{grid-column:1/-1}
+  .dash>.d-discscore{grid-column:1/-1}
   .dash>.d-cal{grid-column:1/-1}
   .dash>.d-recent{grid-column:1/-1}
   .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -533,6 +534,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
   .dash>.d-disc{grid-column:1/-1}
   .dash>.d-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .dash>.d-discscore{grid-column:1/-1}
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-cal{grid-column:1/-1}
   .dash>.d-recent{grid-column:1/-1}
@@ -1200,6 +1202,8 @@ function dashboard(){
     </div>
   </div>
 
+  ${disciplineGauge()}
+
   <div class="card d-recent">
     <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
     ${recent.length?recent.map(t=>tradeRow(t)).join('')+`<button class="btn ghost" style="margin-top:14px" data-act="tab" data-tab="trades">View all</button>`:`<div class="empty">${emptyMsg()}</div>`}
@@ -1580,7 +1584,7 @@ function mistakesReport(){
   <ul class="mis-l">${items.join('')}</ul>${aiUI}`;
 }
 /* Overall report: strengths and things to improve. Numbers are always calculated here; AI only writes the wording. */
-/* overallData() holds the numbers + the AI fetch (score, good/improve) shared by overallReport() and disciplineGauge(), so the AI is called once per period, not twice. */
+/* overallData() holds the numbers + the AI fetch (good/improve) for the Analytics "Overall report" card, for the selected date range. */
 function overallData(){
   const L=S.trades.filter(t=>inR('analytics',t));
   if(!L.length)return {empty:true};
@@ -1666,10 +1670,34 @@ function riskTier(score){
   if(score>=40)return {label:'Needs Work',cls:'a'};
   return {label:'High Risk',cls:'r'};
 }
+/* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to, and never requires a minimum trade count (AI is asked to give its best estimate from whatever exists today). Cached per day so it is one AI call per day, not one per render. */
+function todayDiscData(){
+  const L=S.trades.filter(t=>t.date===today());
+  const yes=k=>L.filter(t=>t[k]==='yes').length;
+  const D={notMaintained:L.filter(t=>t.maintain==='no').length,maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
+  if(!L.length)return {n:0,D,sm:null};
+  const c=misCompute(L);
+  const P=L.map(t=>{const v=pnl(t);return isFinite(v)?v:0});
+  const notes=[];
+  L.forEach((t,i)=>{const x=misClean(t.note);if(x&&notes.length<25)notes.push({r:P[i]>0?'win':P[i]<0?'loss':'flat',t:x})});
+  const payload={trades:L.length,netPnl:Math.round(P.reduce((a,b)=>a+b,0)),
+    discipline:{maintained:D.maintained,notMaintained:D.notMaintained,ruleBreak:D.ruleBreak,anticipation:D.anticipation,revenge:D.revenge,overTrading:D.overTrading,tradesWithDisciplineNoted:L.filter(t=>t.anticipation||t.ruleBreak||t.overTrading||t.revenge).length},
+    mistakes:{tradesWithMistake:c.M,themes:c.top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:c.otherN},notes};
+  let sm=null;
+  const ready=MIS_AI_ON&&!c.sched&&!S.misQ&&!S.misBusy&&(!c.pk||S.misTried[c.pk]);
+  if(ready){
+    const sk=misHash('t'+misToday()+JSON.stringify(payload)),saved=misSumStore()[sk];
+    sm=S.misSum[sk]||(saved&&typeof saved.score==='number'?(S.misSum[sk]={st:'ok',g:saved.g||[],i:saved.i||[],score:saved.score}):null);
+    if(!sm){
+      if(misBlocked())sm={st:'err',msg:'AI limit reached for now',code:'daily_limit'};
+      else{sm=S.misSum[sk]={st:'load'};setTimeout(()=>misOverallAI(sk,payload),0)}
+    }
+    sm.k=sk;
+  }
+  return {n:L.length,D,sm};
+}
 function disciplineGauge(){
-  const o=overallData();
-  if(o.empty)return '';
-  const {D,sm}=o;
+  const {n,D,sm}=todayDiscData();
   const infractions=D.ruleBreak+D.anticipation+D.revenge+D.overTrading;
   const hasScore=sm&&sm.st==='ok'&&typeof sm.score==='number';
   const score=hasScore?sm.score:null;
@@ -1687,14 +1715,15 @@ function disciplineGauge(){
     <text x="${sx}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">0</text>
     <text x="${ex}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">100</text>
   </svg>`;
-  const statusNote=hasScore
-    ?`<div class="k" style="text-align:center;margin-top:-6px">Status: <b style="color:${tcol(tier)}">${tier.label}</b></div>`
-    :sm&&sm.st==='load'?`<div class="k" style="text-align:center;margin-top:-6px">Scoring…</div>`
+  const statusNote=!n
+    ?`<div class="k" style="text-align:center;margin-top:-6px">No trades logged today</div>`
+    :hasScore?`<div class="k" style="text-align:center;margin-top:-6px">Status: <b style="color:${tcol(tier)}">${tier.label}</b></div>`
     :sm&&sm.st==='err'&&sm.code==='daily_limit'?`<div class="k" style="text-align:center;margin-top:-6px">AI limit reached for now</div>`
     :sm&&sm.st==='err'?`<div class="k" style="text-align:center;margin-top:-6px">Score unavailable right now</div>`
-    :`<div class="k" style="text-align:center;margin-top:-6px">Not enough data yet</div>`;
-  return `<div class="card a-discscore">
+    :`<div class="k" style="text-align:center;margin-top:-6px">Scoring…</div>`;
+  return `<div class="card d-discscore">
     <div class="card-h"><h2>${I('shield',22)}Discipline Tracker</h2></div>
+    <div class="k" style="margin:-6px 0 14px">Based on today's trades</div>
     <div style="display:flex;justify-content:center">${svg}</div>
     ${statusNote}
     <div class="stats" style="margin-top:14px">
@@ -1702,7 +1731,7 @@ function disciplineGauge(){
       <div class="stat"><div class="k">Infractions</div><div class="v ${infractions?'neg':'zero'}">${infractions}</div></div>
       <div class="stat"><div class="k">Risk tier</div><div class="v" style="${score!=null?`color:${tcol(tier)}`:''}">${score!=null?tier.label:'–'}</div></div>
     </div>
-    <div class="k" style="margin-top:12px">This score is written by AI from your discipline stats and journal notes, not a fixed app rule. AI can make mistakes.</div>
+    <div class="k" style="margin-top:12px">This score is written by AI from today's discipline stats and journal notes, not a fixed app rule. AI can make mistakes.</div>
   </div>`;
 }
 function analyticsPage(){
@@ -1711,7 +1740,6 @@ function analyticsPage(){
   <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
   ${disciplineCard('analytics')}
-  ${disciplineGauge()}
   <div class="card a-all"><div class="card-h"><h2>${I('sparkle',22)}Overall report</h2></div>${overallReport()}</div>
   <div class="card a-mis"><div class="card-h"><h2>${I('flag',22)}Mistakes report</h2></div><div class="k" style="margin:-6px 0 14px">Your journal mistakes, summarised</div>${mistakesReport()}</div>
   <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
