@@ -1483,8 +1483,10 @@ async function misOverallAI(key,payload){
     const cl=x=>(Array.isArray(x)?x:[]).filter(v=>typeof v==='string'&&v.trim()).slice(0,4);
     const g=cl(data&&data.good),i=cl(data&&data.improve);
     if(!g.length&&!i.length)throw new Error('AI could not write the summary right now');
-    S.misSum[key]={st:'ok',g,i};
-    const st=misSumStore();st[key]={g,i};
+    const sc=data&&data.score;
+    const score=typeof sc==='number'&&isFinite(sc)?Math.max(0,Math.min(100,Math.round(sc))):null;
+    S.misSum[key]={st:'ok',g,i,score};
+    const st=misSumStore();st[key]={g,i,score};
     Object.keys(st).slice(0,Math.max(0,Object.keys(st).length-30)).forEach(k=>delete st[k]);
     safeStorage.setItem('sy-mis-sum',JSON.stringify(st));
   }catch(e){
@@ -1578,9 +1580,10 @@ function mistakesReport(){
   <ul class="mis-l">${items.join('')}</ul>${aiUI}`;
 }
 /* Overall report: strengths and things to improve. Numbers are always calculated here; AI only writes the wording. */
-function overallReport(){
+/* overallData() holds the numbers + the AI fetch (score, good/improve) shared by overallReport() and disciplineGauge(), so the AI is called once per period, not twice. */
+function overallData(){
   const L=S.trades.filter(t=>inR('analytics',t));
-  if(!L.length)return `<div class="empty">${emptyMsg()}</div>`;
+  if(!L.length)return {empty:true};
   const n=L.length,st=stats(L),c=misCompute(L);
   const tr=k=>`${k} ${k===1?'trade':'trades'}`;
   const P=L.map(t=>{const v=pnl(t);return isFinite(v)?v:0});
@@ -1637,6 +1640,13 @@ function overallReport(){
     }
     sm.k=sk;
   }
+  return {n,st,c,D,sGood,sBad,good,bad,stat,sm};
+}
+function overallReport(){
+  const o=overallData();
+  if(o.empty)return `<div class="empty">${emptyMsg()}</div>`;
+  const {sGood,sBad,good,bad,stat,sm}=o;
+  let g=good.slice(0,5),b=bad.slice(0,5);
   if(sm&&sm.st==='ok'){g=sm.g.map(esc).concat(sGood);b=sm.i.map(esc).concat(sBad)}
   const li=(a,e)=>a.length?a.map(x=>`<li>${x}</li>`).join(''):`<li class="k">${e}</li>`;
   const note=sm&&sm.st==='ok'?'<div class="k" style="margin-top:-4px">AI can make mistakes. Please double-check important points.</div>'
@@ -1649,12 +1659,59 @@ function overallReport(){
     <div><div class="lbl">What to improve</div><ul class="ov-l bad">${li(b,'No clear problem areas found from your journal in this period.')}</ul></div>
   </div>${note}`;
 }
+/* Discipline Score: a speedometer-style gauge. The score itself is written by AI (same call as the Overall report, cached together, no extra AI usage) so it is never a fixed in-app formula judging the trader. Rule break / anticipation / revenge / over trading / not maintained counts shown below the gauge are plain counts from the journal, not a score. */
+function riskTier(score){
+  if(score>=85)return {label:'Excellent',cls:'g'};
+  if(score>=65)return {label:'Good',cls:'g'};
+  if(score>=40)return {label:'Needs Work',cls:'a'};
+  return {label:'High Risk',cls:'r'};
+}
+function disciplineGauge(){
+  const o=overallData();
+  if(o.empty)return '';
+  const {D,sm}=o;
+  const infractions=D.ruleBreak+D.anticipation+D.revenge+D.overTrading;
+  const hasScore=sm&&sm.st==='ok'&&typeof sm.score==='number';
+  const score=hasScore?sm.score:null;
+  const tier=score!=null?riskTier(score):null;
+  const tcol=t=>t.cls==='g'?'var(--green)':t.cls==='a'?'#d9a441':'var(--red)';
+  const r=76,cx=100,cy=100;
+  const pt=v=>{const a=Math.PI*(1-v/100);return [cx+r*Math.cos(a),cy-r*Math.sin(a)]};
+  const [sx,sy]=pt(0),[ex,ey]=pt(100);
+  const fg=score!=null?(()=>{const [fx,fy]=pt(score);return `<path d="M${sx},${sy} A${r},${r} 0 ${score>50?1:0} 1 ${fx},${fy}" fill="none" stroke="${tcol(tier)}" stroke-width="16" stroke-linecap="round"/>`})():'';
+  const svg=`<svg width="220" height="140" viewBox="0 0 200 120" style="max-width:100%;height:auto" role="img" aria-label="Discipline score gauge">
+    <path d="M${sx},${sy} A${r},${r} 0 0 1 ${ex},${ey}" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
+    ${fg}
+    <text x="100" y="82" text-anchor="middle" fill="var(--text)" font-size="34" font-weight="700" font-family="Roboto,sans-serif">${score!=null?score:'–'}</text>
+    <text x="100" y="102" text-anchor="middle" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">Discipline Score</text>
+    <text x="${sx}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">0</text>
+    <text x="${ex}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">100</text>
+  </svg>`;
+  const statusNote=hasScore
+    ?`<div class="k" style="text-align:center;margin-top:-6px">Status: <b style="color:${tcol(tier)}">${tier.label}</b></div>`
+    :sm&&sm.st==='load'?`<div class="k" style="text-align:center;margin-top:-6px">Scoring…</div>`
+    :sm&&sm.st==='err'&&sm.code==='daily_limit'?`<div class="k" style="text-align:center;margin-top:-6px">AI limit reached for now</div>`
+    :sm&&sm.st==='err'?`<div class="k" style="text-align:center;margin-top:-6px">Score unavailable right now</div>`
+    :`<div class="k" style="text-align:center;margin-top:-6px">Not enough data yet</div>`;
+  return `<div class="card a-discscore">
+    <div class="card-h"><h2>${I('shield',22)}Discipline Tracker</h2></div>
+    <div style="display:flex;justify-content:center">${svg}</div>
+    ${statusNote}
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><div class="k">Not maintained</div><div class="v ${D.notMaintained?'neg':'zero'}">${D.notMaintained}</div></div>
+      <div class="stat"><div class="k">Infractions</div><div class="v ${infractions?'neg':'zero'}">${infractions}</div></div>
+      <div class="stat"><div class="k">Risk tier</div><div class="v" style="${score!=null?`color:${tcol(tier)}`:''}">${score!=null?tier.label:'–'}</div></div>
+    </div>
+    <div class="k" style="margin-top:12px">This score is written by AI from your discipline stats and journal notes, not a fixed app rule. AI can make mistakes.</div>
+  </div>`;
+}
 function analyticsPage(){
   return `<div class="title">Analytics</div>
   <div class="agrid">
   <div class="card a-range"><div class="card-h"><h2>${I('calendar2',22)}Date range</h2></div>${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to every result below</div></div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
   ${disciplineCard('analytics')}
+  ${disciplineGauge()}
   <div class="card a-all"><div class="card-h"><h2>${I('sparkle',22)}Overall report</h2></div>${overallReport()}</div>
   <div class="card a-mis"><div class="card-h"><h2>${I('flag',22)}Mistakes report</h2></div><div class="k" style="margin:-6px 0 14px">Your journal mistakes, summarised</div>${mistakesReport()}</div>
   <div class="card a-prof"><div class="card-h"><h2>${I('analytics',22)}Profitable setup</h2></div><div class="k" style="margin:-6px 0 14px">Best to worst setup</div>${profitSetup()}</div>
