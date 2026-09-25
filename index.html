@@ -1673,37 +1673,20 @@ function riskTier(score){
   if(score>=40)return {label:'Needs Work',cls:'a'};
   return {label:'High Risk',cls:'r'};
 }
-/* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to, and never requires a minimum trade count (AI is asked to give its best estimate from whatever exists today). Cached per day so it is one AI call per day, not one per render. */
+/* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to. Rule-based, computed instantly from the day's journal entries: no AI call, no daily limit, no waiting. Starts at 100 and deducts fixed points per flagged infraction. */
+const DISC_WEIGHTS={notMaintained:10,ruleBreak:12,anticipation:6,revenge:15,overTrading:10};
 function todayDiscData(){
   const L=S.trades.filter(t=>t.date===today());
   const yes=k=>L.filter(t=>t[k]==='yes').length;
   const D={notMaintained:L.filter(t=>t.maintain==='no').length,maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
-  if(!L.length)return {n:0,D,sm:null};
-  const c=misCompute(L);
-  const P=L.map(t=>{const v=pnl(t);return isFinite(v)?v:0});
-  const notes=[];
-  L.forEach((t,i)=>{const x=misClean(t.note);if(x&&notes.length<25)notes.push({r:P[i]>0?'win':P[i]<0?'loss':'flat',t:x})});
-  const payload={trades:L.length,netPnl:Math.round(P.reduce((a,b)=>a+b,0)),
-    discipline:{maintained:D.maintained,notMaintained:D.notMaintained,ruleBreak:D.ruleBreak,anticipation:D.anticipation,revenge:D.revenge,overTrading:D.overTrading,tradesWithDisciplineNoted:L.filter(t=>t.anticipation||t.ruleBreak||t.overTrading||t.revenge).length},
-    mistakes:{tradesWithMistake:c.M,themes:c.top.map(x=>({label:x.label,trades:x.n,pnl:Math.round(x.p)})),ownWords:c.otherN},notes};
-  let sm=null;
-  const ready=MIS_AI_ON&&!c.sched&&!S.misQ&&!S.misBusy&&(!c.pk||S.misTried[c.pk]);
-  if(ready){
-    const sk=misHash('t'+misToday()+JSON.stringify(payload)),saved=misSumStore()[sk];
-    sm=S.misSum[sk]||(saved&&typeof saved.score==='number'?(S.misSum[sk]={st:'ok',g:saved.g||[],i:saved.i||[],score:saved.score}):null);
-    if(!sm){
-      if(misBlocked())sm={st:'err',msg:'AI limit reached for now',code:'daily_limit'};
-      else{sm=S.misSum[sk]={st:'load'};setTimeout(()=>misOverallAI(sk,payload),0)}
-    }
-    sm.k=sk;
-  }
-  return {n:L.length,D,sm};
+  if(!L.length)return {n:0,D,score:null};
+  const deduction=D.notMaintained*DISC_WEIGHTS.notMaintained+D.ruleBreak*DISC_WEIGHTS.ruleBreak+D.anticipation*DISC_WEIGHTS.anticipation+D.revenge*DISC_WEIGHTS.revenge+D.overTrading*DISC_WEIGHTS.overTrading;
+  const score=Math.max(0,Math.min(100,Math.round(100-deduction)));
+  return {n:L.length,D,score};
 }
 function disciplineGauge(){
-  const {n,D,sm}=todayDiscData();
+  const {n,D,score}=todayDiscData();
   const infractions=D.ruleBreak+D.anticipation+D.revenge+D.overTrading;
-  const hasScore=sm&&sm.st==='ok'&&typeof sm.score==='number';
-  const score=hasScore?sm.score:null;
   const tier=score!=null?riskTier(score):null;
   const tcol=t=>t.cls==='g'?'var(--green)':t.cls==='a'?'#d9a441':'var(--red)';
   const r=76,cx=100,cy=100;
@@ -1720,10 +1703,7 @@ function disciplineGauge(){
   </svg>`;
   const statusNote=!n
     ?`<div class="k" style="text-align:center;margin-top:-6px">No trades logged today</div>`
-    :hasScore?`<div class="k" style="text-align:center;margin-top:-6px">Status: <b style="color:${tcol(tier)}">${tier.label}</b></div>`
-    :sm&&sm.st==='err'&&sm.code==='daily_limit'?`<div class="k" style="text-align:center;margin-top:-6px">AI limit reached for now</div>`
-    :sm&&sm.st==='err'?`<div class="k" style="text-align:center;margin-top:-6px">Score unavailable right now</div>`
-    :`<div class="k" style="text-align:center;margin-top:-6px">Scoring…</div>`;
+    :`<div class="k" style="text-align:center;margin-top:-6px">Status: <b style="color:${tcol(tier)}">${tier.label}</b></div>`;
   return `<div class="card d-discscore">
     <div class="card-h"><h2>${I('shield',22)}Discipline Tracker</h2></div>
     <div class="k" style="margin:-6px 0 14px">Based on today's trades</div>
@@ -1734,7 +1714,7 @@ function disciplineGauge(){
       <div class="stat"><div class="k">Infractions</div><div class="v ${infractions?'neg':'zero'}">${infractions}</div></div>
       <div class="stat"><div class="k">Risk tier</div><div class="v" style="${score!=null?`color:${tcol(tier)}`:''}">${score!=null?tier.label:'–'}</div></div>
     </div>
-    <div class="k" style="margin-top:12px">This score is written by AI from today's discipline stats and journal notes, not a fixed app rule. AI can make mistakes.</div>
+    <div class="k" style="margin-top:12px">Starts at 100 and deducts for today's rule breaks, revenge trades, over-trading, anticipation and not maintaining discipline.</div>
   </div>`;
 }
 function analyticsPage(){
