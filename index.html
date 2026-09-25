@@ -1674,7 +1674,7 @@ function riskTier(score){
   return {label:'High Risk',cls:'r'};
 }
 /* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to. Rule-based, computed instantly from the day's journal entries: no AI call, no daily limit, no waiting. Starts at 100 and deducts fixed points per flagged infraction. */
-const DISC_WEIGHTS={notMaintained:10,ruleBreak:12,anticipation:6,revenge:15,overTrading:10};
+const DISC_WEIGHTS={anticipation:10,ruleBreak:20,overTrading:30,notMaintained:40,revenge:50};
 function todayDiscData(){
   const L=S.trades.filter(t=>t.date===today());
   const yes=k=>L.filter(t=>t[k]==='yes').length;
@@ -1714,7 +1714,7 @@ function disciplineGauge(){
       <div class="stat"><div class="k">Infractions</div><div class="v ${infractions?'neg':'zero'}">${infractions}</div></div>
       <div class="stat"><div class="k">Risk tier</div><div class="v" style="${score!=null?`color:${tcol(tier)}`:''}">${score!=null?tier.label:'–'}</div></div>
     </div>
-    <div class="k" style="margin-top:12px">Starts at 100 and deducts for today's rule breaks, revenge trades, over-trading, anticipation and not maintaining discipline.</div>
+    <div class="k" style="margin-top:12px">Starts at 100. Deducts per today's trade: Anticipation −10, Rule break −20, Over trading −30, Maintain discipline (No) −40, Revenge trading −50.</div>
   </div>`;
 }
 function analyticsPage(){
