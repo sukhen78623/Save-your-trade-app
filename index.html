@@ -435,7 +435,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .chart-sel{transform-box:fill-box;transform-origin:center;animation:selPulse 1.4s ease-in-out infinite}
 @keyframes selPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.55}}
 .chart-tip{transform-box:fill-box;transform-origin:center;animation:pop .22s cubic-bezier(.2,.8,.2,1) both}
-.track i{transform-origin:left;animation:barGrow .65s cubic-bezier(.22,.8,.25,1) both}
+.track i{transform-origin:left;animation:barGrow 1.15s cubic-bezier(.22,.8,.25,1) both}
 @keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .scroll-anim .track i{animation-play-state:paused}
 .scroll-anim.in-view .track i{animation-play-state:running}
@@ -1411,7 +1411,7 @@ function profitSetup(){
   const shown=S.profExpand?g:g.slice(0,CAP);
   const toggle=extra>0?`<button class="textbtn" data-act="prof-expand" style="margin-top:10px">${S.profExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
   return `<div class="bars">${shown.map((x,i)=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b class="${cls(x.p)}" data-count="${x.p}" data-fmt="money">${money(0)}</b></div>
-    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'};animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>${toggle}`;
+    <div class="track"><i style="width:${Math.max(3,Math.abs(x.p)/m*100)}%;background:${x.p>0?'var(--green)':x.p<0?'var(--red)':'var(--grey)'};animation-delay:${i*110}ms"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function mostTraded(){
   const g=setupGroups('analytics').sort((a,b)=>b.n-a.n);
@@ -1421,7 +1421,7 @@ function mostTraded(){
   const shown=S.mostExpand?g:g.slice(0,CAP);
   const toggle=extra>0?`<button class="textbtn" data-act="most-expand" style="margin-top:10px">${S.mostExpand?'Show less':'View all ('+g.length+')'}${I('chev',18)}</button>`:'';
   return `<div class="bars">${shown.map((x,i)=>`<div class="bar-i"><div class="top2"><span>${esc(x.k)}</span><b data-count="${x.n}" data-fmt="int">0</b></div>
-    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey);animation-delay:${i*70}ms"></i></div></div>`).join('')}</div>${toggle}`;
+    <div class="track"><i style="width:${x.n/m*100}%;background:var(--grey);animation-delay:${i*110}ms"></i></div></div>`).join('')}</div>${toggle}`;
 }
 function donut(){
   const L=S.trades.filter(t=>inR('analytics',t));
@@ -1429,7 +1429,7 @@ function donut(){
   const tot=L.length;
   if(!tot)return `<div class="empty">${emptyMsg()}</div>`;
   const r=54,C=2*Math.PI*r;let off=0,idx=0;
-  const seg=(n,c)=>{if(!n)return '';const len=n/tot*C;const s=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="0 ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" class="donut-arc" data-len="${Math.max(0,len-2)}" data-c="${C}" data-delay="${idx*150}"/>`;off+=len;idx++;return s};
+  const seg=(n,c)=>{if(!n)return '';const len=n/tot*C;const s=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="18" stroke-dasharray="0 ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" class="donut-arc" data-len="${Math.max(0,len-2)}" data-c="${C}" data-delay="${idx*220}"/>`;off+=len;idx++;return s};
   return `<div style="display:flex;justify-content:center"><svg width="180" height="180" style="max-width:100%;height:auto" viewBox="0 0 140 140" role="img" aria-label="Win loss donut">
     <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--line)" stroke-width="18"/>
     ${seg(w,'var(--green)')}${seg(l,'var(--red)')}${seg(z,'var(--grey)')}
@@ -1469,7 +1469,7 @@ function dayWise(){
     const v=valid.find(x=>x.name===r.name);
     return !v
     ?`<div class="bar-i"><div class="top2"><span>${r.name}</span><b class="zero">–</b></div><div class="track"><i style="width:0"></i></div></div>`
-    :`<div class="bar-i"><div class="top2"><span>${r.name} <span style="color:var(--muted)">• ${v.n} ${v.n===1?'trade':'trades'}</span></span><b data-count="${v.rate}" data-fmt="pct">0%</b></div><div class="track"><i style="width:${Math.max(3,v.rate)}%;background:${col(v)};animation-delay:${i*70}ms"></i></div></div>`;
+    :`<div class="bar-i"><div class="top2"><span>${r.name} <span style="color:var(--muted)">• ${v.n} ${v.n===1?'trade':'trades'}</span></span><b data-count="${v.rate}" data-fmt="pct">0%</b></div><div class="track"><i style="width:${Math.max(3,v.rate)}%;background:${col(v)};animation-delay:${i*110}ms"></i></div></div>`;
   }).join('')}</div>
   ${both?`<div class="legend"><div><span class="sw" style="background:${col(hi)}"></span>Highest <b>${hi.name} ${hi.rate}%</b></div><div><span class="sw" style="background:${col(lo)}"></span>Lowest <b>${lo.name} ${lo.rate}%</b></div></div>`:''}`;
 }
@@ -2201,7 +2201,7 @@ function animateCountUp(root){
   (root||document).querySelectorAll('[data-count]').forEach(el=>{
     if(!scoped&&el.closest('.scroll-anim'))return;
     const target=+el.dataset.count;if(!isFinite(target))return;
-    const fmt=el.dataset.fmt||'int',dur=650,start=performance.now();
+    const fmt=el.dataset.fmt||'int',dur=1400,start=performance.now();
     const paint=v=>{el.textContent=fmt==='pct'?Math.round(v)+'%':fmt==='money'?money(Math.round(v)):Math.round(v)};
     const step=now=>{
       const p=Math.min(1,(now-start)/dur);
@@ -2219,7 +2219,7 @@ function animateArcs(root){
     const target=+el.dataset.len,C=+el.dataset.c,delay=+el.dataset.delay||0;
     if(!isFinite(target))return;
     setTimeout(()=>{
-      const dur=550,start=performance.now();
+      const dur=1200,start=performance.now();
       const step=now=>{
         const p=Math.min(1,(now-start)/dur);
         const eased=1-Math.pow(1-p,3);
