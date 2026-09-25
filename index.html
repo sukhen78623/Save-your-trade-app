@@ -428,6 +428,8 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .okc{animation:pop .3s}
 .okring{stroke-dasharray:145;stroke-dashoffset:145;animation:draw .55s ease-out forwards}
 .okchk{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .4s .45s ease-out forwards}
+.gauge-fg{animation:draw 1s .1s cubic-bezier(.3,.8,.3,1) forwards}
+.gauge-num{opacity:0;animation:fadeIn .4s .8s ease-out forwards}
 
 /* ---------- page grids (single column on phone) ---------- */
 .dash,.agrid{display:block}
@@ -1268,13 +1270,14 @@ function netChart(){
   const y0=Y(0);
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer"><title>${fmtD(ks[i])}: ${money(vals[i])}</title></circle>`).join('');
   return `<div class="k">Net P&amp;L over time</div>
   <div class="mid ${cls(run)}" style="margin-bottom:8px">${money(run)}</div>
   <div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net P&amp;L curve">
     <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
     ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
     ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
-    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="4.5" fill="${col}"/>
+    ${hit}
     <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
     <text x="${W-R}" y="${H-8}" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif" text-anchor="end">${fmtD(ks[ks.length-1])}</text>
   </svg></div>`;
@@ -1292,11 +1295,12 @@ function curveChart(daysObj,height){
   const y0=Y(0);
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer"><title>${fmtD(ks[i])}: ${money(vals[i])}</title></circle>`).join('');
   return `<div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly P&amp;L curve">
     <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
     ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
     ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
-    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="4.5" fill="${col}"/>
+    ${hit}
     <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
     <text x="${W-R}" y="${H-8}" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif" text-anchor="end">${fmtD(ks[ks.length-1])}</text>
   </svg></div>`;
@@ -1714,11 +1718,11 @@ function disciplineGauge(){
   const r=76,cx=100,cy=100;
   const pt=v=>{const a=Math.PI*(1-v/100);return [cx+r*Math.cos(a),cy-r*Math.sin(a)]};
   const [sx,sy]=pt(0),[ex,ey]=pt(100);
-  const fg=score!=null?(()=>{const [fx,fy]=pt(score);return `<path d="M${sx},${sy} A${r},${r} 0 0 1 ${fx},${fy}" fill="none" stroke="${tcol(tier)}" stroke-width="16" stroke-linecap="round"/>`})():'';
+  const fg=score!=null?(()=>{const [fx,fy]=pt(score);const len=Math.max(0.001,Math.PI*r*score/100);return `<path d="M${sx},${sy} A${r},${r} 0 0 1 ${fx},${fy}" fill="none" stroke="${tcol(tier)}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${len}" stroke-dashoffset="${len}" class="gauge-fg"/>`})():'';
   const svg=`<svg width="220" height="140" viewBox="0 0 200 120" style="max-width:100%;height:auto" role="img" aria-label="Discipline score gauge">
     <path d="M${sx},${sy} A${r},${r} 0 0 1 ${ex},${ey}" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
     ${fg}
-    <text x="100" y="82" text-anchor="middle" fill="var(--text)" font-size="34" font-weight="700" font-family="Roboto,sans-serif">${score!=null?score:'–'}</text>
+    <text x="100" y="82" text-anchor="middle" fill="var(--text)" font-size="34" font-weight="700" font-family="Roboto,sans-serif" class="gauge-num">${score!=null?score:'–'}</text>
     <text x="100" y="102" text-anchor="middle" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">Discipline Score</text>
     <text x="${sx}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">0</text>
     <text x="${ex}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">100</text>
