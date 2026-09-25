@@ -429,7 +429,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .okring{stroke-dasharray:145;stroke-dashoffset:145;animation:draw .55s ease-out forwards}
 .okchk{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .4s .45s ease-out forwards}
 .gauge-fg{animation:draw 1s .1s cubic-bezier(.3,.8,.3,1) forwards}
-.gauge-num{opacity:0;animation:fadeIn .4s .8s ease-out forwards}
+.gauge-num{opacity:0;animation:fadeIn .3s ease-out forwards}
 .chart-dot{transform-box:fill-box;transform-origin:center;opacity:0;animation:dotPop .35s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes dotPop{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
 .chart-sel{transform-box:fill-box;transform-origin:center;animation:selPulse 1.4s ease-in-out infinite}
@@ -1283,8 +1283,8 @@ function netChart(){
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
   S.chartSel=S.chartSel||{};const sel=S.chartSel.net;
-  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="net" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(vals[i])}</title></circle>`).join('');
-  const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(vals[sel])}`,W,L,R,T)}`})():'';
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="net" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(st.days[ks[i]])}</title></circle>`).join('');
+  const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(st.days[ks[sel]])}`,W,L,R,T)}`})():'';
   return `<div class="k">Net P&amp;L over time</div>
   <div class="mid ${cls(run)}" style="margin-bottom:8px">${money(run)}</div>
   <div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net P&amp;L curve">
@@ -1311,8 +1311,8 @@ function curveChart(daysObj,height){
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
   S.chartSel=S.chartSel||{};const sel=S.chartSel.mon;
-  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="mon" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(vals[i])}</title></circle>`).join('');
-  const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(vals[sel])}`,W,L,R,T)}`})():'';
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="mon" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(daysObj[ks[i]])}</title></circle>`).join('');
+  const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(daysObj[ks[sel]])}`,W,L,R,T)}`})():'';
   return `<div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly P&amp;L curve">
     <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
     ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
@@ -1740,7 +1740,7 @@ function disciplineGauge(){
   const svg=`<svg width="220" height="140" viewBox="0 0 200 120" style="max-width:100%;height:auto" role="img" aria-label="Discipline score gauge">
     <path d="M${sx},${sy} A${r},${r} 0 0 1 ${ex},${ey}" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
     ${fg}
-    <text x="100" y="82" text-anchor="middle" fill="var(--text)" font-size="34" font-weight="700" font-family="Roboto,sans-serif" class="gauge-num">${score!=null?score:'–'}</text>
+    <text x="100" y="82" text-anchor="middle" fill="var(--text)" font-size="34" font-weight="700" font-family="Roboto,sans-serif" class="gauge-num" ${score!=null?`data-target="${score}"`:''}>${score!=null?0:'–'}</text>
     <text x="100" y="102" text-anchor="middle" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">Discipline Score</text>
     <text x="${sx}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">0</text>
     <text x="${ex}" y="116" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Roboto,sans-serif">100</text>
@@ -2161,10 +2161,24 @@ function render(top=false){
   app.innerHTML=html;
   window.scrollTo(0,top?0:y);
   drawGoogleBtn();
+  animateGaugeNum();
 }
 function toast(msg){
   const el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);
   setTimeout(()=>el.remove(),2400);
+}
+function animateGaugeNum(){
+  document.querySelectorAll('.gauge-num[data-target]').forEach(el=>{
+    const target=+el.dataset.target;if(!isFinite(target))return;
+    const dur=800,start=performance.now();
+    const step=now=>{
+      const p=Math.min(1,(now-start)/dur);
+      const eased=1-Math.pow(1-p,3);
+      el.textContent=Math.round(eased*target);
+      if(p<1)requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
 }
 function go(fn){fn();S.error='';render(true)}
 /* Open a website page (Terms, Privacy, About, Contact, User data management) in a new tab, so the journal stays open */
