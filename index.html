@@ -1673,15 +1673,24 @@ function riskTier(score){
   if(score>=40)return {label:'Needs Work',cls:'a'};
   return {label:'High Risk',cls:'r'};
 }
-/* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to. Rule-based, computed instantly from the day's journal entries: no AI call, no daily limit, no waiting. Starts at 100 and deducts fixed points per flagged infraction. */
+/* Today's discipline score data: separate from overallData() on purpose — this always looks at today's trades only, whatever the Analytics date range is set to. Rule-based, computed instantly from the day's journal entries: no AI call, no daily limit, no waiting. Each trade gets its own 0-100 score (100 minus that trade's own flagged deductions), and the day's score is the average across today's trades — so a clean trade pulls the day up and a bad one pulls it down, rather than every infraction across the whole day stacking onto one shared total. */
 const DISC_WEIGHTS={anticipation:10,ruleBreak:20,overTrading:30,notMaintained:40,revenge:50};
+function tradeDiscScore(t){
+  let s=100;
+  if(t.anticipation==='yes')s-=DISC_WEIGHTS.anticipation;
+  if(t.ruleBreak==='yes')s-=DISC_WEIGHTS.ruleBreak;
+  if(t.overTrading==='yes')s-=DISC_WEIGHTS.overTrading;
+  if(t.maintain==='no')s-=DISC_WEIGHTS.notMaintained;
+  if(t.revenge==='yes')s-=DISC_WEIGHTS.revenge;
+  return Math.max(0,s);
+}
 function todayDiscData(){
   const L=S.trades.filter(t=>t.date===today());
   const yes=k=>L.filter(t=>t[k]==='yes').length;
   const D={notMaintained:L.filter(t=>t.maintain==='no').length,maintained:yes('maintain'),ruleBreak:yes('ruleBreak'),anticipation:yes('anticipation'),revenge:yes('revenge'),overTrading:yes('overTrading')};
   if(!L.length)return {n:0,D,score:null};
-  const deduction=D.notMaintained*DISC_WEIGHTS.notMaintained+D.ruleBreak*DISC_WEIGHTS.ruleBreak+D.anticipation*DISC_WEIGHTS.anticipation+D.revenge*DISC_WEIGHTS.revenge+D.overTrading*DISC_WEIGHTS.overTrading;
-  const score=Math.max(0,Math.min(100,Math.round(100-deduction)));
+  const scores=L.map(tradeDiscScore);
+  const score=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
   return {n:L.length,D,score};
 }
 function disciplineGauge(){
