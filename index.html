@@ -377,7 +377,8 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .bt .st.g{color:var(--green-d);background:var(--green-bg);padding:2px 8px;border-radius:var(--r1)}
 .bt.on{border-color:var(--green-line);background:var(--green-bg)}
 .blist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-.brow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--bg);border-radius:var(--r2);text-align:left;font-size:14px;font-weight:500;color:var(--text)}
+.brow{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--bg);border-radius:var(--r2);text-align:left;font-size:14px;font-weight:500;color:var(--text)}
+.brow .bn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brow.on{border-color:var(--green-line);background:var(--green-bg)}
 .brow .cbtn{flex:none;font-size:12px;font-weight:500;padding:7px 16px;border-radius:var(--r1);background:linear-gradient(135deg,#5d9d67 0%,#45834f 100%);color:#fff}
 .brow .cst{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--green-d);background:var(--green-bg);border:1px solid var(--green-line);padding:5px 10px;border-radius:var(--r1)}
@@ -2130,7 +2131,7 @@ function sheetView(fresh){
       const isZ=LIVE_BROKERS.includes(b);
       const on=S.connected&&S.broker===b;
       const st=on?`<span class="cst"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>Connected</span>`:(isZ?`<span class="cbtn">Connect</span>`:`<span class="cs">Coming soon</span>`);
-      return `<button class="brow ${on?'on':''}" style="--i:${i}" data-act="broker" data-b="${b}" aria-label="${esc(b)}">${bIcon(b,40)}${st}</button>`;
+      return `<button class="brow ${on?'on':''}" style="--i:${i}" data-act="broker" data-b="${b}">${bIcon(b,40)}<span class="bn">${b}</span>${st}</button>`;
     }).join('')}</div>
     ${S.connected?`<button class="btn ghost" style="margin-top:14px" data-act="change-broker">Change broker</button>`:''}
     <div class="note" style="margin-top:14px">Tap your broker to login and fetch today's trades. We need a fresh login once every day.</div>`;
