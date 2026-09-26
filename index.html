@@ -1209,7 +1209,7 @@ function dashboard(){
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
     <div class="card-h"><h2>${I('trend',22)}Today's performance</h2></div>
     <div class="k">Total P&amp;L</div>
-    <div class="big ${cls(td.total)}">${money(td.total)}</div>
+    <div class="big ${cls(td.total)}" data-count="${td.total}" data-fmt="money">${money(td.total)}</div>
     <div class="stats">
       <div class="stat"><div class="k">Win trades</div><div class="v ${td.w?'pos':'zero'}">${td.w}</div></div>
       <div class="stat"><div class="k">Loss trades</div><div class="v ${td.l?'neg':'zero'}">${td.l}</div></div>
@@ -1287,14 +1287,15 @@ function netChart(){
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
   S.chartSel=S.chartSel||{};const sel=S.chartSel.net;
-  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="net" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(st.days[ks[i]])}</title></circle>`).join('');
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${vals[i]>=0?'var(--green)':'var(--red)'}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="net" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(st.days[ks[i]])}</title></circle>`).join('');
   const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(st.days[ks[sel]])}`,W,L,R,T)}`})():'';
   return `<div class="k">Net P&amp;L over time</div>
   <div class="mid ${cls(run)}" style="margin-bottom:8px">${money(run)}</div>
   <div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net P&amp;L curve">
+    <defs><clipPath id="netClipUp"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="netClipDn"><rect x="0" y="${y0}" width="${W}" height="${H-y0}"/></clipPath></defs>
     <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
-    ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
-    ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
+    ${area?`<path d="${area}" fill="var(--green)" fill-opacity=".14" clip-path="url(#netClipUp)"/><path d="${area}" fill="var(--red)" fill-opacity=".14" clip-path="url(#netClipDn)"/>`:''}
+    ${line?`<path d="${line}" fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linecap="round" clip-path="url(#netClipUp)"/><path d="${line}" fill="none" stroke="var(--red)" stroke-width="2.6" stroke-linecap="round" clip-path="url(#netClipDn)"/>`:''}
     ${hit}
     ${tip}
     <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="13" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
@@ -1315,12 +1316,13 @@ function curveChart(daysObj,height){
   const line=smooth(pts);
   const area=line?`${line} L${pts[pts.length-1][0]},${y0} L${pts[0][0]},${y0} Z`:'';
   S.chartSel=S.chartSel||{};const sel=S.chartSel.mon;
-  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${col}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="mon" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(daysObj[ks[i]])}</title></circle>`).join('');
+  const hit=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="${vals[i]>=0?'var(--green)':'var(--red)'}" fill-opacity=".85" class="chart-dot" style="animation-delay:${i*25}ms"/><circle cx="${x}" cy="${y}" r="9" fill="transparent" style="cursor:pointer" data-act="chart-pt" data-cid="mon" data-idx="${i}"><title>${fmtD(ks[i])}: ${money(daysObj[ks[i]])}</title></circle>`).join('');
   const tip=sel!=null&&pts[sel]?(()=>{const [x,y]=pts[sel];return `<circle cx="${x}" cy="${y}" r="6" fill="var(--surface)" stroke="${col}" stroke-width="2" class="chart-sel"/>${chartTip(x,y,`${fmtD(ks[sel])}: ${money(daysObj[ks[sel]])}`,W,L,R,T)}`})():'';
   return `<div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly P&amp;L curve">
+    <defs><clipPath id="curClipUp"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="curClipDn"><rect x="0" y="${y0}" width="${W}" height="${H-y0}"/></clipPath></defs>
     <line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--grey)" stroke-opacity=".45" stroke-dasharray="4 5"/>
-    ${area?`<path d="${area}" fill="${col}" fill-opacity=".14"/>`:''}
-    ${line?`<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`:''}
+    ${area?`<path d="${area}" fill="var(--green)" fill-opacity=".14" clip-path="url(#curClipUp)"/><path d="${area}" fill="var(--red)" fill-opacity=".14" clip-path="url(#curClipDn)"/>`:''}
+    ${line?`<path d="${line}" fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linecap="round" clip-path="url(#curClipUp)"/><path d="${line}" fill="none" stroke="var(--red)" stroke-width="2.6" stroke-linecap="round" clip-path="url(#curClipDn)"/>`:''}
     ${hit}
     ${tip}
     <text x="${L}" y="${H-8}" fill="var(--muted)" font-size="12" font-family="Roboto,sans-serif">${fmtD(ks[0])}</text>
