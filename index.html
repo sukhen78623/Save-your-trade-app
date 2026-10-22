@@ -561,6 +561,16 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important}}
 #gbtn{color-scheme:light}
+.pill.brk{color:var(--on-red);background:var(--red);border-color:var(--red-d)}
+.pill.rvg{color:#9a6b00;background:rgba(217,164,65,.16);border-color:rgba(217,164,65,.45)}
+.dash>.d-new{grid-column:1/-1}
+.gbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 12px}
+.gbar i{display:block;height:100%;width:var(--w);border-radius:99px;background:var(--c,var(--green));animation:gfill 1.1s cubic-bezier(.3,.8,.3,1) both}
+@keyframes gfill{from{width:0}}
+.gring{display:flex;align-items:center;gap:16px}.gring svg{flex:none}
+.goal-done{animation:gpulse 2.2s ease-in-out infinite}
+@keyframes gpulse{50%{box-shadow:0 0 0 6px var(--green-bg)}}
+@media (prefers-reduced-motion:reduce){.gbar i,.goal-done{animation:none}}
 </style>
 </head>
 <body>
@@ -1162,9 +1172,9 @@ function tradeRow(t,withEdit=true){
   const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain;
   return `<div class="trade"><i class="bar3 ${p>0?'gbg':p<0?'rbg':'nbg'}"></i>
     <div class="tl">
-      <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}${t.source==='manual'?`<span class="pill mn">Manual</span>`:''}</div>
+      <div class="d"><b>${esc(t.scripName||'—')}</b><span class="pill">${cap(t.side)}</span>${brokerLabel(t.broker)?`<span class="pill bk">${esc(brokerLabel(t.broker))}</span>`:''}${t.source==='manual'?`<span class="pill mn">Manual</span>`:''}${flagPills(t)}</div>
       <div class="px">${fmtD(t.date)} • ${t.time} &nbsp; Entry <b>${num(t.entry)}</b> &nbsp; Exit <b>${num(t.exit)}</b></div>
-      ${journaled?`<div class="tag">Journal added</div>`:''}
+      ${flagNote(t)}${journaled?`<div class="tag">Journal added</div>`:''}
     </div>
     <div class="tr"><div class="amt ${cls(p)}">${money(p)}</div><div class="sub">${p>0?'Profit':p<0?'Loss':'No gain, no loss'}</div></div>
     ${withEdit?`<button class="editb" data-act="edit" data-id="${t.id}" aria-label="Edit trade">${I('pencil',20)}</button>`:''}
@@ -1216,7 +1226,7 @@ function dashboard(){
     </div>
   </div>
 
-  ${disciplineGauge()}
+  ${goalCard()}${rulesCard()}${disciplineGauge()}${weeklyCard()}
 
   <div class="card d-recent">
     <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
@@ -1251,7 +1261,7 @@ function tradesPage(){
   S.tpage=Math.min(Math.max(1,S.tpage),pages);
   const rows=list.slice((S.tpage-1)*10,S.tpage*10);
   return `<div class="titlerow"><div class="title">Trades</div><button class="addb" data-act="add-trade" aria-label="Add manual trade">${I('plus',22)}</button></div>
-  <div class="card">${filterUI('trades')}<div class="k" style="margin-top:-6px">${list.length} trade${list.length===1?'':'s'} • 10 per page</div></div>
+  <div class="card">${filterUI('trades')}<div class="k" style="margin-top:-6px">${list.length} trade${list.length===1?'':'s'} • 10 per page</div><button class="btn ghost small" style="margin-top:12px" data-act="csv">${I('file',18)}Export CSV</button></div>
   ${rows.length?`<div class="card pagecard">${rows.map(t=>tradeRow(t)).join('')}</div>
   ${pages>1?`<div class="pager"><button class="btn ghost small" data-act="pg" data-d="-1" ${S.tpage<=1?'disabled':''}>Previous</button><span class="k">Page ${S.tpage} of ${pages}</span><button class="btn ghost small" data-act="pg" data-d="1" ${S.tpage>=pages?'disabled':''}>Next</button></div>`:''}`
   :`<div class="card"><div class="empty">${emptyMsg()}</div></div>`}`;
@@ -1785,6 +1795,206 @@ function analyticsPage(){
   </div>`;
 }
 
+/* ===== Smart Discipline Rules + Goal + Weekly review + Revenge detection + CSV (added v4.0) ===== */
+const RL_DEF=[
+  ['maxTrades','Max trades per day','repeat','e.g. 5','Trades after this count are flagged'],
+  ['maxLoss','Max loss per day (₹)','flag','e.g. 2000','Trading after this loss is hit is flagged'],
+  ['maxTradeLoss','Max loss per trade (₹)','flag','e.g. 1000','Any single trade losing more is flagged'],
+  ['maxStreak','Max losses in a row','flame','e.g. 3','A trade after this many straight losses is flagged']
+];
+const addD=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const dd=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+const rs=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+function stLoad(k,def){
+  if(!S.user)return def;S._st=S._st||{};
+  if(S._st[k]&&S._st[k].u===S.user.id)return S._st[k].v;
+  let v=null;try{v=JSON.parse(safeStorage.getItem('sy-'+k+'-'+S.user.id))}catch(e){}
+  v=v||def;S._st[k]={u:S.user.id,v};return v;
+}
+function stSave(k,v){S._st=S._st||{};S._st[k]={u:S.user.id,v};try{safeStorage.setItem('sy-'+k+'-'+S.user.id,JSON.stringify(v))}catch(e){}}
+const rlGet=()=>stLoad('rl',{}),glGet=()=>stLoad('gl',{active:null,hist:[]});
+
+/* One pass over all trades: which trades broke the user's own limits (br) and which look like revenge trades (rv). Cached, so rows stay fast. */
+function flagMap(){
+  const R=rlGet(),sig=S.trades.length+'|'+Math.round(S.trades.reduce((a,t)=>a+pnl(t),0))+'|'+JSON.stringify(R);
+  if(S._fm&&S._fm.sig===sig)return S._fm;
+  const br={},rv={},bd=new Set(),byDay={};
+  S.trades.forEach(t=>(byDay[t.date]=byDay[t.date]||[]).push(t));
+  const tm=t=>{const m=String(t.time||'').match(/(\d+):(\d+)/);return m?+m[1]*60+ +m[2]:0};
+  const add=(t,m)=>{(br[t.id]=br[t.id]||[]).push(m);bd.add(t.date)};
+  Object.values(byDay).forEach(L=>{
+    L.sort((a,b)=>String(a.time).localeCompare(String(b.time))||a.id-b.id);
+    let run=0,streak=0,lossFlag=false;
+    L.forEach((t,i)=>{
+      const p=pnl(t);
+      if(R.maxTrades&&i>=R.maxTrades)add(t,'Trade #'+(i+1)+' crossed your '+R.maxTrades+'-trade daily limit');
+      if(R.maxLoss&&run<=-R.maxLoss){add(t,'Traded after your '+rs(R.maxLoss)+' daily loss limit was hit');lossFlag=true}
+      if(R.maxStreak&&streak>=R.maxStreak)add(t,'Traded after '+streak+' losses in a row (limit '+R.maxStreak+')');
+      if(R.maxTradeLoss&&p<-R.maxTradeLoss)add(t,'Lost '+rs(-p)+', above your '+rs(R.maxTradeLoss)+' per-trade limit');
+      if(i>0){const q=L[i-1],gap=tm(t)-tm(q);
+        if(pnl(q)<0&&((t.qty>=q.qty*1.5&&gap<=30)||(gap<=10&&t.scripName&&t.scripName===q.scripName&&t.side===q.side)))rv[t.id]=1}
+      run+=p;streak=p<0?streak+1:0;
+    });
+    if(R.maxLoss&&!lossFlag&&run<-R.maxLoss)add(L[L.length-1],'Day loss '+rs(-run)+' went past your '+rs(R.maxLoss)+' limit');
+  });
+  return S._fm={sig,br,rv,bd};
+}
+function flagPills(t){const f=flagMap();return (f.br[t.id]?'<span class="pill brk">Limit breached</span>':'')+(f.rv[t.id]?'<span class="pill rvg">Possible revenge</span>':'')}
+function flagNote(t){const f=flagMap(),m=f.br[t.id];return m?`<div class="tag" style="color:var(--red-d)">${esc(m[0])}${m.length>1?' +'+(m.length-1)+' more':''}</div>`:''}
+
+/* ---------- Rules ---------- */
+function meter(label,v,max,txt){
+  const r=v/max,c=r>=1?'var(--red)':r>=.7?'#d9a441':'var(--green)';
+  return `<div class="top2" style="display:flex;justify-content:space-between"><span class="k">${label}</span><b style="font-size:13px;font-weight:500">${txt}</b></div><div class="gbar"><i style="--w:${Math.min(100,r*100)}%;--c:${c}"></i></div>`;
+}
+function rulesCard(){
+  const R=rlGet();
+  if(!RL_DEF.some(r=>R[r[0]]))return `<div class="card d-new"><div class="card-h"><h2>${I('shield',22)}Discipline rules</h2></div><div class="k" style="margin-bottom:12px">Set your own daily limits (max trades, max loss). We flag anything that crosses them. Nothing is ever blocked.</div><button class="btn" data-act="sub-rules">Set my rules</button></div>`;
+  const f=flagMap(),td=sorted(S.trades.filter(t=>t.date===today())).reverse();
+  const net=td.reduce((a,t)=>a+pnl(t),0),lossUsed=Math.max(0,-net);
+  let streak=0;for(let i=td.length-1;i>=0&&pnl(td[i])<0;i--)streak++;
+  const bad=td.some(t=>f.br[t.id]);
+  const ds=[...new Set(S.trades.map(t=>t.date))].sort().reverse();let clean=0;for(const d of ds){if(f.bd.has(d))break;clean++}
+  const ms=S.trades.filter(t=>t.date>=monthStart());
+  const nb=ms.filter(t=>f.br[t.id]).length,nr=ms.filter(t=>f.rv[t.id]).length;
+  return `<div class="card d-new"><div class="card-h"><h2>${I('shield',22)}Discipline rules</h2><button class="textbtn" data-act="sub-rules">Edit${I('chev',18)}</button></div>
+  <div style="margin:-4px 0 12px"><span class="pill ${bad?'brk':'bk'}">${bad?'Limit breached today':'Within your limits'}</span></div>
+  ${R.maxTrades?meter('Trades today',td.length,R.maxTrades,td.length+' / '+R.maxTrades):''}
+  ${R.maxLoss?meter('Loss today',lossUsed,R.maxLoss,rs(lossUsed)+' / '+rs(R.maxLoss)):''}
+  ${R.maxStreak?meter('Losses in a row',streak,R.maxStreak,streak+' / '+R.maxStreak):''}
+  <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="stat"><div class="k">Clean days</div><div class="v ${clean?'pos':'zero'}" data-count="${clean}" data-fmt="int">0</div><div class="s">in a row</div></div>
+    <div class="stat"><div class="k">Breaches</div><div class="v ${nb?'neg':'zero'}" data-count="${nb}" data-fmt="int">0</div><div class="s">this month</div></div>
+    <div class="stat"><div class="k">Revenge?</div><div class="v ${nr?'neg':'zero'}" data-count="${nr}" data-fmt="int">0</div><div class="s">this month</div></div>
+  </div></div>`;
+}
+function rulesPage(){
+  const d=S.rlDraft||{};
+  return `<div class="screen"><div class="grow">${bar('Discipline rules')}
+  <div class="card"><div class="k" style="margin-bottom:14px">Set your own limits. Leave a box empty to keep that rule off. You stay free to trade as you like: breaches are only shown, never blocked.</div>
+  ${RL_DEF.map(([k,l,ic,ph,h])=>`<div class="lbl">${l}</div><label class="field">${I(ic,20)}<input type="number" inputmode="decimal" min="0" data-rl="${k}" placeholder="${ph}" value="${esc(d[k]||'')}"></label><div class="k" style="margin:-4px 2px 12px">${h}</div>`).join('')}
+  <button class="btn" data-act="rules-save">Save rules</button></div>
+  </div>${foot()}</div>`;
+}
+function rlSaveForm(){
+  const d=S.rlDraft||{},out={};
+  for(const [k,l] of RL_DEF){
+    const raw=String(d[k]??'').trim();if(raw==='')continue;
+    let v=parseFloat(raw);if(!(v>0))return toast('Enter a number above 0 for: '+l);
+    if(k==='maxTrades'||k==='maxStreak')v=Math.round(v)||1;
+    out[k]=v;
+  }
+  stSave('rl',out);S._fm=null;S.sub=null;render(true);toast('Rules saved');
+}
+
+/* ---------- Goal (one at a time, locked once started) ---------- */
+function goalSt(){
+  const g=glGet().active;if(!g)return null;
+  const td=today(),pl=S.trades.filter(t=>t.date>=g.start&&t.date<=g.end).reduce((a,t)=>a+pnl(t),0);
+  const total=dd(g.start,g.end)+1,ended=td>g.end,elapsed=Math.max(1,Math.min(total,dd(g.start,td)+1)),left=ended?0:dd(td,g.end)+1;
+  const pct=Math.max(0,pl/g.target*100),exp=elapsed/total*100,done=pl>=g.target;
+  return {g,pl,total,ended,elapsed,left,pct,exp,done,need:done?0:(g.target-pl)/Math.max(1,left)};
+}
+function goalBody(s){
+  const R=46,C=2*Math.PI*R;
+  const pace=s.ended?(s.done?'Goal achieved':'Goal missed'):s.done?'Target reached':s.pct>=s.exp?'Ahead of pace':s.pct>=s.exp-10?'On track':'Behind pace';
+  const col=s.done||s.pct>=s.exp-10?'var(--green)':'#d9a441';
+  return `<div class="gring"><svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Goal progress"><circle cx="56" cy="56" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>
+    ${s.pct>0?`<circle cx="56" cy="56" r="${R}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 ${C}" transform="rotate(-90 56 56)" class="donut-arc" data-len="${C*Math.min(1,s.pct/100)}" data-c="${C}"/>`:''}
+    <text x="56" y="63" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text)" font-family="Roboto,sans-serif" data-count="${s.pct}" data-fmt="pct">0%</text></svg>
+    <div><div class="k">${fmtD(s.g.start)} – ${fmtD(s.g.end)}</div><div style="font-size:15px;font-weight:500;margin:2px 0 6px;color:${col}">${pace}</div>
+    <div class="k">${s.ended?'Ended':'Day '+s.elapsed+' of '+s.total}</div></div></div>
+  <div class="gbar" style="margin-top:14px"><i style="--w:${Math.min(100,s.pct)}%;--c:${col}"></i></div>
+  <div class="stats"><div class="stat"><div class="k">Achieved P&amp;L</div><div class="v ${cls(s.pl)}">${money(s.pl)}</div></div>
+    <div class="stat"><div class="k">Target</div><div class="v">${rs(s.g.target)}</div></div>
+    <div class="stat"><div class="k">Days left</div><div class="v">${s.ended?'–':s.left}</div></div>
+    <div class="stat"><div class="k">Need per day</div><div class="v">${s.ended||s.done?'–':rs(s.need)}</div></div></div>`;
+}
+function goalCard(){
+  const s=goalSt();
+  if(!s)return `<div class="card d-new"><div class="card-h"><h2>${I('trend',22)}Goal</h2></div><div class="k" style="margin-bottom:12px">Set a P&amp;L goal for a week, a month or custom dates. We track your exact progress from the day you start.</div><button class="btn" data-act="sub-goal">Set a goal</button></div>`;
+  return `<div class="card d-new ${s.done?'goal-done hero g':''}"><div class="card-h"><h2>${I('trend',22)}Goal</h2><span class="pill">${I('lock',12)} ${s.ended?'Ended':'Locked till '+fmtD(s.g.end)}</span></div>${goalBody(s)}
+  <button class="btn ghost" style="margin-top:14px" data-act="${s.ended?'goal-new':'sub-goal'}">${s.ended?'Set a new goal':'View goal'}</button></div>`;
+}
+function gdEnd(d){return d.dur==='week'?addD(today(),6):d.dur==='month'?(()=>{const x=new Date();x.setMonth(x.getMonth()+1);x.setDate(x.getDate()-1);return iso(x)})():(d.end||'')}
+function goalPage(){
+  const s=goalSt(),h=glGet().hist||[];let body;
+  if(s){
+    body=`<div class="card ${s.done?'goal-done hero g':''}"><div class="card-h"><h2>${I('trend',22)}${s.ended?'Goal result':'Active goal'}</h2></div>${goalBody(s)}
+    ${s.ended?`<button class="btn" style="margin-top:14px" data-act="goal-new">Set a new goal</button>`:`<div class="k" style="margin-top:14px;display:flex;gap:6px;align-items:center">${I('lock',14)}Locked: this goal can't be edited or cancelled until ${fmtD(s.g.end)}.</div>`}</div>`;
+  }else{
+    const d=S.gdraft||(S.gdraft={dur:'week',end:'',target:''}),end=gdEnd(d);
+    body=`<div class="card"><div class="hd">${I('trend',22)}Set your goal</div>
+    <div class="lbl">Duration</div><div class="seg">${[['week','1 Week'],['month','1 Month'],['custom','Custom']].map(([v,l])=>`<button class="${d.dur===v?'on':''}" data-act="goal-dur" data-v="${v}">${l}</button>`).join('')}</div>
+    ${d.dur==='custom'?`<div class="lbl">End date</div><label class="field"><input type="date" data-gd="end" min="${today()}" value="${esc(d.end)}"></label>`:''}
+    <div class="lbl">Target P&amp;L (₹)</div><label class="field"><input type="number" inputmode="decimal" min="0" data-gd="target" placeholder="e.g. 10000" value="${esc(d.target)}"></label>
+    <div class="k" style="margin:-2px 2px 14px">Starts today (${fmtD(today())})${end?' and ends '+fmtD(end):''}. Progress uses your real P&amp;L from today. Once started, the goal is locked.</div>
+    <button class="btn" data-act="goal-ask">Start goal</button></div>`;
+  }
+  const hist=h.length?`<div class="card"><div class="card-h"><h2>${I('calendar2',22)}Past goals</h2></div>${h.slice(0,5).map(x=>`<div class="kv"><span>${fmtD(x.start)} – ${fmtD(x.end)}<br><span class="k">Target ${rs(x.target)} • ${money(x.pl)}</span></span><span class="pill ${x.done?'bk':''}">${x.done?'Achieved':Math.round(x.pct)+'%'}</span></div>`).join('')}</div>`:'';
+  return `<div class="screen"><div class="grow">${bar('Trading goal')}${body}${hist}</div>${foot()}</div>`;
+}
+function goalConfirmView(fresh){
+  const d=S.gdraft||{},end=gdEnd(d);
+  return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="modal"><h3>Lock this goal?</h3><p>Target ${rs(+d.target)} from today to ${fmtD(end)}. Once started you can't edit or cancel it until it ends.</p>
+  <div class="acts"><button class="btn ghost" data-act="close-ov-btn">Cancel</button><button class="btn" data-act="goal-lock">Lock &amp; start</button></div></div></div>`;
+}
+function goalAsk(){
+  const d=S.gdraft||{},end=gdEnd(d);
+  if(!(+d.target>0))return toast('Enter a target amount');
+  if(!end||end<today())return toast('Pick an end date from today onwards');
+  S.goalConfirm=true;ovFresh=true;render();
+}
+function goalLock(){
+  const d=S.gdraft,end=gdEnd(d),G=glGet();
+  G.active={start:today(),end,target:+d.target,created:Date.now()};stSave('gl',G);
+  S.goalConfirm=false;S.gdraft=null;render(true);toast('Goal locked. All the best!');
+}
+function goalNew(){
+  const s=goalSt(),G=glGet();
+  if(s){G.hist=[{...s.g,pl:s.pl,pct:s.pct,done:s.done},...(G.hist||[])].slice(0,10);G.active=null;stSave('gl',G)}
+  S.gdraft=null;S.sub='goal';render(true);
+}
+
+/* ---------- Weekly review ---------- */
+function weekRange(off){const d=new Date(),back=(d.getDay()+6)%7,m=new Date(d);m.setDate(d.getDate()-back-7*off);const e=new Date(m);e.setDate(m.getDate()+6);return [iso(m),iso(e)]}
+function weeklyCard(){
+  const v=S.wk||'last',o=v==='last'?1:0,[a,b]=weekRange(o),[pa,pb]=weekRange(o+1);
+  const L=S.trades.filter(t=>t.date>=a&&t.date<=b),P=S.trades.filter(t=>t.date>=pa&&t.date<=pb),st=stats(L),ps=stats(P),f=flagMap();
+  const bt=L.filter(t=>f.br[t.id]),nr=L.filter(t=>f.rv[t.id]).length,ins=[];
+  if(L.length){
+    if(P.length){const dl=st.total-ps.total;ins.push(`Net P&L is ${rs(Math.abs(dl))} ${dl>=0?'better':'lower'} than the week before.`)}
+    if(bt.length)ins.push(`${bt.length} trade${bt.length>1?'s':''} crossed your limits and made ${money(bt.reduce((x,t)=>x+pnl(t),0))}.`);
+    else if(RL_DEF.some(r=>rlGet()[r[0]]))ins.push('You stayed inside every limit this week.');
+    if(nr)ins.push(`${nr} possible revenge trade${nr>1?'s':''} spotted after losses.`);
+    if(st.worst)ins.push(`Toughest day: ${fmtD(st.worst.d)} (${money(st.worst.v)}).`);
+  }
+  return `<div class="card d-new"><div class="card-h"><h2>${I('calendar2',22)}Weekly review</h2></div>
+  <div class="seg">${[['last','Last week'],['this','This week']].map(([k,l])=>`<button class="${v===k?'on':''}" data-act="wk" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="k" style="margin:-4px 0 10px">${fmtD(a)} – ${fmtD(b)}</div>
+  ${L.length?`<div class="mid ${cls(st.total)}">${money(st.total)}</div>
+  <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="stat"><div class="k">Win rate</div><div class="v">${st.rate}%</div></div>
+    <div class="stat"><div class="k">Trades</div><div class="v">${L.length}</div></div>
+    <div class="stat"><div class="k">Best day</div><div class="v ${st.best?'pos':'zero'}">${st.best?moneyShort(st.best.v):'–'}</div></div>
+    <div class="stat"><div class="k">Breaches</div><div class="v ${bt.length?'neg':'zero'}">${bt.length}</div></div>
+    <div class="stat"><div class="k">Revenge?</div><div class="v ${nr?'neg':'zero'}">${nr}</div></div>
+    <div class="stat"><div class="k">Profit factor</div><div class="v">${pfStr(st.pf)}</div></div></div>
+  <ul class="ov-l good" style="margin-top:12px">${ins.slice(0,3).map(x=>`<li>${x}</li>`).join('')}</ul>`:`<div class="empty">No trades in this week</div>`}</div>`;
+}
+
+/* ---------- CSV export (respects the Trades page period filter) ---------- */
+function exportCSV(){
+  const list=sorted(S.trades.filter(t=>inR('trades',t)));
+  if(!list.length)return toast('No trades to export');
+  const f=flagMap(),tx=v=>{v=String(v??'');if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
+  const head=['Date','Time','Broker','Scrip','Side','Qty','Entry','Exit','P&L','Setup','Planned SL','Planned target','Anticipation','Rule break','Over trading','Revenge (journal)','Maintain discipline','Mistake','Note','Limit breach','Possible revenge (auto)'];
+  const rows=list.map(t=>[t.date,t.time,tx(brokerLabel(t.broker)),tx(t.scripName),t.side,t.qty,t.entry,t.exit,Math.round(pnl(t)*100)/100,tx(t.setup),t.sl,t.target,t.anticipation,t.ruleBreak,t.overTrading,t.revenge,t.maintain,tx(t.mistake),tx(t.note),tx((f.br[t.id]||[]).join('; ')),f.rv[t.id]?'yes':''].join(','));
+  const r=rangeOf('trades'),blob=new Blob(['\ufeff'+head.join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='save-your-trade_'+(r.from||'all')+'_to_'+(r.to||'all')+'.csv';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('CSV exported');
+}
+
 const PLAN_NAMES={'3m':'3 Months Plan','6m':'6 Months Plan','1y':'1 Year Plan'};
 function planDisplay(plan){
   const p=String(plan||'').trim();
@@ -1807,6 +2017,11 @@ function settingsPage(){
     ${li('user','User profile','sub-profile')}
     ${li('card','Subscription','sub-subscription',subLabel())}
     ${li('refresh',`Sync with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
+  </div>
+  <div class="sec">Trading discipline</div>
+  <div class="list">
+    ${li('shield','Discipline rules','sub-rules',`<span class="r">${RL_DEF.filter(r=>rlGet()[r[0]]).length?RL_DEF.filter(r=>rlGet()[r[0]]).length+' active':'Not set'}</span>`)}
+    ${li('trend','Trading goal','sub-goal',`<span class="r">${goalSt()?(goalSt().ended?'Ended':'Active'):'Not set'}</span>`)}
   </div>
   <div class="sec">Appearance</div>
   <div class="seg appearance" style="margin-bottom:0">${[['auto','Auto','auto'],['light','Light','sun'],['dark','Dark','moon']].map(([k,l,ic])=>`<button class="${S.theme===k?'on':''}" data-act="theme" data-t="${k}">${I(ic,15)}<span>${l}</span></button>`).join('')}</div>
@@ -2111,6 +2326,8 @@ function subView(){
     case 'edit':return editPage();
     case 'addtrade':return addTradePage();
     case 'day':return dayPage();
+    case 'rules':return rulesPage();
+    case 'goal':return goalPage();
   }
   return '';
 }
@@ -2163,6 +2380,7 @@ function render(top=false){
   if(S.logoutModal)html+=logoutView(fresh);
   if(S.delModal)html+=deleteView(fresh);
   if(S.changeModal)html+=changeBrokerView(fresh);
+  if(S.goalConfirm)html+=goalConfirmView(fresh);
   if(S.busy)html+=loaderView();
   app.classList.toggle('enter',top);
   app.classList.toggle('noshell',!S.user);
@@ -2787,7 +3005,7 @@ function act(a,el){
     case 'sheet':S.sheet=true;ovFresh=true;return render();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
-    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
+    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.goalConfirm=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
     case 'broker':{
       const b=el.dataset.b;
       if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
@@ -2833,6 +3051,15 @@ function act(a,el){
     case 'cal-prev':return go(()=>{S.calMonth=shiftMonth(S.calMonth,-1)});
     case 'cal-next':return go(()=>{S.calMonth=shiftMonth(S.calMonth,1)});
     case 'cal-day':return go(()=>{S.calDay=el.dataset.date;S.sub='day'});
+    case 'sub-rules':return go(()=>{S.rlDraft={...rlGet()};S.sub='rules'});
+    case 'rules-save':return rlSaveForm();
+    case 'sub-goal':return go(()=>{if(!S.gdraft)S.gdraft={dur:'week',end:'',target:''};S.sub='goal'});
+    case 'goal-dur':S.gdraft.dur=el.dataset.v;return render();
+    case 'goal-ask':return goalAsk();
+    case 'goal-lock':return goalLock();
+    case 'goal-new':return goalNew();
+    case 'wk':S.wk=el.dataset.v;return render();
+    case 'csv':return exportCSV();
     case 'theme':S.theme=el.dataset.t;try{safeStorage.setItem('tj-theme',S.theme)}catch(e){}applyTheme();return render();
     case 'logout':S.logoutModal=true;ovFresh=true;return render();
     case 'confirm-logout':return doLogout();
@@ -2851,6 +3078,8 @@ function onField(e){
   if(t.dataset.p)S.pw[t.dataset.p]=t.value;
   if(t.dataset.e)S.em[t.dataset.e]=t.value;
   if(t.dataset.fb)S.fb[t.dataset.fb]=t.value;
+  if(t.dataset.rl){S.rlDraft=S.rlDraft||{};S.rlDraft[t.dataset.rl]=t.value}
+  if(t.dataset.gd){S.gdraft=S.gdraft||{dur:'week'};S.gdraft[t.dataset.gd]=t.value}
 }
 document.addEventListener('input',onField);
 function canvasToBlob(c,type,q){return new Promise(res=>c.toBlob(res,type,q));}
