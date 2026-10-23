@@ -1998,19 +1998,8 @@ function goalSt(){
 }
 function goalBody(s){
   const R=46,C=2*Math.PI*R;
-  /* Message depends only on how much of the target is done (not on calendar days, so weekends and holidays never matter) */
-  const pc=s.pct,pl=s.pl;
-  const pace=s.done?(s.ended?'Goal achieved. Well done, champ!':'Goal achieved! Well done, champ!')
-    :s.ended?'Goal ended at '+Math.round(pc)+'%. Review your trades and set a new one.'
-    :pl<0?'Tough start. Stay calm and stick to your plan.'
-    :pc<=0?'Ready when you are. Your first step is waiting.'
-    :pc<10?'You just started. Keep going!'
-    :pc<25?'Good start. Keep moving forward!'
-    :pc<50?'Nice progress. Stay steady.'
-    :pc<75?'More than halfway there. Keep it up!'
-    :pc<90?'Almost there. Just a few steps left!'
-    :'Cheer up, champ! You are just a few miles away!';
-  const col=pl<0?'#d9a441':'var(--green)';
+  const pace=goalMsg(s);
+  const col=s.pl<0?'#d9a441':'var(--green)';
   return `<div class="gring"><svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Goal progress"><circle cx="56" cy="56" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>
     ${s.pct>0?`<circle cx="56" cy="56" r="${R}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 ${C}" transform="rotate(-90 56 56)" class="donut-arc" data-len="${C*Math.min(1,s.pct/100)}" data-c="${C}"/>`:''}
     <text x="56" y="63" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text)" font-family="Roboto,sans-serif" data-count="${s.pct}" data-fmt="pct">0%</text></svg>
@@ -2021,6 +2010,59 @@ function goalBody(s){
     <div class="stat"><div class="k">Target</div><div class="v">${rs(s.g.target)}</div></div>
     <div class="stat"><div class="k">Days left</div><div class="v">${s.ended?'–':s.left}</div></div>
     <div class="stat"><div class="k">Remaining</div><div class="v">${s.done?'–':rs(s.g.target-s.pl)}</div></div></div>`;
+}
+/* Goal card messages: chosen by progress (not calendar days) and by time of day. One message is picked per stage and time slot when the app opens, so it does not flicker on every tap. */
+const GOAL_MSGS={
+ loss:{g:["Tough start. Stay calm and stick to your plan.","A red start is not the end. Protect your capital first.","Do not chase it back. One good trade at a time.","Every trader has red days. Learn from this one.","Breathe. Your rules matter more than this loss.","Small steps will bring you back. No hurry.","Review the trade, not your feelings.","A loss is the fee for learning. Pay it wisely.","Stay patient. Recovery starts with discipline.","Do not trade to recover. Trade to follow your plan."],
+  m:["New morning, fresh chance. Go slow and steady.","Start the day calm. Your plan will bring you back.","Morning is a good time to reset. Check your rules first."],
+  e:["Evening is for review. See what went wrong, without anger.","The day is almost done. Learn from it and let it go.","Do not take a revenge trade in the evening. Rest and review."],
+  n:["Close the screen. Rest well, tomorrow is a new day.","Sleep on it. A calm mind trades better tomorrow.","Red days end at night. Rest and come back strong."]},
+ zero:{g:["Ready when you are. Your first step is waiting.","Every big journey starts with one small step.","Your goal is set. Now follow your plan.","Wait for your setup. No setup, no trade.","A clear plan is already half the work.","No need to hurry. Quality over quantity.","The first trade is just a step. Make it a clean one.","Stay calm and trade only your setup.","Your target is ahead. Your discipline will take you there.","Begin with patience. The market will give you chances."],
+  m:["Good morning! A fresh start. Plan first, then trade.","New day, new chance. Read your rules before you begin.","Start slow this morning. Let the market show its mood."],
+  e:["Evening check: no trade is also a good decision.","Still at zero? That is fine. Wait for a good setup.","Good evening. Plan tomorrow's setups now."],
+  n:["Rest well tonight. Plan your first step for tomorrow.","Night is for planning. Tomorrow you take the first step.","Sleep early. A fresh mind starts better."]},
+ p1:{g:["You just started. Keep going!","The journey has begun. Stay steady.","A small start is still a start. Well done!","First few steps are done. Keep your rhythm.","Good beginning. Do not rush the rest.","You are on the road now. One trade at a time.","Little by little, it adds up. Keep it up!","The seed is planted. Give it time.","Nice start. Protect what you have made.","Early days. Stay disciplined and patient."],
+  m:["Good morning! You have started, so keep going today.","A fresh morning on a good start. Stay focused.","Start the day with the same discipline as yesterday."],
+  e:["Good evening! A small start today, and that is okay.","You moved forward today. Be proud of that.","Evening review: you are on the road. Keep going."],
+  n:["You started well. Rest now, continue tomorrow.","Small steps count. Good night, trader.","Night thought: slow and steady wins. Sleep well."]},
+ p10:{g:["Good start. Keep moving forward!","You are building momentum. Stay calm.","Nice work. Your plan is working.","Keep your rules, keep your pace.","Progress is visible now. Do not get careless.","Step by step, you are getting there.","Consistency is doing its job. Keep going!","You are on the right track. Stay humble.","A good base is ready. Build on it slowly.","Do not increase size just because it is going well."],
+  m:["Good morning! Good progress so far. Keep the same habits.","A good start to the day. Trust your process.","Morning focus: protect your progress, then grow it."],
+  e:["Good evening! You are making real progress.","Evening review: good work. Note what helped you.","You moved forward again. Well done today."],
+  n:["Good progress. Rest well, your mind needs it.","You are doing well. Sleep now, continue tomorrow.","Night note: process over profit. Good night!"]},
+ p25:{g:["Nice progress. Stay steady.","A quarter of the way, or more. Great going!","Your discipline is showing in the numbers.","You are moving well. Keep the same rhythm.","Good job. Keep your rules close.","Do not change what is working.","Progress is real now. Stay focused.","Calm and steady. That is how you win.","You are building good habits. Keep them.","Slow and steady. The goal is getting closer."],
+  m:["Good morning! You are moving well. Stay consistent.","Morning check: same plan, same discipline.","A fresh day on a good run. Keep it simple."],
+  e:["Good evening! Good going so far.","Evening thought: consistency is beating luck.","Another good day of discipline. Well done!"],
+  n:["Good progress. Rest now and keep your energy.","Sleep well. A steady mind makes steady profit.","Night note: you are doing better than you think."]},
+ p50:{g:["More than halfway there. Keep it up!","You crossed the halfway mark. Great work!","Half the journey is done. Stay disciplined.","The hard part is behind you. Do not relax your rules.","Strong progress. Protect what you have made.","You are doing really well. Stay calm.","Halfway done. Keep your focus sharp.","This is where discipline matters most. Stay steady.","Great going, champ. The goal is in sight.","Do not get greedy now. Keep your pace."],
+  m:["Good morning! You are past halfway. Keep the same plan.","Morning energy: you are doing great. Stay steady.","Halfway and going strong. Start the day calm."],
+  e:["Good evening! Past halfway. That is a big thing.","Evening review: strong progress, strong habits.","You are doing great. Do not break your rules now."],
+  n:["Past halfway. Rest well, you earned it.","Good night, champ. Tomorrow we keep going.","Sleep well. Your progress is real."]},
+ p75:{g:["Almost there. Just a few steps left!","The finish line is getting close. Stay calm.","You have come so far. Keep your discipline.","Do not rush the last part. Keep your plan.","Very close now. One clean trade at a time.","Great work. Stay patient and finish well.","Keep your head cool. You are nearly there.","The last part needs the most patience.","You can almost touch the goal. Stay steady.","Do not take extra risk to finish early."],
+  m:["Good morning! The goal is close. Stay calm today.","Morning thought: finish strong, not fast.","Nearly there. Start the day with discipline."],
+  e:["Good evening! So close to your goal now.","Evening review: great run. Keep it clean.","The goal is near. Do not break your rules for it."],
+  n:["So close now. Rest well and stay sharp.","Good night. Tomorrow we move closer, calmly.","Sleep well. The finish line will wait for you."]},
+ p90:{g:["Cheer up, champ! You are just a few miles away!","Almost at the top. Do not rush now!","So close you can see it. Stay calm.","Final steps. Follow your plan to the end.","Your hard work is about to pay off.","One or two clean trades and you are there.","Do not let excitement break your rules.","Finish the way you started: with discipline.","Great job, champ. Just a little more.","The last mile is the most important. Stay patient."],
+  m:["Good morning, champ! The goal is just ahead. Stay calm.","Morning reminder: the last steps need the most patience.","So close. Start the day cool and focused."],
+  e:["Good evening, champ! You are really close now.","Evening review: you are almost there. Great work!","Just a few steps left. Do not rush tomorrow."],
+  n:["So close! Rest well, tomorrow you finish calmly.","Good night, champ. The goal is very near.","Sleep well. A calm mind will finish the job."]},
+ done:{g:["Goal achieved! Well done, champ!","You did it! Your discipline paid off.","Target reached. Be proud of yourself!","Great job! Now protect what you earned.","Goal complete. Take a moment to enjoy it.","Excellent work. Set a new goal when you are ready.","You earned this. Stay humble, stay disciplined.","Mission complete! Review what worked for you.","Champion move! Do not give it back.","Target hit! Rest, review, and plan the next one."],
+  m:["Good morning, champ! Your goal is done. Enjoy the win!","Goal achieved. Start the day proud and calm.","Morning thought: you did it. Now stay disciplined."],
+  e:["Good evening, champ! Goal achieved, great work!","Evening review: write down what worked for you.","You did it! Enjoy the evening."],
+  n:["Goal achieved. Sleep well, champ!","Good night, winner. You earned this rest.","You did it. Rest well and plan the next goal tomorrow."]},
+ ended:{g:["Goal period ended. Review your trades and set a new one.","This goal is over. Learn from it and move ahead.","Every goal teaches something. Check what worked.","New goal, fresh start. Use what you learned.","Not reached this time. That is okay, keep learning.","Review your journal and set a smarter goal.","Progress is progress. Set the next target.","Look at your mistakes without blame. Then move on.","A goal ended, not your journey. Keep going.","Take a small break, then set a new goal."],
+  m:["Good morning! Set a fresh goal and start again.","New morning. Review the last goal, then move on.","Start today with a clear new target."],
+  e:["Evening review: what did this goal teach you?","Good evening! Plan your next goal calmly.","Look back at your trades tonight, then set a new goal."],
+  n:["Rest now. Tomorrow, set a new goal.","Good night. Every end is a new beginning.","Sleep well. A fresh goal is waiting."]}
+};
+function goalMsg(s){
+  const pc=s.pct,pl=s.pl;
+  const key=s.done?'done':s.ended?'ended':pl<0?'loss':pc<=0?'zero':pc<10?'p1':pc<25?'p10':pc<50?'p25':pc<75?'p50':pc<90?'p75':'p90';
+  const h=new Date().getHours(),slot=h>=5&&h<12?'m':h>=17&&h<22?'e':(h>=22||h<5)?'n':'g';
+  const set=GOAL_MSGS[key],pool=slot==='g'?set.g:set.g.concat(set[slot]);
+  S._gm=S._gm||{};
+  const ck=key+slot;
+  if(S._gm[ck]==null||S._gm[ck]>=pool.length)S._gm[ck]=Math.floor(Math.random()*pool.length);
+  return pool[S._gm[ck]];
 }
 function goalCard(){
   const s=goalSt();
