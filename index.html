@@ -1775,7 +1775,7 @@ const SYTG=(function(){
     if(food.length)pools.push(food);
     pools.push(dayLines[dayKeys[day]],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)],funLines);
     /* One short line only. Friendly questions get the biggest share. */
-    var short=function(t){return t.length<=60};
+    var short=function(t){return t.length<=50};
     var msg="";
     if(weekend&&Math.random()<0.4){
       msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][wslot]).replace("{n}","");
@@ -1806,13 +1806,89 @@ function greetSlot(){
   if(now<at(23))return h<20?'evening':'night';
   return 'night';
 }
+/* ---------- Friend messages: how the trader actually traded ----------
+   Rule-based and runs only in the browser from the trader's own data. Never judges, never gives trade advice.
+   Strong moments (a tough day, a disciplined loss) always show. Softer ones show now and then. */
+const FRIEND={
+  lossGoodLate:["You did it right today, champ. Sleep well.","Loss is part of profit. Proud of you.","Clean rules today. Rest well, champ.","Red day, clean rules. Sleep well."],
+  lossGoodEve:["You did well, champ. Loss is part of profit.","Red day, but your rules held.","Well done for staying disciplined, champ.","A disciplined loss is a lesson.","Proud of you for sticking to your rules.","Not every day is green. Your discipline was."],
+  lossGoodDay:["Calm after a loss is a skill.","A loss doesn't define your day.","You stayed on your rules. Keep that calm.","Take a breath. You are doing fine."],
+  lossBadLate:["Take a moment to reflect. Health comes first.","Rest now. You matter more than any trade.","It's late. Be kind to yourself and sleep.","Rules slipped. Rest first, review tomorrow.","Your health matters beyond trading."],
+  lossBadEve:["Tough day. Reflect, no judgment.","Rules slipped. Step away, review calmly.","Rough day. A short walk helps.","It happens to every trader. Reset tonight.","Close the charts. Review with a fresh mind."],
+  lossBadDay:["Rules slipped. Step away for a few minutes.","Take a deep breath. A pause is strong.","Tough patch. Water, breath, short break.","You are not your last trade."],
+  revenge:["Quick re-entry after a loss? Breathe first.","Back to back losses? Take a short break.","Pause. Water. Breath. Then think."],
+  over:["Many trades today. A short break may help.","Busy day. Rest your eyes for a bit.","Slow down. The market isn't going anywhere."],
+  winBadEve:["Green day, but a few rules slipped.","Profit is nice. Keep your rules close.","A win can hide a slip. Review it kindly."],
+  winGoodEve:["Green day, clean rules. Real win, champ.","Well done. Discipline made that profit.","You earned today. Rest and enjoy it.","Profit with discipline. Proud of you."],
+  winGoodDay:["Good going. Keep the same calm.","Nice start. Stay steady."],
+  slip:["A few rules slipped. Be kind, then review.","Flat day with a slip. Note it, let it go."],
+  streak:["{n} clean days in a row, champ.","{n} days of discipline. Real growth.","{n} clean days. Nice habit."],
+  lastLoss:["Last session was red. Fresh page today.","Start today light and calm, champ."],
+  lastWin:["Good last session. Same calm today.","Nice last session. No need to chase."],
+  noTrade:["No trade yet. Waiting is also a decision.","Patience counts too. Wait for your setup."],
+  journal:["A short note on your last trade helps.","Got a minute? Note why you took your last trade."],
+  rules:["Set your daily limits in Settings."],
+  goalNear:["You are close to your goal. Stay steady.","So close to your goal. Same calm."],
+  goalDone:["Goal done! Enjoy it, you earned it."]
+};
+function cleanStreak(){
+  const by={};S.trades.forEach(t=>{(by[t.date]=by[t.date]||[]).push(t)});
+  let n=0;for(const dt of Object.keys(by).sort().reverse()){if(by[dt].some(t=>effFlags(t).notMaintained))break;n++}
+  return n;
+}
+/* Returns {m:message,p:chance to show} or null when nothing special applies. */
+function behaviourNote(slot){
+  try{
+    if(S.tradesLoading||!S.trades.length)return null;
+    const d=new Date(),dow=d.getDay(),h=d.getHours(),td=today();
+    const eve=slot==='evening'||slot==='night'||slot==='latenight';
+    const late=slot==='latenight'||(slot==='night'&&(h>=22||h<4));
+    const pick=a=>a[Math.floor(Math.random()*a.length)];
+    const tt=S.trades.filter(t=>t.date===td);
+    const streak=cleanStreak();
+    if(tt.length){
+      const st=stats(tt),fl=tt.map(effFlags);
+      const bad=fl.some(f=>f.notMaintained),rv=fl.some(f=>f.revenge),ov=fl.some(f=>f.overTrading);
+      if(st.total<0){
+        if(!bad)return {m:pick(late?FRIEND.lossGoodLate:eve?FRIEND.lossGoodEve:FRIEND.lossGoodDay),p:late||eve?1:.8};
+        if(late)return {m:pick(FRIEND.lossBadLate),p:1};
+        if(eve)return {m:pick(FRIEND.lossBadEve),p:1};
+        return {m:pick(rv?FRIEND.revenge:ov?FRIEND.over:FRIEND.lossBadDay),p:.85};
+      }
+      if(st.total>0){
+        if(bad)return eve?{m:pick(FRIEND.winBadEve),p:.9}:(rv||ov)?{m:pick(rv?FRIEND.revenge:FRIEND.over),p:.7}:null;
+        if(streak>=3&&Math.random()<.5)return {m:pick(FRIEND.streak).replace('{n}',streak),p:.9};
+        return {m:pick(eve?FRIEND.winGoodEve:FRIEND.winGoodDay),p:eve?.9:.7};
+      }
+      if(bad)return {m:pick(FRIEND.slip),p:.8};
+      if(ov)return {m:pick(FRIEND.over),p:.7};
+    }
+    const c=[];
+    const s=goalSt();
+    if(s&&!s.ended){if(s.done)c.push({m:pick(FRIEND.goalDone),p:.5});else if(s.pct>=80)c.push({m:pick(FRIEND.goalNear),p:.5})}
+    if(!tt.length){
+      if(streak>=3)c.push({m:pick(FRIEND.streak).replace('{n}',streak),p:.6});
+      const ds=[...new Set(S.trades.map(t=>t.date))].filter(x=>x<td).sort().reverse();
+      if(ds[0]&&h<12){const lp=stats(S.trades.filter(t=>t.date===ds[0])).total;
+        if(lp<0)c.push({m:pick(FRIEND.lastLoss),p:.6});else if(lp>0)c.push({m:pick(FRIEND.lastWin),p:.45})}
+      if(S.connected&&dow>0&&dow<6&&h>=9&&h<15)c.push({m:pick(FRIEND.noTrade),p:.45});
+    }
+    const last=sorted(S.trades)[0];
+    if(last&&!(last.setup||last.note||last.mistake||last.shot||last.sl||last.target||last.anticipation||last.ruleBreak||last.overTrading||last.revenge||last.maintain))c.push({m:pick(FRIEND.journal),p:.3});
+    let rulesOn=false;try{rulesOn=RL_DEF.some(r=>rlGet()[r[0]])}catch(e){}
+    if(!rulesOn)c.push({m:pick(FRIEND.rules),p:.25});
+    return c.length?pick(c):null;
+  }catch(e){return null}
+}
 function greetingNote(){
   try{
-    const d=new Date(),slot=greetSlot(),k=d.toDateString()+'|'+slot;
+    if(S.tradesLoading)return '';
+    const d=new Date(),slot=greetSlot(),k=d.toDateString()+'|'+slot+'|'+S.trades.length+'|'+Math.round(S.trades.reduce((a,t)=>a+pnl(t),0));
     if(_gnote.k===k&&_gnote.v)return _gnote.v;
-    let m=SYTG.note(slot),last='';
+    const draw=()=>{const b=behaviourNote(slot);return (b&&Math.random()<b.p)?b.m:SYTG.note(slot)};
+    let m=draw(),last='';
     try{last=safeStorage.getItem('sy-last-greet')||''}catch(e){}
-    for(let i=0;i<6&&m===last;i++)m=SYTG.note(slot);
+    for(let i=0;i<6&&m===last;i++)m=draw();
     try{safeStorage.setItem('sy-last-greet',m)}catch(e){}
     _gnote={k:k,v:m};return m;
   }catch(e){return ''}
