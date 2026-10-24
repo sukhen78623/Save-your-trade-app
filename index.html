@@ -1274,7 +1274,7 @@ const SYTG=(function(){
     saturday: {
       morning: [
         "Welcome to the weekend morning{n}!", "Happy Saturday morning{n}!", "Saturday morning vibes{n}!",
-        "It's the weekend{n}, good morning!", "Slow Saturday morning ahead{n}!", "Weekend mode: ON{n}. Good morning!"
+        "It's the weekend{n}, finally!", "Slow Saturday morning ahead{n}!", "Weekend mode: ON{n}!"
       ],
       afternoon: [
         "Happy Saturday afternoon{n}!", "Enjoying your Saturday{n}?", "Lazy weekend afternoon{n}!",
@@ -1292,7 +1292,7 @@ const SYTG=(function(){
     sunday: {
       morning: [
         "Happy Sunday morning{n}!", "Welcome to a slow Sunday morning{n}!", "Sunday morning vibes{n}!",
-        "Good Sunday morning{n}!", "It's Sunday{n}, no rush today!", "Peaceful Sunday morning to you{n}!"
+        "Sunday mode: relaxed{n}!", "It's Sunday{n}, no rush today!", "Peaceful Sunday morning to you{n}!"
       ],
       afternoon: [
         "Happy Sunday afternoon{n}!", "Lazy Sunday afternoon{n}!", "Enjoying your Sunday{n}?",
@@ -1361,51 +1361,72 @@ const SYTG=(function(){
     ]
   };
 
-  /* ---------- 4. TEA / COFFEE / FOOD LINES (by time of day) ---------- */
-  var drinkLines = {
-    dawn: [
-      "Enjoy your first cup of tea or coffee in peace.", "A warm cup of tea and a quiet start, perfect.",
-      "Sip your tea slowly, the day is yours.", "Fresh air, fresh tea, fresh mind.",
-      "Hope your first coffee is a good one.", "A calm cup before a busy day.",
-      "Tea (or coffee) first, everything else later.", "The best ideas come with the first cup."
-    ],
-    morning: [
-      "Enjoy your tea, or sometimes coffee, whichever suits you today.", "Hope you had a good breakfast and a warm cup.",
-      "Tea or coffee? Both are a good choice this morning.", "Grab your favourite cup and settle in.",
-      "A warm cup makes any morning better.", "Hope your chai is hot and your mind is calm.",
-      "Breakfast done? Cup in hand? Perfect.", "Sip, smile and start slow."
-    ],
-    noon: [
-      "Hope you had a good lunch.", "Have you eaten yet? A good meal makes a clear mind.",
-      "A proper lunch is the best productivity tool.", "Lunch time! Drink some water too.",
-      "Don't skip lunch, your mind needs fuel.", "Hope your lunch was tasty.",
-      "A short break after lunch does wonders.", "Water, food, calm, in that order."
-    ],
-    afternoon: [
-      "Time for an afternoon chai or coffee?", "A tea break is a very good idea right now.",
-      "Hope your afternoon cup is hot and your snacks are tasty.", "Chai and a little break, you deserve it.",
-      "Stretch your legs, sip some water.", "Afternoon energy low? Tea to the rescue.",
-      "A small snack and a short walk can reset your focus.", "Pause, sip, continue."
-    ],
-    evening: [
-      "Evening chai time, the best time of the day.", "Hope you have some evening tea and snacks.",
-      "A warm cup and a calm mind, a perfect evening.", "Chai, biscuits and a calm evening, that's the plan.",
-      "The evening cup always tastes better.", "Hope your day ends with something warm and tasty.",
-      "Watch the sky for a minute, it's worth it.", "Relax, the day's work is done."
-    ],
-    night: [
-      "Hope you had a good dinner.", "A light dinner and early sleep make tomorrow better.",
-      "Drink some water and unwind.", "Dim the screen, relax your eyes.",
-      "A warm glass of milk and a calm mind, good night prep.", "Time to slow down and rest your mind.",
-      "Tomorrow is a new chance, rest well tonight.", "Switch off from the charts, switch on the calm."
-    ],
-    latenight: [
-      "A good sleep is the best trading edge.", "Please get some rest, tomorrow needs you fresh.",
-      "Your journal will be here in the morning, your sleep matters more.", "Drink some water and rest your eyes.",
-      "Late nights are fine sometimes, but rest soon.", "Sleep well, your best decisions come from a rested mind.",
-      "The charts will still be there tomorrow.", "Take care of your sleep, it is part of your discipline."
-    ]
+  /* ---------- 4. TEA, COFFEE, MEAL LINES (only one small part of the mix) ---------- */
+  var teaLines = {
+    dawn: ["Tea first, everything else later.", "A hot cup of chai and a quiet start. Perfect.", "Chai in hand yet?", "Early tea hits different, doesn't it?"],
+    morning: ["Is it a chai morning today?", "Hope your chai is hot and your mind is calm.", "Tea cup ready? Then let's begin.", "One cup of chai can fix a lot of things."],
+    afternoon: ["Chai break time?", "Afternoon chai is always a good idea.", "A cup of tea and a short pause, you deserve it.", "Tea o'clock, right on time."],
+    evening: ["Evening chai time, the best time of the day.", "Chai and a little sky-watching, try it today.", "Hope your evening chai is strong and sweet.", "Chai, biscuits and a calm evening. That's the plan."],
+    night: ["A light cup of tea before bed? Why not."],
+    noon: ["Lunch done? Then a small chai makes it perfect."],
+    latenight: ["No more tea tonight, sleep is waiting."]
   };
+  var coffeeLines = {
+    dawn: ["Coffee first, thinking later.", "That first sip of coffee is magic.", "Coffee day today?", "Strong coffee, quiet mind."],
+    morning: ["Is it a coffee morning today?", "Coffee in hand? Then you are ready.", "One good coffee and the day feels easier.", "Hope your coffee is as strong as your plan."],
+    afternoon: ["Time for a coffee break?", "Afternoon coffee can bring the energy back.", "A short coffee break can reset the whole afternoon.", "Coffee and a stretch, that's the combo."],
+    evening: ["Evening coffee, the calm kind.", "Hope you had your coffee before the day ended.", "A cup of coffee and a slow evening."],
+    night: ["Easy on the coffee tonight, your sleep matters."],
+    noon: ["Post-lunch coffee, anyone?"],
+    latenight: ["Coffee this late? Your sleep might disagree."]
+  };
+  var mealLines = {
+    dawn: ["Had your breakfast? Ready for today?", "Breakfast first, then the big plans.", "Early start. Don't forget a good breakfast."],
+    morning: ["Had your breakfast? Ready for today?", "Breakfast done? Then you are ready for anything.", "A good breakfast is a good start to a calm day.", "Ready for today? Hope breakfast was good."],
+    noon: ["Lunch time! What's on your plate today?", "Have you eaten yet? A good meal makes a clear mind.", "Don't skip lunch, the day is long.", "Hope your lunch is something tasty today."],
+    afternoon: ["Had a good lunch? Hope you feel fresh.", "A small snack and a short walk can reset your focus.", "Snack time? A little something is always nice."],
+    evening: ["Snacks ready? Evening is the best time for them.", "Hope you have something tasty planned for tonight.", "What's for dinner tonight?"],
+    night: ["Had your dinner? Hope it was good.", "A light dinner makes for a better sleep.", "Dinner done? Then it's time to slow down."],
+    latenight: ["Midnight snack or sleep? Sleep wins."]
+  };
+
+  /* ---------- 4b. CONNECT LINES: friendly questions and thoughts, by time of day ---------- */
+  var connectLines = {
+    dawn: ["Did you sleep well?", "The world is quiet right now. Enjoy it.", "What is the first thing you want to get right today?", "Early mornings feel like a secret. Enjoy yours.", "Ready to start slow and strong?"],
+    morning: ["How are you feeling today?", "Ready for today?", "What's the one thing you want to do well today?", "Did you sleep well last night?", "Today is a fresh page. What will you write?", "Mood check: calm, excited or sleepy?", "Let's make today a good one.", "Any plan for today?"],
+    noon: ["How is your day going so far?", "Halfway through the day. How are you feeling?", "Take a deep breath. You are doing fine.", "Quick check: are you sitting comfortably?", "Anything fun happened today yet?", "Is today going the way you wanted?"],
+    afternoon: ["How is the day treating you?", "Feeling a little sleepy? That's normal after lunch.", "Quick stretch? Your back will thank you.", "Remember to drink some water.", "What's been the best part of today so far?", "The day is almost two-thirds done. How are you?"],
+    evening: ["How was your day?", "What was the best part of today?", "Did today go the way you planned?", "Take a minute for yourself now.", "The day is done. How do you feel?", "Any small win to celebrate today?", "Time to slow down a little."],
+    night: ["How was your day, really?", "Any small win today? Even tiny ones count.", "Tomorrow can wait. Tonight is for rest.", "Did you do something kind today?", "Let the day go. You did what you could.", "Ready to switch off and rest?"],
+    latenight: ["Can't sleep? Try putting the phone down soon.", "The night is quiet. Be kind to yourself.", "Rest is productive too.", "Tomorrow's you will thank tonight's you for sleeping."]
+  };
+  var weekendConnect = {
+    morning: ["Any plan for the weekend?", "Family time, movie or a long nap today?", "What's on the weekend list today?", "Weekend breakfast is the best breakfast.", "No alarm, no rush. How does that feel?", "Today is for doing what you love."],
+    afternoon: ["How is your weekend going?", "Out for a walk or relaxing at home?", "Weekend afternoons are made for slow things.", "Calling a friend today? It always helps.", "Has the weekend been kind to you so far?"],
+    evening: ["How was your weekend day?", "Did you do something you enjoyed today?", "A good weekend evening needs good company.", "Any dinner plans tonight?"],
+    night: ["Hope the weekend treated you well.", "A good night's sleep is the best weekend gift.", "Early or late, enjoy your night."]
+  };
+
+  /* ---------- 4c. LIGHT AND FUN LINES (any time) ---------- */
+  var funLines = [
+    "Plot twist: the best trade today might be the one you skip.",
+    "Your journal remembers everything, so you don't have to.",
+    "Tiny habits, big results. That's the whole secret.",
+    "A calm trader is a dangerous trader, in the best way.",
+    "Slow and steady is not boring. It is profitable.",
+    "Patience looks lazy from the outside. It works from the inside.",
+    "Every great trader was once confused. Keep learning.",
+    "Your future self is reading today's journal. Be kind to them.",
+    "Good days teach little. Honest journals teach a lot.",
+    "No one rings a bell for patience, but it pays anyway.",
+    "Small wins are still wins. Count them.",
+    "Smile a little, it makes the charts look friendlier.",
+    "Progress is quiet. Keep showing up.",
+    "A deep breath costs nothing and helps a lot.",
+    "Be proud that you track your trades. Most people don't.",
+    "Today's lesson is tomorrow's edge.",
+    "You are building a habit, not just a journal."
+  ];
 
   /* ---------- 5. SEASON LINES (India) ---------- */
   var seasonLines = {
@@ -1583,18 +1604,31 @@ const SYTG=(function(){
   function pickOf(arr){return arr[Math.floor(Math.random()*arr.length)]}
   /* Returns the small message under the user's name. Weekends get a welcome line first.
      The normal "Good morning," line above it already comes from greeting(), so it is not repeated. */
-  function note(){
-    var d=new Date(),slot=slotOf(d.getHours()),day=d.getDay(),key=(d.getMonth()+1)+"-"+d.getDate();
+  function pickNonEmpty(o,slot){var a=o[slot];return a&&a.length?pickOf(a):null}
+  function note(slotArg){
+    var d=new Date(),slot=slotArg||slotOf(d.getHours()),day=d.getDay(),key=(d.getMonth()+1)+"-"+d.getDate();
+    var weekend=(day===0||day===6),wslot=weekendSlot(slot);
     var pools=[];
+    /* special dates and month start/end get extra weight */
     if(specialDates[key])pools.push(specialDates[key],specialDates[key],specialDates[key]);
-    pools.push(dayLines[dayKeys[day]],drinkLines[slot],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)]);
     if(d.getDate()===1)pools.push(monthLines.first,monthLines.first);
     if(d.getDate()===daysInMonth(d.getFullYear(),d.getMonth()))pools.push(monthLines.last,monthLines.last);
+    /* connect questions: the biggest share */
+    pools.push(connectLines[slot],connectLines[slot]);
+    if(weekend&&weekendConnect[wslot])pools.push(weekendConnect[wslot],weekendConnect[wslot]);
+    /* tea, coffee or a meal: only one slot, so food never dominates */
+    var food=[];
+    ["tea","coffee","meal"].forEach(function(t){
+      var src=t==="tea"?teaLines:t==="coffee"?coffeeLines:mealLines;
+      if(src[slot])food=food.concat(src[slot]);
+    });
+    if(food.length)pools.push(food);
+    pools.push(dayLines[dayKeys[day]],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)],funLines);
     var msg="";
-    if((day===0||day===6)&&Math.random()<0.7)msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][weekendSlot(slot)]).replace("{n}","")+" ";
+    if(weekend&&Math.random()<0.7)msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][wslot]).replace("{n}","")+" ";
     var second=pickOf(pickOf(pools));
     msg+=second;
-    if(Math.random()<0.33){var extra=pickOf(pickOf(pools));if(extra!==second)msg+=" "+extra}
+    if(Math.random()<0.4){var extra=pickOf(pickOf(pools));if(extra!==second&&food.indexOf(extra)<0||food.indexOf(second)<0&&extra!==second)msg+=" "+extra}
     return msg;
   }
   return {note:note};
@@ -1602,13 +1636,29 @@ const SYTG=(function(){
 /* The message is picked once per time slot, so it does not change every time the screen redraws.
    It also never repeats the message shown the last time the app was opened. */
 let _gnote={k:'',v:''};
+/* Same time boundaries as greeting(), so the message always matches the "Good morning," line above it. */
+function greetSlot(){
+  const now=new Date(),p=placeCoords(),at=(h,mi)=>new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,mi||0);
+  const st=sunTimes(now,p.lat,p.lon);
+  let rise=st?st.rise:at(6),set=st?st.set:at(18);
+  if(rise>at(11))rise=at(11);
+  let eve=new Date(set.getTime()-60*6e4);
+  if(eve<at(16))eve=at(16);
+  if(eve>at(18,30))eve=at(18,30);
+  const h=now.getHours();
+  if(now<rise)return h<4?'latenight':'dawn';
+  if(now<at(12))return 'morning';
+  if(now<eve)return h<14?'noon':'afternoon';
+  if(now<at(23))return h<20?'evening':'night';
+  return 'night';
+}
 function greetingNote(){
   try{
-    const d=new Date(),k=d.toDateString()+'|'+Math.floor(d.getHours()/3);
+    const d=new Date(),slot=greetSlot(),k=d.toDateString()+'|'+slot;
     if(_gnote.k===k&&_gnote.v)return _gnote.v;
-    let m=SYTG.note(),last='';
+    let m=SYTG.note(slot),last='';
     try{last=safeStorage.getItem('sy-last-greet')||''}catch(e){}
-    for(let i=0;i<6&&m===last;i++)m=SYTG.note();
+    for(let i=0;i<6&&m===last;i++)m=SYTG.note(slot);
     try{safeStorage.setItem('sy-last-greet',m)}catch(e){}
     _gnote={k:k,v:m};return m;
   }catch(e){return ''}
