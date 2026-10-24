@@ -170,6 +170,27 @@ h1,h2,h3{letter-spacing:-.01em}
 .gs-h{display:block;font-size:12px;color:var(--muted);margin-top:1px}
 .gs-row.done .gs-t{color:var(--muted);text-decoration:line-through}
 .gs-o{font-size:10px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+
+/* Get started animations: entrance only on page-enter (not on every re-render), pulse on the next step is continuous */
+@keyframes gsRowIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes gsTick{0%{transform:scale(0) rotate(-40deg)}60%{transform:scale(1.35) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes gsRing{0%{box-shadow:0 0 0 0 var(--green-line)}70%,100%{box-shadow:0 0 0 9px transparent}}
+@keyframes gsNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes gsFlag{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(10deg)}}
+@keyframes gsShine{from{transform:translateX(-120%)}to{transform:translateX(320%)}}
+@keyframes gsOut{to{opacity:0;transform:scale(.94) translateY(-10px);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:-14px}}
+#app.enter .gs-row{animation:gsRowIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*80ms + 350ms)}
+#app.enter .gs-row.done .gs-ck svg{animation:gsTick .55s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i,0)*80ms + 650ms)}
+#app.enter .gs .card-h svg{transform-origin:70% 90%;animation:gsFlag 1.2s ease-in-out .8s 1 both}
+.gs-row.next .gs-ck{border-color:var(--green);animation:gsRing 1.6s ease-out infinite}
+.gs-row.next .gs-t{color:var(--green-d)}
+.gs-row.next>svg:last-child{color:var(--green);animation:gsNudge 1.2s ease-in-out infinite}
+.gs-row{transition:background .2s,transform .15s}
+.gs-row:active{transform:scale(.98)}
+.gs .gbar{position:relative}
+.gs .gbar::after{content:'';position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:gsShine 2.4s ease-in-out 1.2s infinite}
+.gs.gs-out{overflow:hidden;animation:gsOut .34s ease forwards}
+@media (prefers-reduced-motion:reduce){.gs-row.next .gs-ck,.gs-row.next>svg:last-child,.gs .gbar::after{animation:none}}
 .gnote{color:var(--text);font-size:16px;line-height:1.4;margin:6px 0 4px}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
@@ -1809,7 +1830,7 @@ function getStartedCard(){
     <div class="card-h"><h2>${I('flag',22)}Get started</h2><button class="textbtn" data-act="gs-hide">Hide</button></div>
     <div class="k">${done} of ${req.length} steps done. Tap a step to begin.</div>
     <div class="gbar" style="margin:8px 0 6px"><i style="--w:${Math.round(done/req.length*100)}%;--c:var(--green)"></i></div>
-    ${steps.map(s=>`<button class="gs-row ${s.done?'done':''}" data-act="${s.a}"${s.tab?` data-tab="${s.tab}"`:''}>
+    ${steps.map((s,i)=>`<button class="gs-row ${s.done?'done':''} ${(!s.done&&!s.opt&&i===steps.findIndex(x=>!x.done&&!x.opt))?'next':''}" style="--i:${i}" data-act="${s.a}"${s.tab?` data-tab="${s.tab}"`:''}>
       <span class="gs-ck">${s.done?I('check',14):''}</span>
       <span class="grow"><span class="gs-t">${s.t}${s.opt?' <span class="gs-o">Optional</span>':''}</span><span class="gs-h">${s.h}</span></span>
       ${I('chev',18)}</button>`).join('')}
@@ -3701,7 +3722,7 @@ function act(a,el){
     case 'open-terms':return openSite('https://saveyourtrade.in/terms');
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
     case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null;if(S.tab==='analytics')gsSet('analytics')});
-    case 'gs-hide':gsSet('hide');return render();
+    case 'gs-hide':{const c=el.closest('.gs');if(!c){gsSet('hide');return render()}c.classList.add('gs-out');return void setTimeout(()=>{gsSet('hide');render()},340)}
     case 'sheet':S.sheet=true;ovFresh=true;return render();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
