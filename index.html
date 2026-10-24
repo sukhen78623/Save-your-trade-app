@@ -3146,8 +3146,8 @@ function tourMark(){
 }
 const TOUR=[
   {k:'welcome'},
-  {k:'f',a:'#4f8f5a',h:'Your trades, on autopilot',p:'Connect your broker once and your trades come in by themselves. No typing, nothing missed.',
-   s:['Tap <b>Sync with broker</b> on your dashboard','Choose your broker and log in to it','Your trades appear. Sync again anytime'],note:'live',art:'sync'},
+  {k:'f',a:'#4f8f5a',h:'Your trades, on autopilot',p:'Connect your broker once and your trades come in by themselves. Or add trades manually, whichever you like.',
+   s:['Tap <b>Sync with broker</b> on your dashboard','Choose your broker and log in to it','Your trades appear. Sync again anytime','No broker? Tap <b>+</b> in the Trades tab to add a trade by hand'],note:'live',art:'sync'},
   {k:'f',a:'#3b7bd1',h:'Every trade has a story',p:'Write why you took a trade and what you learned from it. Your notes stay saved with each trade.',
    s:['Open any trade from the <b>Trades</b> tab','Add your setup, stop loss, target and notes','Mark your mistakes and attach a screenshot'],art:'journal'},
   {k:'f',a:'#c98a1b',h:'Your rules, your discipline',p:'Set your own daily limits. We never block you. We simply keep count and show your discipline score.',
@@ -3200,7 +3200,7 @@ function tourStage(i){
     const sp=[['12%','22%','#d9a441','0s'],['84%','18%','#3b7bd1','.5s'],['20%','74%','#e04376','1s'],['80%','70%','#7a5bd1','1.5s'],['50%','4%','#2a9d8f','.8s'],['92%','46%','#4f8f5a','1.2s'],['6%','48%','#4f8f5a','.3s']];
     return `<div class="t-slide t-center"><div class="t-art t-welcome"><div class="t-rings"><span></span><span></span><span></span></div><div class="t-logo">${logoMark(92,'t')}</div>${sp.map(s=>`<b class="t-spk" style="left:${s[0]};top:${s[1]};--c:${s[2]};--dl:${s[3]}"></b>`).join('')}</div>
       <h2 class="t-h">Welcome${nm?`, ${nm}`:''} <span class="t-wave">👋</span></h2>
-      <p class="t-p">I'm really glad to see you here.</p>
+      <p class="t-p">Really glad to see you here.</p>
       <p class="t-p">Wait, let me show you around and what you can do here. It takes just a minute.</p></div>`;
   }
   if(t.k==='end'){
