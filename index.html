@@ -1756,7 +1756,9 @@ const SYTG=(function(){
      The normal "Good morning," line above it already comes from greeting(), so it is not repeated. */
   function pickNonEmpty(o,slot){var a=o[slot];return a&&a.length?pickOf(a):null}
   function note(slotArg){
-    var d=new Date(),slot=slotArg||slotOf(d.getHours()),day=d.getDay(),key=(d.getMonth()+1)+"-"+d.getDate();
+    var d=new Date(),slot=slotArg||slotOf(d.getHours()),key=(d.getMonth()+1)+"-"+d.getDate();
+    /* After midnight (until 4 AM) people still feel it is the previous evening, so day-based lines follow the previous day. */
+    var late=slot==="latenight",ed=late?new Date(d.getTime()-864e5):d,day=ed.getDay();
     var weekend=(day===0||day===6),wslot=weekendSlot(slot);
     var pools=[];
     /* special dates and month start/end get extra weight */
@@ -1773,7 +1775,7 @@ const SYTG=(function(){
       if(src[slot])food=food.concat(src[slot]);
     });
     if(food.length)pools.push(food);
-    pools.push(dayLines[dayKeys[day]],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)],funLines);
+    pools.push(dayLines[dayKeys[day]],seasonLines[seasonOf(d.getMonth())],marketLines[late?((day===0||day===6)?"closed":"post"):marketState(d)],funLines);
     /* One short line only. Friendly questions get the biggest share. */
     var short=function(t){return t.length<=50};
     var msg="";
@@ -1840,7 +1842,10 @@ function cleanStreak(){
 function behaviourNote(slot){
   try{
     if(S.tradesLoading||!S.trades.length)return null;
-    const d=new Date(),dow=d.getDay(),h=d.getHours(),td=today();
+    const d0=new Date(),h=d0.getHours();
+    /* After midnight: if there is a trade dated today, that is "today". Otherwise the previous day still counts as "today". */
+    const d=(slot==='latenight'&&!S.trades.some(t=>t.date===iso(d0)))?new Date(d0.getTime()-864e5):d0;
+    const dow=d.getDay(),td=iso(d);
     const eve=slot==='evening'||slot==='night'||slot==='latenight';
     const late=slot==='latenight'||(slot==='night'&&(h>=22||h<4));
     const pick=a=>a[Math.floor(Math.random()*a.length)];
