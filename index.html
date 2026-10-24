@@ -161,6 +161,15 @@ h1,h2,h3{letter-spacing:-.01em}
 .hello{color:var(--muted);font-size:12px}
 .name{font-size:18px;font-weight:500;line-height:1.3;letter-spacing:-.01em}
 .when{color:var(--muted);font-size:12px;margin-top:2px}
+.dash>.gs{grid-column:1/-1}
+.gs-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:11px 0;color:var(--text);font:inherit;cursor:pointer}
+.gs-row:first-of-type{margin-top:4px}
+.gs-ck{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;color:#fff}
+.gs-row.done .gs-ck{background:var(--green);border-color:var(--green)}
+.gs-t{display:block;font-size:14px;font-weight:500}
+.gs-h{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.gs-row.done .gs-t{color:var(--muted);text-decoration:line-through}
+.gs-o{font-size:10px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px}
 .gnote{color:var(--text);font-size:16px;line-height:1.4;margin:6px 0 4px}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
@@ -1770,6 +1779,43 @@ function disciplineCard(key){
   </div>`;
 }
 
+/* ---------- Get started checklist (new users) ----------
+   Ticks come from real data (broker connected, trades, notes, rules, goal), so nothing extra is saved,
+   except "Hide" and "visited Analytics", which live in this browser only. */
+function gsKey(n){return 'sy-gs-'+n+':'+((S.user&&S.user.email)||'')}
+function gsGet(n){try{return safeStorage.getItem(gsKey(n))==='1'}catch(e){return false}}
+function gsSet(n){try{safeStorage.setItem(gsKey(n),'1')}catch(e){}}
+function gsSteps(){
+  const journaled=S.trades.some(t=>t.setup||t.note||t.mistake||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain);
+  let rulesOn=false;try{rulesOn=RL_DEF.some(r=>rlGet()[r[0]])}catch(e){}
+  let goalOn=false;try{goalOn=!!goalSt()}catch(e){}
+  return [
+    {t:'Connect your broker',h:'Link your broker so your trades come in by themselves.',ic:'refresh',a:'sheet',done:!!S.connected},
+    {t:'Fetch your trades',h:'Tap Sync with broker to bring in your trades.',ic:'trades',a:'sheet',done:S.trades.length>0},
+    {t:'Add a journal note',h:'Open a trade and write your setup, plan or mistake.',ic:'file',a:'tab',tab:'trades',done:journaled},
+    {t:'Set your discipline rules',h:'Choose your own daily limits. Nothing is ever blocked.',ic:'shield',a:'sub-rules',done:rulesOn},
+    {t:'Set a trading goal',h:'Pick a target and watch your progress.',ic:'trend',a:'sub-goal',done:goalOn},
+    {t:'Explore Analytics',h:'See your stats, charts and discipline score.',ic:'analytics',a:'tab',tab:'analytics',done:gsGet('analytics')},
+    {t:'Add a trade by hand',h:'Missed one? You can add it yourself from the Trades tab.',ic:'plus',a:'add-trade',done:S.trades.some(t=>t.source==='manual'),opt:true}
+  ];
+}
+function getStartedCard(){
+  try{
+    if(S.tradesLoading||gsGet('hide'))return '';
+    const steps=gsSteps(),req=steps.filter(s=>!s.opt),left=req.filter(s=>!s.done).length;
+    if(!left)return '';
+    const done=req.length-left;
+    return `<div class="card gs">
+    <div class="card-h"><h2>${I('flag',22)}Get started</h2><button class="textbtn" data-act="gs-hide">Hide</button></div>
+    <div class="k">${done} of ${req.length} steps done. Tap a step to begin.</div>
+    <div class="gbar" style="margin:8px 0 6px"><i style="--w:${Math.round(done/req.length*100)}%;--c:var(--green)"></i></div>
+    ${steps.map(s=>`<button class="gs-row ${s.done?'done':''}" data-act="${s.a}"${s.tab?` data-tab="${s.tab}"`:''}>
+      <span class="gs-ck">${s.done?I('check',14):''}</span>
+      <span class="grow"><span class="gs-t">${s.t}${s.opt?' <span class="gs-o">Optional</span>':''}</span><span class="gs-h">${s.h}</span></span>
+      ${I('chev',18)}</button>`).join('')}
+    </div>`;
+  }catch(e){return ''}
+}
 function dashboard(){
   const td=stats(S.trades.filter(t=>t.date===today()));
   const mo=stats(S.trades.filter(t=>inR('monthly',t)));
@@ -1781,6 +1827,8 @@ function dashboard(){
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
     ${syncBtn()}
   </div>
+
+  ${getStartedCard()}
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
     <div class="card-h"><h2>${I('trend',22)}Today's performance</h2></div>
@@ -3652,7 +3700,8 @@ function act(a,el){
     }
     case 'open-terms':return openSite('https://saveyourtrade.in/terms');
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
-    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
+    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null;if(S.tab==='analytics')gsSet('analytics')});
+    case 'gs-hide':gsSet('hide');return render();
     case 'sheet':S.sheet=true;ovFresh=true;return render();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
