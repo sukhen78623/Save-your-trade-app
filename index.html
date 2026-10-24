@@ -161,6 +161,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .hello{color:var(--muted);font-size:12px}
 .name{font-size:18px;font-weight:500;line-height:1.3;letter-spacing:-.01em}
 .when{color:var(--muted);font-size:12px;margin-top:2px}
+.gnote{color:var(--muted);font-size:12px;line-height:1.45;margin-top:3px;max-width:46ch}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
@@ -1226,6 +1227,392 @@ function greeting(){
   if(now<night)return 'Good evening,';
   return 'Have a better morning tomorrow, sleep now';
 }
+/* ===== Greeting messages (time, day, season, market hours, special dates) ===== */
+const SYTG=(function(){
+  "use strict";
+  /* ---------- 1. TIME-OF-DAY OPENERS ({n} = ", Name" or nothing) ---------- */
+  var timeOpeners = {
+    dawn: [ // 4:00 - 6:59
+      "Good early morning{n}!", "Up before the sun{n}? Respect!", "Rise and shine{n}!",
+      "A quiet, early start{n}.", "The world is still waking up{n}.", "Early bird alert{n}!",
+      "Fresh morning air, fresh mind{n}.", "Sunrise vibes{n}!"
+    ],
+    morning: [ // 7:00 - 10:59
+      "Good morning{n}!", "Hello, bright morning{n}!", "Morning{n}! Great to see you.",
+      "A very good morning to you{n}!", "Welcome back{n}, hope your morning is going well.",
+      "Hey{n}, good morning!", "Start of a fresh day{n}!", "Top of the morning to you{n}!"
+    ],
+    noon: [ // 11:00 - 13:59
+      "Good day{n}!", "Hello{n}, hope your day is going great.", "Midday greetings{n}!",
+      "Welcome back{n}!", "Hey{n}, nice to see you around noon.", "Halfway through the day{n}!",
+      "Hope your day is treating you well{n}.", "Good to have you here{n}!"
+    ],
+    afternoon: [ // 14:00 - 16:59
+      "Good afternoon{n}!", "Hello{n}, hope the afternoon is kind to you.", "Afternoon{n}! Welcome back.",
+      "Hey{n}, good afternoon!", "A pleasant afternoon to you{n}!", "Welcome{n}, glad you stopped by.",
+      "Afternoon check-in{n}!", "Good to see you this afternoon{n}."
+    ],
+    evening: [ // 17:00 - 19:59
+      "Good evening{n}!", "Hello{n}, hope your evening is peaceful.", "Evening{n}! Welcome back.",
+      "Hey{n}, good evening!", "A lovely evening to you{n}!", "The day is winding down{n}.",
+      "Golden hour greetings{n}!", "Good to see you this evening{n}."
+    ],
+    night: [ // 20:00 - 23:59
+      "Good evening{n}!", "Good night owl{n}!", "Hello{n}, hope you had a good day.",
+      "Welcome back{n}, the day is almost done.", "Hey{n}, a calm night to you!",
+      "Night greetings{n}!", "The day is done{n}, nice to see you.", "A peaceful night to you{n}!"
+    ],
+    latenight: [ // 0:00 - 3:59
+      "Still awake{n}?", "Late night greetings{n}!", "Midnight visitor{n}, welcome!",
+      "Burning the midnight oil{n}?", "The world is asleep{n}, but you are here.",
+      "Hello, night owl{n}!", "Quiet hours, big thoughts{n}.", "Hey{n}, it's very late!"
+    ]
+  };
+
+  /* ---------- 2. WEEKEND OPENERS ---------- */
+  var weekendOpeners = {
+    saturday: {
+      morning: [
+        "Welcome to the weekend morning{n}!", "Happy Saturday morning{n}!", "Saturday morning vibes{n}!",
+        "It's the weekend{n}, good morning!", "Slow Saturday morning ahead{n}!", "Weekend mode: ON{n}. Good morning!"
+      ],
+      afternoon: [
+        "Happy Saturday afternoon{n}!", "Enjoying your Saturday{n}?", "Lazy weekend afternoon{n}!",
+        "Hello{n}, hope your Saturday is a good one.", "Saturday afternoon greetings{n}!", "Weekend afternoon{n}, welcome!"
+      ],
+      evening: [
+        "Happy Saturday evening{n}!", "Saturday night is near{n}!", "Good weekend evening{n}!",
+        "Hope your Saturday was lovely{n}.", "Saturday evening vibes{n}!", "Weekend evening greetings{n}!"
+      ],
+      night: [
+        "Happy Saturday night{n}!", "Saturday night greetings{n}!", "Weekend night{n}, nice to see you.",
+        "Hope your Saturday was great{n}.", "A calm Saturday night to you{n}!", "No alarm tomorrow{n}, welcome!"
+      ]
+    },
+    sunday: {
+      morning: [
+        "Happy Sunday morning{n}!", "Welcome to a slow Sunday morning{n}!", "Sunday morning vibes{n}!",
+        "Good Sunday morning{n}!", "It's Sunday{n}, no rush today!", "Peaceful Sunday morning to you{n}!"
+      ],
+      afternoon: [
+        "Happy Sunday afternoon{n}!", "Lazy Sunday afternoon{n}!", "Enjoying your Sunday{n}?",
+        "Hello{n}, hope your Sunday is relaxing.", "Sunday afternoon greetings{n}!", "A restful Sunday to you{n}!"
+      ],
+      evening: [
+        "Happy Sunday evening{n}!", "Sunday evening{n}, welcome!", "The weekend is winding down{n}.",
+        "Hope your Sunday was lovely{n}.", "Calm Sunday evening vibes{n}!", "Sunday evening greetings{n}!"
+      ],
+      night: [
+        "Sunday night greetings{n}!", "A new week begins tomorrow{n}.", "Hope your Sunday was relaxing{n}.",
+        "Calm Sunday night{n}, welcome!", "Last few hours of the weekend{n}.", "Sunday night{n}, nice to see you!"
+      ]
+    }
+  };
+
+  /* ---------- 3. DAY-OF-WEEK LINES ---------- */
+  var dayLines = {
+    mon: [
+      "Monday is a fresh page, write it well.", "New week, clean slate.", "Mondays are for calm starts, not rushed ones.",
+      "A new week begins. Take it one step at a time.", "Start the week slow and steady.", "Monday reset: breathe, plan, begin.",
+      "Good habits begin on Mondays and every day after.", "A fresh week, a fresh chance to follow your plan.",
+      "Let this week be a patient one.", "Monday energy: calm, clear and focused.", "Small steps this Monday add up by Friday.",
+      "Plan the week, then trust your plan."
+    ],
+    tue: [
+      "Tuesday: the week has found its rhythm.", "Two days in, you're already ahead of the lazy version of you.",
+      "Keep the momentum going this Tuesday.", "Tuesday focus: stay consistent.", "Steady Tuesday, steady mind.",
+      "The week is warming up nicely.", "Consistency is quietly winning today.", "A calm Tuesday is a good Tuesday.",
+      "One day at a time, one trade at a time.", "Tuesday reminder: patience pays.", "Keep your routine strong today.",
+      "No rush, just rhythm."
+    ],
+    wed: [
+      "Midweek check-in: how is your discipline holding up?", "Wednesday: halfway through the week.",
+      "Hump day! You are doing fine.", "Midweek is a great time to review your journal.", "Halfway there, keep it steady.",
+      "Wednesday wisdom: review, adjust, continue.", "Take a small pause and look at your week so far.",
+      "Midweek calm, midweek clarity.", "Wednesday is perfect for a quick journal review.", "The week's midpoint, a good time to reset focus.",
+      "Be kind to yourself this Wednesday.", "Steady hands, steady mind."
+    ],
+    thu: [
+      "Thursday: almost there, stay consistent.", "Thursday focus: finish the week with discipline.",
+      "Two more days to go, keep your routine.", "The finish line of the week is in sight.", "Thursday calm: don't rush the ending.",
+      "Keep your rules close this Thursday.", "A disciplined Thursday sets up a happy Friday.", "Stay patient, the week is nearly done.",
+      "Thursday thoughts: process over outcome.", "Almost Friday, but today still counts.", "Keep the good habits going today.",
+      "Consistent Thursdays make great months."
+    ],
+    fri: [
+      "Friday is here, finish the week with a clear head.", "Happy Friday! Review the week with a smile.",
+      "It's Friday: time to reflect on your week.", "Friday feeling: the weekend is close.", "Finish the week calmly, no rush at the end.",
+      "Friday reminder: discipline over excitement.", "Almost the weekend! One last calm push.", "Friday is a great day to read your journal.",
+      "End the week the way you started it: with a plan.", "Weekend is knocking, wrap up with a clear mind.",
+      "Happy Friday, you made it through another week.", "Friday focus: protect what you've built this week."
+    ],
+    sat: [
+      "No market today, just a chance to relax.", "A weekend is a great time to review your journal.",
+      "Rest is part of the process.", "Step away from the screen a little today.", "Charts can wait, enjoy your weekend.",
+      "Saturday is for recharging your mind.", "A rested mind makes better decisions next week.", "Go easy on yourself today.",
+      "Weekend reminder: your journal will be here when you're ready.", "Today is for family, food and fresh air.",
+      "Take a walk, call a friend, enjoy the day.", "Rest well, next week will come on its own."
+    ],
+    sun: [
+      "Sunday is for resting and gently planning the week.", "No market today, enjoy the calm.", "A quick journal review on Sunday goes a long way.",
+      "Rest now, plan lightly, start fresh tomorrow.", "Sunday reset: relax first, plan second.", "Enjoy the quiet, Monday will wait.",
+      "A calm Sunday makes a calm Monday.", "Spend a little time with people you love today.", "Sunday is the day to recharge.",
+      "Read your last week's notes, then close the app and relax.", "Slow down, breathe, enjoy the day.", "Let the week ahead come to you, not the other way round."
+    ]
+  };
+
+  /* ---------- 4. TEA / COFFEE / FOOD LINES (by time of day) ---------- */
+  var drinkLines = {
+    dawn: [
+      "Enjoy your first cup of tea or coffee in peace.", "A warm cup of tea and a quiet start, perfect.",
+      "Sip your tea slowly, the day is yours.", "Fresh air, fresh tea, fresh mind.",
+      "Hope your first coffee is a good one.", "A calm cup before a busy day.",
+      "Tea (or coffee) first, everything else later.", "The best ideas come with the first cup."
+    ],
+    morning: [
+      "Enjoy your tea, or sometimes coffee, whichever suits you today.", "Hope you had a good breakfast and a warm cup.",
+      "Tea or coffee? Both are a good choice this morning.", "Grab your favourite cup and settle in.",
+      "A warm cup makes any morning better.", "Hope your chai is hot and your mind is calm.",
+      "Breakfast done? Cup in hand? Perfect.", "Sip, smile and start slow."
+    ],
+    noon: [
+      "Hope you had a good lunch.", "Have you eaten yet? A good meal makes a clear mind.",
+      "A proper lunch is the best productivity tool.", "Lunch time! Drink some water too.",
+      "Don't skip lunch, your mind needs fuel.", "Hope your lunch was tasty.",
+      "A short break after lunch does wonders.", "Water, food, calm, in that order."
+    ],
+    afternoon: [
+      "Time for an afternoon chai or coffee?", "A tea break is a very good idea right now.",
+      "Hope your afternoon cup is hot and your snacks are tasty.", "Chai and a little break, you deserve it.",
+      "Stretch your legs, sip some water.", "Afternoon energy low? Tea to the rescue.",
+      "A small snack and a short walk can reset your focus.", "Pause, sip, continue."
+    ],
+    evening: [
+      "Evening chai time, the best time of the day.", "Hope you have some evening tea and snacks.",
+      "A warm cup and a calm mind, a perfect evening.", "Chai, biscuits and a calm evening, that's the plan.",
+      "The evening cup always tastes better.", "Hope your day ends with something warm and tasty.",
+      "Watch the sky for a minute, it's worth it.", "Relax, the day's work is done."
+    ],
+    night: [
+      "Hope you had a good dinner.", "A light dinner and early sleep make tomorrow better.",
+      "Drink some water and unwind.", "Dim the screen, relax your eyes.",
+      "A warm glass of milk and a calm mind, good night prep.", "Time to slow down and rest your mind.",
+      "Tomorrow is a new chance, rest well tonight.", "Switch off from the charts, switch on the calm."
+    ],
+    latenight: [
+      "A good sleep is the best trading edge.", "Please get some rest, tomorrow needs you fresh.",
+      "Your journal will be here in the morning, your sleep matters more.", "Drink some water and rest your eyes.",
+      "Late nights are fine sometimes, but rest soon.", "Sleep well, your best decisions come from a rested mind.",
+      "The charts will still be there tomorrow.", "Take care of your sleep, it is part of your discipline."
+    ]
+  };
+
+  /* ---------- 5. SEASON LINES (India) ---------- */
+  var seasonLines = {
+    winter: [ // Dec, Jan, Feb
+      "Cold morning? Keep your tea extra hot.", "Winter mornings are made for warm cups and calm minds.",
+      "Stay warm, stay patient.", "Winter calm: slow and steady wins.", "A cosy winter day to you!",
+      "Hope you're staying warm out there.", "Sweater weather, journal weather.", "Winter is a great season for calm thinking.",
+      "Warm drink, warm blanket, warm mind.", "Cool weather, cool head."
+    ],
+    summer: [ // Mar, Apr, May
+      "Stay hydrated, summer is serious.", "Hot day? Keep your water bottle close.",
+      "A cool glass of water goes a long way today.", "Summer days are best handled calmly.",
+      "Keep your head cool, in every sense.", "Hope you're staying cool out there.",
+      "Mango season is the best season.", "A cool drink and a calm mind, perfect for summer.",
+      "Heat outside, calm inside.", "Take breaks in the shade, you deserve it."
+    ],
+    monsoon: [ // Jun, Jul, Aug, Sep
+      "Rain outside, chai inside. Perfect.", "Monsoon days and hot tea, a perfect pair.",
+      "Hope you stay dry and your chai stays hot.", "Listen to the rain for a moment, it's calming.",
+      "Rainy day mood: slow, warm and thoughtful.", "Monsoon is a great time for reflection.",
+      "A little pakora with that chai, maybe?", "Let the rain wash away yesterday's stress.",
+      "Cloudy skies, clear mind.", "Rain or shine, your routine shines."
+    ],
+    festive: [ // Oct, Nov
+      "Festive season is here, enjoy the lights and the sweets.", "Hope your home is full of light and laughter.",
+      "The festive mood is in the air, enjoy it.", "Enjoy the season of sweets and smiles.",
+      "A pleasant autumn day to you!", "The weather is lovely, take a short walk today.",
+      "Spend a little time with family this season.", "Festive days are best enjoyed without screens for a bit.",
+      "Light a diya, calm the mind.", "Celebrate the small wins this season."
+    ]
+  };
+
+  /* ---------- 6. MARKET STATE LINES (Nifty hours, Mon-Fri 9:15 - 15:30) ---------- */
+  var marketLines = {
+    pre: [ // weekday before 9:15
+      "The market opens at 9:15, plan first, trade later.", "Pre-market calm: check your rules before the bell.",
+      "Have a plan before the market opens.", "No setup, no trade, remember your rule.",
+      "A few quiet minutes before the open can save a lot later.", "Let the market come to you, not the other way round.",
+      "Breathe in, plan, then begin.", "Good plans are made before 9:15.",
+      "Patience at the open is a superpower.", "Wait for confirmation, always."
+    ],
+    live: [ // weekday 9:15 - 15:30
+      "The market is live, stay calm and follow your plan.", "No setup, no trade.",
+      "Don't anticipate, wait for confirmation.", "Rules first, trades second.",
+      "A missed trade is better than a bad trade.", "Take a breath between trades.",
+      "Stay patient, the next good setup will come.", "One trade at a time, one decision at a time.",
+      "Your journal is your best teacher, keep it honest.", "Calm mind, clear charts."
+    ],
+    post: [ // weekday after 15:30
+      "The market is closed, a good time to review your trades.", "Done for the day? Log your trades and your thoughts.",
+      "Review what you did right today, not just what went wrong.", "A short journal entry now is worth a lot later.",
+      "The bell has rung, relax and reflect.", "Check your discipline counters and move on.",
+      "Whatever the result, you showed up, that counts.", "Close the charts, open your journal.",
+      "Learn from today, then let it go.", "A calm review is the best way to end the trading day."
+    ],
+    closed: [ // weekend
+      "Markets are closed, so is your stress.", "No market today, enjoy the break.",
+      "The market will be back on Monday, so will you.", "Weekend mode: review, relax, recharge.",
+      "Today the market rests, and so can you.", "Spend today on yourself, the market can wait.",
+      "A weekend review of your journal is time well spent.", "No charts to chase today.",
+      "Rest is part of discipline.", "A rested trader is a better trader."
+    ]
+  };
+
+  /* ---------- 7. MONTH POSITION LINES ---------- */
+  var monthLines = {
+    first: [
+      "A new month begins, a fresh page for your journal.", "First of the month, fresh goals, fresh energy.",
+      "New month, same discipline, even better habits.", "Start of the month: set one small, clear goal."
+    ],
+    last: [
+      "Last day of the month, a great time to review your progress.", "Month-end: look back and be proud of your consistency.",
+      "The month is ending, take a moment to review.", "Wrap up the month calmly and with a clear head."
+    ]
+  };
+
+  /* ---------- 8. SPECIAL DATES (fixed dates only) ---------- */
+  var specialDates = {
+    "1-1": [
+      "Happy New Year! Wishing you a calm and consistent year ahead.", "Welcome to a brand-new year! One day at a time.",
+      "Happy New Year! May your discipline grow stronger every month.", "New year, new journal pages. Let's make them count."
+    ],
+    "1-26": [
+      "Happy Republic Day! Jai Hind!", "Wishing you a proud and peaceful Republic Day!",
+      "Happy Republic Day! Enjoy the holiday.", "Republic Day greetings! May your freedom of mind grow too."
+    ],
+    "2-14": [
+      "Happy Valentine's Day! Be kind to yourself too.", "Love your process today, and the people around you.",
+      "Spread some love today, to others and to yourself.", "Happy Valentine's Day!"
+    ],
+    "3-8": [
+      "Happy Women's Day! Wishing every woman a wonderful day.", "Happy International Women's Day!",
+      "Respect and best wishes on Women's Day.", "Celebrating all the women trading, learning and growing today."
+    ],
+    "3-31": [
+      "Financial year-end today. A good moment to look back and be proud.", "Last day of the financial year, take a moment to review.",
+      "The financial year closes today. Review calmly, plan fresh tomorrow.", "Year-end for your finances, a great day to reflect."
+    ],
+    "4-1": [
+      "A new financial year begins today! Fresh goals, fresh page.", "Happy new financial year! Set your goals calmly.",
+      "New financial year, new journal chapter.", "Welcome to the new financial year. Let's make it a disciplined one."
+    ],
+    "5-1": [
+      "Happy Labour Day! Rest well, you've earned it.", "Happy Maharashtra Day and Labour Day!",
+      "Today we celebrate hard work, take a break.", "Happy May Day! Enjoy the rest."
+    ],
+    "8-15": [
+      "Happy Independence Day! Jai Hind!", "Wishing you a proud Independence Day!",
+      "Freedom to trade smart, freedom to rest well. Happy Independence Day!", "Happy Independence Day! Enjoy the holiday."
+    ],
+    "9-5": [
+      "Happy Teachers' Day! Thank a teacher today.", "Teachers' Day greetings! Your best teacher might be your own journal.",
+      "Happy Teachers' Day to everyone who taught you something.", "Remember the teachers who shaped you today."
+    ],
+    "10-2": [
+      "Gandhi Jayanti greetings! Truth and patience always win.", "Happy Gandhi Jayanti. Patience is a strength.",
+      "Remembering Bapu today, small steady steps change everything.", "Gandhi Jayanti: simple living, clear thinking."
+    ],
+    "11-14": [
+      "Happy Children's Day! Stay curious like a child.", "Children's Day greetings! Keep learning every day.",
+      "Be a little more playful today, Happy Children's Day!", "Happy Children's Day, never stop being curious."
+    ],
+    "12-24": [
+      "Merry Christmas Eve! Enjoy the festive lights.", "Christmas Eve greetings, enjoy the evening!",
+      "Christmas is almost here, relax and enjoy.", "Wishing you a warm Christmas Eve."
+    ],
+    "12-25": [
+      "Merry Christmas! Wishing you joy and peace.", "Happy Christmas! Enjoy the day with loved ones.",
+      "Merry Christmas! May your year end on a calm note.", "Warm Christmas wishes to you and your family."
+    ],
+    "12-31": [
+      "Last day of the year! Look back with pride, look ahead with hope.", "Happy New Year's Eve! Enjoy the celebration.",
+      "The year ends today, thank you for being consistent.", "Wrap up the year with a calm review and a big smile."
+    ]
+  };
+
+  /* ---------- HELPERS ---------- */
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function slotOf(h) {
+    if (h < 4) return "latenight";
+    if (h < 7) return "dawn";
+    if (h < 11) return "morning";
+    if (h < 14) return "noon";
+    if (h < 17) return "afternoon";
+    if (h < 20) return "evening";
+    return "night";
+  }
+  function weekendSlot(slot) {
+    if (slot === "latenight" || slot === "night") return "night";
+    if (slot === "dawn" || slot === "morning") return "morning";
+    if (slot === "noon" || slot === "afternoon") return "afternoon";
+    return "evening";
+  }
+  function seasonOf(m) { // m = 0..11
+    if (m === 11 || m <= 1) return "winter";
+    if (m <= 4) return "summer";
+    if (m <= 8) return "monsoon";
+    return "festive";
+  }
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+
+  function marketState(d) {
+    var day = d.getDay();
+    if (day === 0 || day === 6) return "closed";
+    var mins = d.getHours() * 60 + d.getMinutes();
+    if (mins < 9 * 60 + 15) return "pre";
+    if (mins <= 15 * 60 + 30) return "live";
+    return "post";
+  }
+
+  var dayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+
+  function pickOf(arr){return arr[Math.floor(Math.random()*arr.length)]}
+  /* Returns the small message under the user's name. Weekends get a welcome line first.
+     The normal "Good morning," line above it already comes from greeting(), so it is not repeated. */
+  function note(){
+    var d=new Date(),slot=slotOf(d.getHours()),day=d.getDay(),key=(d.getMonth()+1)+"-"+d.getDate();
+    var pools=[];
+    if(specialDates[key])pools.push(specialDates[key],specialDates[key],specialDates[key]);
+    pools.push(dayLines[dayKeys[day]],drinkLines[slot],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)]);
+    if(d.getDate()===1)pools.push(monthLines.first,monthLines.first);
+    if(d.getDate()===daysInMonth(d.getFullYear(),d.getMonth()))pools.push(monthLines.last,monthLines.last);
+    var msg="";
+    if((day===0||day===6)&&Math.random()<0.7)msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][weekendSlot(slot)]).replace("{n}","")+" ";
+    var second=pickOf(pickOf(pools));
+    msg+=second;
+    if(Math.random()<0.33){var extra=pickOf(pickOf(pools));if(extra!==second)msg+=" "+extra}
+    return msg;
+  }
+  return {note:note};
+})();
+/* The message is picked once per time slot, so it does not change every time the screen redraws.
+   It also never repeats the message shown the last time the app was opened. */
+let _gnote={k:'',v:''};
+function greetingNote(){
+  try{
+    const d=new Date(),k=d.toDateString()+'|'+Math.floor(d.getHours()/3);
+    if(_gnote.k===k&&_gnote.v)return _gnote.v;
+    let m=SYTG.note(),last='';
+    try{last=safeStorage.getItem('sy-last-greet')||''}catch(e){}
+    for(let i=0;i<6&&m===last;i++)m=SYTG.note();
+    try{safeStorage.setItem('sy-last-greet',m)}catch(e){}
+    _gnote={k:k,v:m};return m;
+  }catch(e){return ''}
+}
 function dateStr(){return new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
 function timeStr(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}).toUpperCase()}
 
@@ -1292,6 +1679,7 @@ function dashboard(){
   return `<div class="dash">
   <div class="top">
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
+      <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
     ${syncBtn()}
   </div>
