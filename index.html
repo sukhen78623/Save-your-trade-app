@@ -161,7 +161,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .hello{color:var(--muted);font-size:12px}
 .name{font-size:18px;font-weight:500;line-height:1.3;letter-spacing:-.01em}
 .when{color:var(--muted);font-size:12px;margin-top:2px}
-.gnote{color:var(--muted);font-size:12px;line-height:1.45;margin-top:3px;max-width:46ch}
+.gnote{color:var(--text);font-size:14px;line-height:1.45;margin:6px 0 4px}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
@@ -1614,7 +1614,7 @@ const SYTG=(function(){
     if(d.getDate()===1)pools.push(monthLines.first,monthLines.first);
     if(d.getDate()===daysInMonth(d.getFullYear(),d.getMonth()))pools.push(monthLines.last,monthLines.last);
     /* connect questions: the biggest share */
-    pools.push(connectLines[slot],connectLines[slot]);
+    pools.push(connectLines[slot],connectLines[slot],connectLines[slot]);
     if(weekend&&weekendConnect[wslot])pools.push(weekendConnect[wslot],weekendConnect[wslot]);
     /* tea, coffee or a meal: only one slot, so food never dominates */
     var food=[];
@@ -1624,11 +1624,15 @@ const SYTG=(function(){
     });
     if(food.length)pools.push(food);
     pools.push(dayLines[dayKeys[day]],seasonLines[seasonOf(d.getMonth())],marketLines[marketState(d)],funLines);
+    /* One short line only. Friendly questions get the biggest share. */
+    var short=function(t){return t.length<=60};
     var msg="";
-    if(weekend&&Math.random()<0.7)msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][wslot]).replace("{n}","")+" ";
-    var second=pickOf(pickOf(pools));
-    msg+=second;
-    if(Math.random()<0.4){var extra=pickOf(pickOf(pools));if(extra!==second&&food.indexOf(extra)<0||food.indexOf(second)<0&&extra!==second)msg+=" "+extra}
+    if(weekend&&Math.random()<0.4){
+      msg=pickOf(weekendOpeners[day===6?"saturday":"sunday"][wslot]).replace("{n}","");
+    }else{
+      for(var i=0;i<20;i++){var c=pickOf(pickOf(pools));if(short(c)){msg=c;break}}
+      if(!msg)msg=pickOf(connectLines[slot]);
+    }
     return msg;
   }
   return {note:note};
