@@ -43,7 +43,7 @@
 <title>Save Your Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f5f7f5; --surface:#ffffff; --surface2:#f0f4f1; --line:#dfe6e1;
@@ -161,36 +161,6 @@ h1,h2,h3{letter-spacing:-.01em}
 .hello{color:var(--muted);font-size:12px}
 .name{font-size:18px;font-weight:500;line-height:1.3;letter-spacing:-.01em}
 .when{color:var(--muted);font-size:12px;margin-top:2px}
-.dash>.gs{grid-column:1/-1}
-.gs-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:11px 0;color:var(--text);font:inherit;cursor:pointer}
-.gs-row:first-of-type{margin-top:4px}
-.gs-ck{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;color:#fff}
-.gs-row.done .gs-ck{background:var(--green);border-color:var(--green)}
-.gs-t{display:block;font-size:14px;font-weight:500}
-.gs-h{display:block;font-size:12px;color:var(--muted);margin-top:1px}
-.gs-row.done .gs-t{color:var(--muted);text-decoration:line-through}
-.gs-o{font-size:10px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px}
-
-/* Get started animations: entrance only on page-enter (not on every re-render), pulse on the next step is continuous */
-@keyframes gsRowIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
-@keyframes gsTick{0%{transform:scale(0) rotate(-40deg)}60%{transform:scale(1.35) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
-@keyframes gsRing{0%{box-shadow:0 0 0 0 var(--green-line)}70%,100%{box-shadow:0 0 0 9px transparent}}
-@keyframes gsNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
-@keyframes gsFlag{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(10deg)}}
-@keyframes gsShine{from{transform:translateX(-120%)}to{transform:translateX(320%)}}
-@keyframes gsOut{to{opacity:0;transform:scale(.94) translateY(-10px);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:-14px}}
-#app.enter .gs-row{animation:gsRowIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*80ms + 350ms)}
-#app.enter .gs-row.done .gs-ck svg{animation:gsTick .55s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i,0)*80ms + 650ms)}
-#app.enter .gs .card-h svg{transform-origin:70% 90%;animation:gsFlag 1.2s ease-in-out .8s 1 both}
-.gs-row.next .gs-ck{border-color:var(--green);animation:gsRing 1.6s ease-out infinite}
-.gs-row.next .gs-t{color:var(--green-d)}
-.gs-row.next>svg:last-child{color:var(--green);animation:gsNudge 1.2s ease-in-out infinite}
-.gs-row{transition:background .2s,transform .15s}
-.gs-row:active{transform:scale(.98)}
-.gs .gbar{position:relative}
-.gs .gbar::after{content:'';position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:gsShine 2.4s ease-in-out 1.2s infinite}
-.gs.gs-out{overflow:hidden;animation:gsOut .34s ease forwards}
-@media (prefers-reduced-motion:reduce){.gs-row.next .gs-ck,.gs-row.next>svg:last-child,.gs .gbar::after{animation:none}}
 .gnote{color:var(--text);font-size:16px;line-height:1.4;margin:6px 0 4px}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
@@ -607,6 +577,111 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .goal-done{animation:gpulse 2.2s ease-in-out infinite}
 @keyframes gpulse{50%{box-shadow:0 0 0 6px var(--green-bg)}}
 @media (prefers-reduced-motion:reduce){.gbar i,.goal-done{animation:none}}
+
+/* ===== Welcome tour (new users) ===== */
+#tour{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(9,13,10,.66);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:tFade .4s both;font-family:'Plus Jakarta Sans',var(--font)}
+.t-card{position:relative;width:100%;max-width:410px;max-height:calc(100dvh - 28px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:30px;box-shadow:0 34px 90px rgba(0,0,0,.4);overflow:hidden;animation:tCardIn .7s cubic-bezier(.2,.9,.25,1.08) both}
+.t-card::before{content:'';position:absolute;inset:-40% -20% auto -20%;height:70%;background:radial-gradient(closest-side,var(--green-bg),transparent);pointer-events:none;animation:tGlow 6s ease-in-out infinite alternate}
+.t-top{position:relative;display:flex;align-items:center;gap:14px;padding:18px 20px 6px}
+.t-segs{flex:1;display:flex;gap:5px}
+.t-segs i{flex:1;height:5px;border-radius:99px;background:var(--line);position:relative;overflow:hidden}
+.t-segs i::after{content:'';position:absolute;inset:0;border-radius:99px;background:var(--green);transform:scaleX(0);transform-origin:left;transition:transform .55s cubic-bezier(.3,.8,.3,1)}
+.t-segs i.on::after{transform:scaleX(1)}
+.t-skip{font:inherit;font-size:13px;font-weight:600;color:var(--muted);background:none;border:0;padding:6px 4px;cursor:pointer}
+.t-stage{position:relative;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:12px 22px 6px;-webkit-overflow-scrolling:touch}
+.t-slide{--a:var(--green)}
+.t-stage[data-dir=n] .t-slide{animation:tInN .55s cubic-bezier(.2,.8,.2,1) both}
+.t-stage[data-dir=b] .t-slide{animation:tInB .55s cubic-bezier(.2,.8,.2,1) both}
+.t-art{position:relative;height:150px;margin-bottom:16px;border-radius:22px;border:1px solid var(--line);background:var(--surface2);background:radial-gradient(120% 120% at 50% 0%,color-mix(in srgb,var(--a) 18%,var(--surface)),var(--surface2));overflow:hidden}
+.t-svg{display:block;width:100%;height:100%}
+.t-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--a);background:var(--green-bg);background:color-mix(in srgb,var(--a) 13%,transparent);padding:5px 11px;border-radius:99px;animation:tUp .5s .12s both}
+.t-h{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px;color:var(--text);animation:tUp .55s .18s both}
+.t-p{font-size:14.5px;line-height:1.6;color:var(--muted);margin:0 0 6px;animation:tUp .55s .26s both}
+.t-how{margin-top:14px;padding:14px 14px 6px;border-radius:18px;background:var(--surface2);border:1px solid var(--line);animation:tUp .55s .34s both}
+.t-how-h{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.t-how ol{list-style:none;margin:0;padding:0}
+.t-how li{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px;font-size:13.5px;line-height:1.45;color:var(--text);animation:tUp .5s both;animation-delay:calc(.42s + var(--d)*.12s)}
+.t-how li>b{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:var(--a)}
+.t-how li span b{font-weight:700;color:var(--a)}
+@media (max-height:720px){.t-art{height:118px;margin-bottom:12px}.t-h{font-size:22px;margin:8px 0 6px}.t-p{font-size:14px;line-height:1.5}.t-how{margin-top:10px}.t-center .t-art{height:150px}}
+.t-note{margin:2px 0 12px;font-size:12px;color:var(--muted);animation:tUp .5s .85s both}
+.t-center{text-align:center}
+.t-center .t-art{background:none;border:0;height:170px;overflow:visible}
+.t-center .t-h{font-size:27px;margin-top:2px}
+.t-wave{display:inline-block;transform-origin:70% 70%;animation:tWave 1.8s 1s ease-in-out infinite}
+.t-foot{position:relative;display:flex;gap:10px;padding:14px 22px 22px;animation:tUp .5s .3s both}
+.t-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border:0;border-radius:16px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:var(--on-green);background:linear-gradient(135deg,var(--mark-a),var(--mark-b));box-shadow:0 10px 24px -8px var(--green);transition:transform .15s}
+.t-btn:active{transform:scale(.97)}
+.t-btn.ghost{flex:none;color:var(--text);background:var(--surface2);border:1px solid var(--line);box-shadow:none}
+.t-btn.big{animation:tBtnPulse 2.2s 1.2s ease-in-out infinite}
+.t-btn svg{flex:none}
+/* illustrations */
+.t-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.t-box.a{stroke:var(--a)}
+.t-ic{color:var(--a)}
+.t-lbl{font-size:11px;font-weight:700;fill:var(--muted);font-family:inherit}
+.t-dash{stroke:var(--line);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:2 9;fill:none;animation:tDash 1s linear infinite}
+.t-pkt{fill:var(--a);animation:tPkt 2.1s cubic-bezier(.5,0,.3,1) infinite}
+.t-pkt.p2{animation-delay:.7s}.t-pkt.p3{animation-delay:1.4s}
+.t-row{fill:var(--a);opacity:.2;animation:tRow 2.1s infinite}
+.t-row.r1{animation-delay:1.55s}.t-row.r2{animation-delay:.15s}.t-row.r3{animation-delay:.85s}
+.t-ln{fill:var(--line);transform-box:fill-box;transform-origin:left;animation:tLn 4.2s ease-in-out infinite}
+.t-ln.l2{animation-delay:.35s}.t-ln.l3{animation-delay:.7s}.t-ln.l4{animation-delay:1.05s}
+.t-ln.hl{fill:var(--a)}
+.t-chip rect{fill:var(--a)}
+.t-chip text{fill:#fff;font-size:10.5px;font-weight:700;font-family:inherit;text-anchor:middle}
+.t-chip{transform-box:fill-box;transform-origin:center;animation:tChip 4.2s ease-in-out infinite}
+.t-chip.c2{animation-delay:1.1s}
+.t-thumb{fill:color-mix(in srgb,var(--a) 22%,var(--surface2));stroke:var(--a);stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:tChip 4.2s 1.6s ease-in-out infinite}
+.t-gbg{fill:none;stroke:var(--line);stroke-width:11}
+.t-gfg{fill:none;stroke:var(--a);stroke-width:11;stroke-linecap:round;stroke-dasharray:289;transform:rotate(-90deg);transform-origin:160px 75px;animation:tGauge 4s cubic-bezier(.3,.8,.3,1) infinite}
+.t-float{animation:tFloat 3s ease-in-out infinite}
+.t-float.f2{animation-delay:1.2s}
+.t-pill{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.t-pilltx{font-size:10.5px;font-weight:700;fill:var(--text);font-family:inherit;text-anchor:middle}
+.t-path{fill:none;stroke:var(--a);stroke-width:4;stroke-linecap:round;stroke-dasharray:320;animation:tPath 4.4s ease-in-out infinite}
+.t-pathbg{fill:none;stroke:var(--line);stroke-width:4;stroke-linecap:round;stroke-dasharray:2 9}
+.t-end{fill:var(--a);transform-box:fill-box;transform-origin:center;animation:tEnd 4.4s ease-in-out infinite}
+.t-flag{fill:var(--a);transform-box:fill-box;transform-origin:left center;animation:tFlag 1.2s ease-in-out infinite alternate}
+.t-bar{transform-box:fill-box;transform-origin:50% 100%;animation:tBar 3.6s cubic-bezier(.3,.8,.3,1) infinite}
+.t-bar.up{fill:var(--a)}.t-bar.dn{fill:var(--red)}
+.t-line{fill:none;stroke:var(--text);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;animation:tLine 3.6s ease-in-out infinite;opacity:.55}
+.t-cell{transform-box:fill-box;transform-origin:center;animation:tCell .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--n)*.035s + .15s)}
+.t-cell.g{fill:var(--green)}.t-cell.r{fill:var(--red)}.t-cell.n{fill:var(--line)}
+.t-welcome{position:relative;height:170px;display:grid;place-items:center}
+.t-logo{position:relative;animation:tLogo .9s .15s cubic-bezier(.34,1.56,.64,1) both}
+.t-rings span{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;border:2px solid var(--green);opacity:0;animation:tRing 2.6s ease-out infinite}
+.t-rings span:nth-child(2){animation-delay:.85s}.t-rings span:nth-child(3){animation-delay:1.7s}
+.t-spk{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--c);opacity:0;animation:tTwinkle 2.4s ease-in-out infinite;animation-delay:var(--dl)}
+.t-conf{position:absolute;inset:0;pointer-events:none}
+.t-conf i{position:absolute;left:50%;top:50%;width:8px;height:13px;margin:-6px 0 0 -4px;border-radius:2px;background:var(--c);opacity:0;animation:tConf 1.5s cubic-bezier(.2,.8,.3,1) var(--dl) both}
+.t-done{position:relative;height:150px;display:grid;place-items:center}
+@keyframes tFade{from{opacity:0}to{opacity:1}}
+@keyframes tCardIn{from{opacity:0;transform:translateY(40px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes tGlow{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+@keyframes tInN{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+@keyframes tInB{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:none}}
+@keyframes tUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tWave{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(16deg)}20%{transform:rotate(-10deg)}30%{transform:rotate(16deg)}40%{transform:rotate(-6deg)}50%{transform:rotate(10deg)}}
+@keyframes tBtnPulse{0%,100%{box-shadow:0 10px 24px -8px var(--green),0 0 0 0 var(--green-line)}50%{box-shadow:0 10px 24px -8px var(--green),0 0 0 9px transparent}}
+@keyframes tDash{to{stroke-dashoffset:-22}}
+@keyframes tPkt{0%{transform:translateX(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(112px);opacity:0}}
+@keyframes tRow{0%{opacity:.2}12%{opacity:1}40%,100%{opacity:.2}}
+@keyframes tLn{0%{transform:scaleX(0)}28%,82%{transform:scaleX(1)}100%{transform:scaleX(0)}}
+@keyframes tChip{0%,10%{opacity:0;transform:scale(.3)}22%,80%{opacity:1;transform:scale(1)}92%,100%{opacity:0;transform:scale(.3)}}
+@keyframes tGauge{0%{stroke-dashoffset:289}55%,85%{stroke-dashoffset:66}100%{stroke-dashoffset:289}}
+@keyframes tFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes tPath{0%{stroke-dashoffset:320}55%,88%{stroke-dashoffset:0}100%{stroke-dashoffset:320}}
+@keyframes tEnd{0%,50%{transform:scale(0);opacity:0}62%{transform:scale(1.5);opacity:1}72%,88%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
+@keyframes tFlag{from{transform:skewY(-7deg) scaleX(1)}to{transform:skewY(7deg) scaleX(.82)}}
+@keyframes tBar{0%{transform:scaleY(0)}35%,85%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+@keyframes tLine{0%,15%{stroke-dashoffset:420}55%,88%{stroke-dashoffset:0}100%{stroke-dashoffset:420}}
+@keyframes tCell{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+@keyframes tLogo{from{opacity:0;transform:scale(.3) rotate(-25deg)}to{opacity:1;transform:none}}
+@keyframes tRing{0%{opacity:.7;transform:scale(.7)}100%{opacity:0;transform:scale(2.3)}}
+@keyframes tTwinkle{0%,100%{opacity:0;transform:scale(.2)}50%{opacity:1;transform:scale(1)}}
+@keyframes tConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){#tour *{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -1016,11 +1091,12 @@ async function loadAll(session){
   S.subStatus=st.status;S.subDaysLeft=st.daysLeft;
   S.user={id:u.id,first:(p&&p.first_name)||m.first_name||'',last:(p&&p.last_name)||m.last_name||'',gender:String((p&&p.gender)||m.gender||'').toLowerCase(),dob:(p&&p.dob)||m.dob||'',email:u.email||'',plan:plan};
   S.acct=S.user;
+  S.tourPending=tourShouldShow(u);S.tour=null;
   S.trades=[];
   /* Trade history can be large, so it no longer blocks login: the dashboard opens right away
      and the trade list fills in a moment later, re-rendering once it's ready */
   S.tradesLoading=true;
-  loadTrades().catch(e=>{S.trades=[];console.error(e)}).then(()=>{S.tradesLoading=false;render(true)});
+  loadTrades().catch(e=>{S.trades=[];console.error(e)}).then(()=>{S.tradesLoading=false;if(S.tourPending){S.tourPending=false;S.tour=0;S.tourDir='n'}render(true)});
 }
 
 function friendlyError(e){
@@ -1800,43 +1876,6 @@ function disciplineCard(key){
   </div>`;
 }
 
-/* ---------- Get started checklist (new users) ----------
-   Ticks come from real data (broker connected, trades, notes, rules, goal), so nothing extra is saved,
-   except "Hide" and "visited Analytics", which live in this browser only. */
-function gsKey(n){return 'sy-gs-'+n+':'+((S.user&&S.user.email)||'')}
-function gsGet(n){try{return safeStorage.getItem(gsKey(n))==='1'}catch(e){return false}}
-function gsSet(n){try{safeStorage.setItem(gsKey(n),'1')}catch(e){}}
-function gsSteps(){
-  const journaled=S.trades.some(t=>t.setup||t.note||t.mistake||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain);
-  let rulesOn=false;try{rulesOn=RL_DEF.some(r=>rlGet()[r[0]])}catch(e){}
-  let goalOn=false;try{goalOn=!!goalSt()}catch(e){}
-  return [
-    {t:'Connect your broker',h:'Link your broker so your trades come in by themselves.',ic:'refresh',a:'sheet',done:!!S.connected},
-    {t:'Fetch your trades',h:'Tap Sync with broker to bring in your trades.',ic:'trades',a:'sheet',done:S.trades.length>0},
-    {t:'Add a journal note',h:'Open a trade and write your setup, plan or mistake.',ic:'file',a:'tab',tab:'trades',done:journaled},
-    {t:'Set your discipline rules',h:'Choose your own daily limits. Nothing is ever blocked.',ic:'shield',a:'sub-rules',done:rulesOn},
-    {t:'Set a trading goal',h:'Pick a target and watch your progress.',ic:'trend',a:'sub-goal',done:goalOn},
-    {t:'Explore Analytics',h:'See your stats, charts and discipline score.',ic:'analytics',a:'tab',tab:'analytics',done:gsGet('analytics')},
-    {t:'Add a trade by hand',h:'Missed one? You can add it yourself from the Trades tab.',ic:'plus',a:'add-trade',done:S.trades.some(t=>t.source==='manual'),opt:true}
-  ];
-}
-function getStartedCard(){
-  try{
-    if(S.tradesLoading||gsGet('hide'))return '';
-    const steps=gsSteps(),req=steps.filter(s=>!s.opt),left=req.filter(s=>!s.done).length;
-    if(!left)return '';
-    const done=req.length-left;
-    return `<div class="card gs">
-    <div class="card-h"><h2>${I('flag',22)}Get started</h2><button class="textbtn" data-act="gs-hide">Hide</button></div>
-    <div class="k">${done} of ${req.length} steps done. Tap a step to begin.</div>
-    <div class="gbar" style="margin:8px 0 6px"><i style="--w:${Math.round(done/req.length*100)}%;--c:var(--green)"></i></div>
-    ${steps.map((s,i)=>`<button class="gs-row ${s.done?'done':''} ${(!s.done&&!s.opt&&i===steps.findIndex(x=>!x.done&&!x.opt))?'next':''}" style="--i:${i}" data-act="${s.a}"${s.tab?` data-tab="${s.tab}"`:''}>
-      <span class="gs-ck">${s.done?I('check',14):''}</span>
-      <span class="grow"><span class="gs-t">${s.t}${s.opt?' <span class="gs-o">Optional</span>':''}</span><span class="gs-h">${s.h}</span></span>
-      ${I('chev',18)}</button>`).join('')}
-    </div>`;
-  }catch(e){return ''}
-}
 function dashboard(){
   const td=stats(S.trades.filter(t=>t.date===today()));
   const mo=stats(S.trades.filter(t=>inR('monthly',t)));
@@ -1848,8 +1887,6 @@ function dashboard(){
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
     ${syncBtn()}
   </div>
-
-  ${getStartedCard()}
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
     <div class="card-h"><h2>${I('trend',22)}Today's performance</h2></div>
@@ -2750,6 +2787,7 @@ function settingsPage(){
     ${li('file','Terms and conditions','sub-terms')}
     ${li('db','User data management','sub-data')}
     ${li('shield','Privacy and policy','sub-privacy')}
+    ${li('sparkle','Welcome tour','tour-open')}
     ${li('info','About us','sub-about')}
     ${li('phone','Contact us','sub-contact')}
   </div>
@@ -3088,6 +3126,118 @@ function logoutView(fresh){
     <div class="acts"><button class="btn ghost" data-act="close-ov-btn">Cancel</button><button class="btn danger" data-act="confirm-logout">Logout</button></div></div></div>`;
 }
 
+
+/* ---------- Welcome tour (new users) ----------
+   Opens once for a brand-new account (created in the last 14 days). "Seen" is remembered in this browser
+   and in the account itself (tour_seen), so it does not come back on another phone. Settings has a button to watch it again. */
+function tourKey(){return 'sy-tour:'+((S.user&&S.user.email)||'')}
+function tourShouldShow(u){
+  try{
+    const m=(u&&u.user_metadata)||{};
+    if(m.tour_seen)return false;
+    if(safeStorage.getItem('sy-tour:'+((u&&u.email)||''))==='1')return false;
+    const c=u&&u.created_at?new Date(u.created_at).getTime():0;
+    return !!c&&(Date.now()-c)<14*864e5;
+  }catch(e){return false}
+}
+function tourMark(){
+  try{safeStorage.setItem(tourKey(),'1')}catch(e){}
+  try{Promise.resolve(sb.auth.updateUser({data:{tour_seen:true}})).catch(()=>{})}catch(e){}
+}
+const TOUR=[
+  {k:'welcome'},
+  {k:'f',a:'#4f8f5a',h:'Your trades, on autopilot',p:'Connect your broker once and your trades come in by themselves. No typing, nothing missed.',
+   s:['Tap <b>Sync with broker</b> on your dashboard','Choose your broker and log in to it','Your trades appear. Sync again anytime'],note:'live',art:'sync'},
+  {k:'f',a:'#3b7bd1',h:'Every trade has a story',p:'Write why you took a trade and what you learned from it. Your notes stay saved with each trade.',
+   s:['Open any trade from the <b>Trades</b> tab','Add your setup, stop loss, target and notes','Mark your mistakes and attach a screenshot'],art:'journal'},
+  {k:'f',a:'#c98a1b',h:'Your rules, your discipline',p:'Set your own daily limits. We never block you. We simply keep count and show your discipline score.',
+   s:['Open <b>Settings</b>, then <b>Discipline rules</b>','Set max trades, max loss and more','Trades that cross a limit are flagged for you'],art:'rules'},
+  {k:'f',a:'#2a9d8f',h:'Set a goal and chase it',p:'Pick a profit target for a week, a month or your own dates, and watch your progress fill up.',
+   s:['Open <b>Settings</b>, then <b>Trading goal</b>','Choose your dates and target amount','Watch your progress grow in <b>Analytics</b>'],art:'goal'},
+  {k:'f',a:'#7a5bd1',h:'See your trading clearly',p:'Win rate, profit factor, best and worst days, setup performance and a weekly review, all in one place.',
+   s:['Open the <b>Analytics</b> tab','Pick the date range you want to study','Read your reports and mistakes summary'],art:'stats'},
+  {k:'f',a:'#d6527a',h:'Your month at a glance',p:'A calendar shows every day in green or red. Missed a trade? Add it yourself. Need a copy? Export it.',
+   s:['See your green and red days on the <b>Calendar</b>','Tap <b>+</b> in the Trades tab to add a trade by hand','Tap <b>Export CSV</b> to download your trades'],art:'cal'},
+  {k:'end'}
+];
+function tourArt(n){
+  const T=(c)=>`<svg class="t-svg" viewBox="0 0 320 150" aria-hidden="true">${c}</svg>`;
+  if(n==='sync')return T(`<rect class="t-box" x="12" y="38" width="86" height="74" rx="18"/><g class="t-ic" transform="translate(41 56)">${I('bank',32)}</g><text class="t-lbl" x="55" y="102" text-anchor="middle">Broker</text>
+    <path class="t-dash" d="M108 75H214"/><circle class="t-pkt p1" cx="106" cy="75" r="5"/><circle class="t-pkt p2" cx="106" cy="75" r="5"/><circle class="t-pkt p3" cx="106" cy="75" r="5"/>
+    <rect class="t-box a" x="222" y="38" width="86" height="74" rx="18"/><rect class="t-row r1" x="236" y="54" width="58" height="10" rx="5"/><rect class="t-row r2" x="236" y="71" width="58" height="10" rx="5"/><rect class="t-row r3" x="236" y="88" width="58" height="10" rx="5"/>`);
+  if(n==='journal')return T(`<rect class="t-box" x="66" y="14" width="188" height="124" rx="18"/><rect x="84" y="28" width="44" height="9" rx="4.5" fill="var(--a)"/>
+    <rect class="t-ln hl l1" x="84" y="50" width="120" height="8" rx="4"/><rect class="t-ln l2" x="84" y="68" width="96" height="8" rx="4"/><rect class="t-ln l3" x="84" y="86" width="110" height="8" rx="4"/><rect class="t-ln l4" x="84" y="104" width="70" height="8" rx="4"/>
+    <g class="t-chip c1"><rect x="26" y="34" width="56" height="20" rx="10"/><text x="54" y="48">Setup</text></g>
+    <g class="t-chip c2"><rect x="232" y="22" width="62" height="20" rx="10"/><text x="263" y="36">Mistake</text></g>
+    <g><rect class="t-thumb" x="208" y="82" width="38" height="34" rx="8"/><path d="M214 108l9-10 7 7 5-5 6 8" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`);
+  if(n==='rules')return T(`<circle class="t-gbg" cx="160" cy="75" r="46"/><circle class="t-gfg" cx="160" cy="75" r="46"/><g class="t-ic" transform="translate(143 58)">${I('shield',34)}</g>
+    <g class="t-float"><rect class="t-pill" x="14" y="34" width="86" height="26" rx="13"/><text class="t-pilltx" x="57" y="51">Max trades</text></g>
+    <g class="t-float f2"><rect class="t-pill" x="224" y="94" width="82" height="26" rx="13"/><text class="t-pilltx" x="265" y="111">Max loss</text></g>`);
+  if(n==='goal')return T(`<path class="t-pathbg" d="M30 126C90 126 110 76 170 80S240 44 262 40"/><path class="t-path" d="M30 126C90 126 110 76 170 80S240 44 262 40"/>
+    <path d="M262 40V14" stroke="var(--text)" stroke-width="3" stroke-linecap="round" opacity=".7"/><path class="t-flag" d="M264 14h28l-7 8 7 8h-28z"/><circle class="t-end" cx="262" cy="40" r="7"/>`);
+  if(n==='stats'){
+    const h=[44,64,34,90,72,104],x0=40,c=[1,1,0,1,1,1];
+    return T(`<path d="M24 132H296" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>`+h.map((v,k)=>`<rect class="t-bar ${c[k]?'up':'dn'}" style="animation-delay:${k*.12}s" x="${x0+k*42}" y="${132-v}" width="28" height="${v}" rx="8"/>`).join('')+
+    `<path class="t-line" d="M54 84 L96 66 L138 98 L180 36 L222 58 L264 26"/>`);
+  }
+  if(n==='cal'){
+    const p='ngrgg nn gr ggg nnn ggrg g nn ggg rg n'.replace(/ /g,'').slice(0,28).padEnd(28,'g');
+    return T(p.split('').map((v,k)=>`<rect class="t-cell ${v}" style="--n:${k}" x="${48+(k%7)*28}" y="${16+Math.floor(k/7)*28}" width="22" height="22" rx="7"/>`).join('')+
+    `<g class="t-float"><circle cx="278" cy="112" r="17" fill="var(--a)"/><path d="M278 104v16M270 112h16" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
+     <g class="t-float f2"><rect class="t-pill" x="12" y="108" width="52" height="24" rx="12"/><text class="t-pilltx" x="38" y="124">CSV</text></g>`);
+  }
+  return '';
+}
+function tourConfetti(){
+  const col=['#4f8f5a','#d9a441','#3b7bd1','#e04376','#7a5bd1','#2a9d8f'];let h='';
+  for(let i=0;i<22;i++){const a=i/22*Math.PI*2,d=78+(i%3)*30;
+    h+=`<i style="--x:${Math.round(Math.cos(a)*d)}px;--y:${Math.round(Math.sin(a)*d*.78)}px;--r:${(i*47)%360}deg;--c:${col[i%col.length]};--dl:${(0.15+(i%5)*.06).toFixed(2)}s"></i>`}
+  return `<div class="t-conf">${h}</div>`;
+}
+function tourStage(i){
+  const t=TOUR[i],nm=esc((S.user&&S.user.first)||'');
+  if(t.k==='welcome'){
+    const sp=[['12%','22%','#d9a441','0s'],['84%','18%','#3b7bd1','.5s'],['20%','74%','#e04376','1s'],['80%','70%','#7a5bd1','1.5s'],['50%','4%','#2a9d8f','.8s'],['92%','46%','#4f8f5a','1.2s'],['6%','48%','#4f8f5a','.3s']];
+    return `<div class="t-slide t-center"><div class="t-art t-welcome"><div class="t-rings"><span></span><span></span><span></span></div><div class="t-logo">${logoMark(92,'t')}</div>${sp.map(s=>`<b class="t-spk" style="left:${s[0]};top:${s[1]};--c:${s[2]};--dl:${s[3]}"></b>`).join('')}</div>
+      <h2 class="t-h">Welcome${nm?`, ${nm}`:''} <span class="t-wave">👋</span></h2>
+      <p class="t-p">I'm really glad to see you here.</p>
+      <p class="t-p">Wait, let me show you around and what you can do here. It takes just a minute.</p></div>`;
+  }
+  if(t.k==='end'){
+    return `<div class="t-slide t-center"><div class="t-art t-done"><div class="okc">${checkSvg(96)}</div>${tourConfetti()}</div>
+      <h2 class="t-h">You're all set${nm?`, ${nm}`:''}!</h2>
+      <p class="t-p">That's the whole tour. The best way to begin is to connect your broker, and your trades will show up on their own.</p>
+      <p class="t-p">Happy journaling! 💚</p></div>`;
+  }
+  const note=t.note==='live'?`<div class="t-note">Live now: ${LIVE_BROKERS.join(', ')}</div>`:'';
+  return `<div class="t-slide" style="--a:${t.a}"><div class="t-art">${tourArt(t.art)}</div>
+    <span class="t-tag">Feature ${i} of ${TOUR.length-2}</span>
+    <h2 class="t-h">${t.h}</h2><p class="t-p">${t.p}</p>
+    <div class="t-how"><div class="t-how-h">How it works</div><ol>${t.s.map((x,k)=>`<li style="--d:${k}"><b>${k+1}</b><span>${x}</span></li>`).join('')}</ol></div>${note}</div>`;
+}
+function tourFoot(i){
+  const t=TOUR[i];
+  if(t.k==='welcome')return `<button class="t-btn big" data-act="tour-next">Show me around${I('chev',18)}</button>`;
+  if(t.k==='end')return `<button class="t-btn ghost" data-act="tour-skip">I'll explore</button><button class="t-btn big" data-act="tour-connect">${I('refresh',18)}Connect my broker</button>`;
+  return `<button class="t-btn ghost" data-act="tour-back" aria-label="Back">${I('back',20)}</button><button class="t-btn" data-act="tour-next">Next${I('chev',18)}</button>`;
+}
+function tourView(){
+  const i=S.tour;
+  return `<div id="tour" role="dialog" aria-modal="true" aria-label="Welcome tour"><div class="t-card">
+    <div class="t-top"><div class="t-segs">${TOUR.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</div><button class="t-skip" data-act="tour-skip" style="visibility:${i===TOUR.length-1?'hidden':'visible'}">Skip</button></div>
+    <div class="t-stage" data-dir="${S.tourDir||'n'}">${tourStage(i)}</div>
+    <div class="t-foot">${tourFoot(i)}</div></div></div>`;
+}
+function tourGo(i,dir){
+  i=Math.max(0,Math.min(TOUR.length-1,i));S.tour=i;S.tourDir=dir;
+  const root=document.getElementById('tour');if(!root)return render();
+  root.querySelectorAll('.t-segs i').forEach((e,k)=>e.classList.toggle('on',k<=i));
+  const st=root.querySelector('.t-stage');st.setAttribute('data-dir',dir);st.innerHTML=tourStage(i);st.scrollTop=0;
+  root.querySelector('.t-foot').innerHTML=tourFoot(i);
+  root.querySelector('.t-skip').style.visibility=i===TOUR.length-1?'hidden':'visible';
+}
+function tourClose(){S.tour=null;tourMark();render()}
+
 let ovFresh=false;
 function render(top=false){
   const y=window.scrollY;
@@ -3101,7 +3251,9 @@ function render(top=false){
   if(S.delModal)html+=deleteView(fresh);
   if(S.changeModal)html+=changeBrokerView(fresh);
   if(S.goalConfirm)html+=goalConfirmView(fresh);
+  if(S.tour!=null&&S.user)html+=tourView();
   if(S.busy)html+=loaderView();
+  try{document.body.style.overflow=(S.tour!=null&&S.user)?'hidden':''}catch(e){}
   app.classList.toggle('enter',top);
   app.classList.toggle('noshell',!S.user);
   app.innerHTML=html;
@@ -3721,8 +3873,12 @@ function act(a,el){
     }
     case 'open-terms':return openSite('https://saveyourtrade.in/terms');
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
-    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null;if(S.tab==='analytics')gsSet('analytics')});
-    case 'gs-hide':{const c=el.closest('.gs');if(!c){gsSet('hide');return render()}c.classList.add('gs-out');return void setTimeout(()=>{gsSet('hide');render()},340)}
+    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
+    case 'tour-open':return go(()=>{S.sub=null;S.tab='dashboard';S.tour=0;S.tourDir='n'});
+    case 'tour-next':return S.tour>=TOUR.length-1?tourClose():tourGo(S.tour+1,'n');
+    case 'tour-back':return tourGo(S.tour-1,'b');
+    case 'tour-skip':return tourClose();
+    case 'tour-connect':S.tour=null;tourMark();S.sheet=true;ovFresh=true;return render();
     case 'sheet':S.sheet=true;ovFresh=true;return render();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
