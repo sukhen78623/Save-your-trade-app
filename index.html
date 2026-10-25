@@ -60,6 +60,7 @@
   --font:'Roboto',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
   --r1:6px; --r2:9px; --r3:12px;
   --side-w:88px;
+  --t-glow:var(--green); --t-ring:var(--green-line);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
@@ -74,6 +75,7 @@
   --shadow-lg:0 10px 28px rgba(0,0,0,.34);
   --mark-a:#57ab5e; --mark-b:#367a3f;
   --heart:#e04376;
+  --t-glow:rgba(98,169,109,.16); --t-ring:rgba(98,169,109,.10);
   color-scheme:dark;
 }}
 :root[data-theme=dark]{
@@ -88,6 +90,7 @@
   --shadow-lg:0 10px 28px rgba(0,0,0,.34);
   --mark-a:#57ab5e; --mark-b:#367a3f;
   --heart:#e04376;
+  --t-glow:rgba(98,169,109,.16); --t-ring:rgba(98,169,109,.10);
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -621,7 +624,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .t-center .t-h{font-size:27px;margin-top:2px}
 .t-wave{display:inline-block;transform-origin:70% 70%;animation:tWave 1.8s 1s ease-in-out infinite}
 .t-foot{position:relative;display:flex;gap:10px;padding:14px 22px 22px;animation:tUp .5s .3s both}
-.t-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border:0;border-radius:16px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:var(--on-green);background:linear-gradient(135deg,var(--mark-a),var(--mark-b));box-shadow:0 10px 24px -8px var(--green);transition:transform .15s}
+.t-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border:0;border-radius:16px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:var(--on-green);background:linear-gradient(135deg,var(--mark-a),var(--mark-b));box-shadow:0 10px 24px -8px var(--t-glow);transition:transform .15s}
 .t-btn:active{transform:scale(.97)}
 .t-btn.ghost{flex:none;color:var(--text);background:var(--surface2);border:1px solid var(--line);box-shadow:none}
 .t-btn.big{animation:tBtnPulse 2.2s 1.2s ease-in-out infinite}
@@ -674,7 +677,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 @keyframes tInB{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:none}}
 @keyframes tUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes tWave{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(16deg)}20%{transform:rotate(-10deg)}30%{transform:rotate(16deg)}40%{transform:rotate(-6deg)}50%{transform:rotate(10deg)}}
-@keyframes tBtnPulse{0%,100%{box-shadow:0 10px 24px -8px var(--green),0 0 0 0 var(--green-line)}50%{box-shadow:0 10px 24px -8px var(--green),0 0 0 9px transparent}}
+@keyframes tBtnPulse{0%,100%{box-shadow:0 10px 24px -8px var(--t-glow),0 0 0 0 var(--t-ring)}50%{box-shadow:0 10px 24px -8px var(--t-glow),0 0 0 9px transparent}}
 @keyframes tDash{to{stroke-dashoffset:-22}}
 @keyframes tPkt{0%{transform:translateX(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(112px);opacity:0}}
 @keyframes tRow{0%{opacity:.2}12%{opacity:1}40%,100%{opacity:.2}}
