@@ -165,6 +165,17 @@ h1,h2,h3{letter-spacing:-.01em}
 .sync{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;font-weight:500;font-size:12px;white-space:nowrap}
 .sync.active{background:var(--green-bg);border-color:var(--green-line);color:var(--green-d)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.topr{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none;min-width:0}
+.mkt{width:0;min-width:100%;max-width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);border-radius:var(--r2);padding:8px 12px;display:flex;flex-direction:column;gap:3px}
+.mk-l{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text)}
+.mk-d{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.mk-c{font-size:15px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+.mk-s{font-size:11px;line-height:1.35;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.mkt.open{background:var(--green-bg);border-color:var(--green-line)}
+.mkt.open .mk-d{background:var(--green);animation:pulse 2s infinite}
+.mkt.open .mk-c{color:var(--green-d)}
+.mkt.holiday,.mkt.special{background:rgba(201,146,40,.10);border-color:rgba(201,146,40,.45)}
+.mkt.holiday .mk-d,.mkt.special .mk-d{background:#c99228}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:16px;margin-bottom:12px}
 .card.hero.g{border-color:var(--green-line);background:var(--green-bg)}
 .card.hero.r{border-color:var(--red-line);background:var(--red-bg)}
@@ -1901,6 +1912,121 @@ function greetingNote(){
 function dateStr(){return new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
 function timeStr(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}).toUpperCase()}
 
+/* ================= MARKET STATUS (Open / Closed / Holiday + countdown) =================
+   HOW TO UPDATE THE HOLIDAY LIST EVERY YEAR (this is the only part you need to touch):
+   1. Open NSE's yearly "Trading holidays" circular on nseindia.com.
+   2. Add one line per weekday holiday inside the box below:  date as YYYY-MM-DD, a space, then the name.
+      Example:  2027-01-26 Republic Day
+   3. Holidays that fall on Saturday or Sunday are not needed (the market is closed anyway).
+   4. Save the file and upload it again. Old years can stay in the list.
+   A line that starts with # is ignored. */
+const MKT_HOLIDAYS=`
+2026-01-26 Republic Day
+2026-03-03 Holi
+2026-03-26 Shri Ram Navami
+2026-03-31 Shri Mahavir Jayanti
+2026-04-03 Good Friday
+2026-04-14 Dr. Baba Saheb Ambedkar Jayanti
+2026-05-01 Maharashtra Day
+2026-05-28 Bakri Id
+2026-06-26 Muharram
+2026-09-14 Ganesh Chaturthi
+2026-10-02 Mahatma Gandhi Jayanti
+2026-10-20 Dussehra
+2026-11-10 Diwali-Balipratipada
+2026-11-24 Prakash Gurpurb Sri Guru Nanak Dev
+2026-12-25 Christmas
+`;
+/* SPECIAL SESSIONS: days when the market trades although it would normally be closed (for example Diwali Muhurat trading on a Sunday).
+   Format:  YYYY-MM-DD Name | HH:MM-HH:MM   (24-hour time, Indian time)
+   If NSE has not announced the timing yet, leave the "| HH:MM-HH:MM" part out. The box will then say "Special session today". */
+const MKT_SPECIAL=`
+2026-11-08 Diwali Muhurat Trading | 14:20-15:30
+`;
+
+const MKT_OPEN=9*3600+15*60, MKT_CLOSE=15*3600+30*60;   /* normal hours 9:15 AM to 3:30 PM */
+const MKT_PRE=60*60;      /* show the "Opens in" countdown during the last 1 hour before opening */
+const MKT_END=30*60;      /* show the "Closes in" countdown during the last 30 minutes before closing */
+
+function mktParse(txt,special){
+  const out={};
+  String(txt).split('\n').forEach(line=>{
+    line=line.trim();if(!line||line.charAt(0)==='#')return;
+    const m=line.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);if(!m)return;
+    let name=m[2].trim(),open=null,close=null;
+    if(special){
+      const t=name.match(/^(.*?)\s*\|\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/);
+      if(t){name=t[1];open=Number(t[2])*3600+Number(t[3])*60;close=Number(t[4])*3600+Number(t[5])*60}
+    }
+    out[m[1]]={name:name,open:open,close:close};
+  });
+  return out;
+}
+const MKT_HOL=mktParse(MKT_HOLIDAYS,false), MKT_SPEC=mktParse(MKT_SPECIAL,true);
+
+/* Everything below uses Indian time, whatever the phone's own time zone is. */
+function mktIST(d){
+  const f=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const p={};f.formatToParts(d||new Date()).forEach(x=>{p[x.type]=x.value});
+  return {date:p.year+'-'+p.month+'-'+p.day,
+    dow:new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day))).getUTCDay(),
+    sec:(Number(p.hour)%24)*3600+Number(p.minute)*60+Number(p.second)};
+}
+function mktAdd(date,n){const t=new Date(date+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)}
+function mktClock(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return ((h+11)%12+1)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')}
+function mktCount(s){
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
+  return h?h+':'+p(m)+':'+p(x):p(m)+':'+p(x);
+}
+/* Next day the market opens after the given date, and when. */
+function mktNext(date){
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let i=1;i<=400;i++){
+    const d=mktAdd(date,i),t=new Date(d+'T00:00:00Z'),dow=t.getUTCDay(),sp=MKT_SPEC[d];
+    let open=null;
+    if(sp&&sp.open!=null)open=sp.open;
+    else if(dow!==0&&dow!==6&&!MKT_HOL[d])open=MKT_OPEN;
+    if(open!=null)return {open:open,label:i===1?'tomorrow':names[dow]+' '+t.getUTCDate()+' '+mons[t.getUTCMonth()]};
+  }
+  return {open:MKT_OPEN,label:'soon'};
+}
+function mktStatus(d){
+  const n=mktIST(d),sp=MKT_SPEC[n.date],hol=MKT_HOL[n.date],wk=(n.dow===0||n.dow===6);
+  const nx=()=>{const x=mktNext(n.date);return 'Opens '+x.label+' '+mktClock(x.open)};
+  let open=MKT_OPEN,close=MKT_CLOSE,live=!wk&&!hol;
+  if(sp){
+    if(sp.open==null)return {kind:'special',label:'Special session today',sub:sp.name+'. Check NSE for the timing'};
+    live=true;open=sp.open;close=sp.close;
+  }
+  if(!live){
+    if(hol)return {kind:'holiday',label:'Market holiday',sub:hol.name+' · '+nx()};
+    return {kind:'closed',label:'Market closed',sub:'Weekend · '+nx()};
+  }
+  const s=n.sec;
+  if(s<open){
+    const left=open-s;
+    return left<=MKT_PRE?{kind:'closed',label:'Market closed',count:'Opens in '+mktCount(left),sub:'at '+mktClock(open)}
+      :{kind:'closed',label:'Market closed',sub:'Opens today '+mktClock(open)};
+  }
+  if(s<close){
+    const left=close-s;
+    return left<=MKT_END?{kind:'open',label:'Market open',count:'Closes in '+mktCount(left),sub:'at '+mktClock(close)}
+      :{kind:'open',label:'Market open',sub:'Closes '+mktClock(close)};
+  }
+  return {kind:'closed',label:'Market closed',sub:nx()};
+}
+function mktKey(s){return s.kind+'|'+s.label+'|'+(s.sub||'')+'|'+(s.count?1:0)}
+function mktInner(s){
+  return `<div class="mk-l"><i class="mk-d"></i>${esc(s.label)}</div>${s.count?`<div class="mk-c">${esc(s.count)}</div>`:''}${s.sub?`<div class="mk-s">${esc(s.sub)}</div>`:''}`;
+}
+function mktBox(){const s=mktStatus();return `<div id="mkt" class="mkt ${s.kind}" data-k="${esc(mktKey(s))}">${mktInner(s)}</div>`}
+function mktTick(){
+  const e=document.getElementById('mkt');if(!e)return;
+  const s=mktStatus(),k=mktKey(s);
+  if(e.dataset.k!==k){e.className='mkt '+s.kind;e.innerHTML=mktInner(s);e.dataset.k=k}
+  else if(s.count){const c=e.querySelector('.mk-c');if(c)c.textContent=s.count}
+}
+
 function tradeRow(t,withEdit=true){
   const p=pnl(t);
   const journaled=t.setup||t.note||t.mistake||t.shot||t.sl||t.target||t.anticipation||t.ruleBreak||t.overTrading||t.revenge||t.maintain;
@@ -1966,7 +2092,7 @@ function dashboard(){
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
       <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
-    ${syncBtn()}
+    <div class="topr">${syncBtn()}${mktBox()}</div>
   </div>
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
@@ -4092,6 +4218,7 @@ document.addEventListener('change',e=>{
 /* Deep links from the profile page: app.html#terms and app.html#privacy open those pages */
 try{const h=(window.location.hash||'').slice(1).toLowerCase();if(h==='terms'||h==='privacy'){S.sub=h;S.subFrom='auth'}}catch(e){}
 setInterval(()=>{const c=document.getElementById('clock');if(c)c.textContent=timeStr()},20000);
+setInterval(mktTick,1000);
 render(true);
 initSession();
 </script>
