@@ -184,13 +184,6 @@ h1,h2,h3{letter-spacing:-.01em}
 .card.hero.r{border-color:var(--red-line);background:var(--red-bg)}
 .card.hero.g .pos{color:var(--green-d)}
 .card.hero.r .neg{color:var(--red-d)}
-.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:18px}
-.profile-avatar{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--green-bg);border:1px solid var(--green-line);color:var(--green-d);font-size:20px;font-weight:700;letter-spacing:.02em}
-.profile-summary{min-width:0}
-.profile-name{font-size:16px;font-weight:600;overflow-wrap:anywhere}
-.profile-email{color:var(--muted);font-size:12px;margin-top:2px;overflow-wrap:anywhere}
-.profile-caption{color:var(--faint);font-size:11px;margin-top:5px}
-.risk-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .card-h h2{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
 .card-h h2 svg{color:var(--green);width:18px;height:18px}
@@ -532,16 +525,15 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .agrid>.card,.agrid>.a-range{margin:0}
   .a-range{grid-column:1/-1;grid-row:1}
   .a-net{grid-column:1/-1;grid-row:2}
-  .a-risk{grid-column:1/-1;grid-row:3}
-  .a-goal{grid-column:1/-1;grid-row:4}
-  .a-disc{grid-column:1/-1;grid-row:5}
-  .a-week{grid-column:1/-1;grid-row:6}
-  .a-all{grid-column:1/-1;grid-row:7}
-  .a-mis{grid-column:1/-1;grid-row:8}
-  .a-prof{grid-column:1/7;grid-row:9}
-  .a-most{grid-column:7/13;grid-row:9}
-  .a-win{grid-column:1/7;grid-row:10}
-  .a-day{grid-column:7/13;grid-row:10}
+  .a-goal{grid-column:1/-1;grid-row:3}
+  .a-disc{grid-column:1/-1;grid-row:4}
+  .a-week{grid-column:1/-1;grid-row:5}
+  .a-all{grid-column:1/-1;grid-row:6}
+  .a-mis{grid-column:1/-1;grid-row:7}
+  .a-prof{grid-column:1/7;grid-row:8}
+  .a-most{grid-column:7/13;grid-row:8}
+  .a-win{grid-column:1/7;grid-row:9}
+  .a-day{grid-column:7/13;grid-row:9}
   .mis-l{display:grid;grid-template-columns:1fr 1fr}
   .a-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .a-win svg{max-width:100%;height:auto}
@@ -570,7 +562,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .stx{display:block}
   .main .screen{padding:28px 36px 32px}
   .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
-  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
   .dash>.d-disc{grid-column:1/-1}
   .dash>.d-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .dash>.d-discscore{grid-column:1/-1}
@@ -2113,8 +2105,6 @@ function dashboard(){
     <div class="stats">
       <div class="stat"><div class="k">Win trades</div><div class="v ${td.w?'pos':'zero'}">${td.w}</div></div>
       <div class="stat"><div class="k">Loss trades</div><div class="v ${td.l?'neg':'zero'}">${td.l}</div></div>
-      <div class="stat"><div class="k">Win rate</div><div class="v ${td.w+td.l?'':'zero'}">${td.rate}%</div></div>
-      <div class="stat"><div class="k">Profit factor</div><div class="v ${td.w+td.l?(td.pf>1?'pos':td.pf<1?'neg':''):'zero'}">${td.w+td.l?pfStr(td.pf):'–'}</div></div>
     </div>
   </div>
 
@@ -2678,37 +2668,12 @@ function rangeLabel(){
   const f=TRADE_PERIODS.find(x=>x[0]===r.mode);
   return f?f[1]:'This Month';
 }
-function riskMetrics(list){
-  const st=stats(list);
-  const ordered=[...list].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  let equity=0,peak=0,maxDrawdown=0;
-  for(const t of ordered){equity+=pnl(t);peak=Math.max(peak,equity);maxDrawdown=Math.max(maxDrawdown,peak-equity)}
-  const count=list.length;
-  return {count,expectancy:count?st.total/count:0,avgWin:st.w?st.gp/st.w:0,avgLoss:st.l?st.gl/st.l:0,maxDrawdown,ratio:st.gl>0?(st.gp/st.w)/(st.gl/st.l||1):null,st};
-}
-function riskAnalyticsCard(){
-  const list=S.trades.filter(t=>inR('analytics',t));
-  const r=riskMetrics(list),has=r.count>0;
-  return `<div class="card a-risk"><div class="card-h"><h2>${I('shield',22)}Risk &amp; trade quality</h2></div>
-    <div class="k" style="margin:-6px 0 14px">Based on trades in the selected date range</div>
-    <div class="stats risk-stats">
-      <div class="stat"><div class="k">Max realised drawdown</div><div class="v ${r.maxDrawdown?'neg':'zero'}">${has?money(-r.maxDrawdown):'–'}</div><div class="s">Peak-to-trough P&amp;L</div></div>
-      <div class="stat"><div class="k">Average trade</div><div class="v ${has?cls(r.expectancy):'zero'}">${has?money(r.expectancy):'–'}</div><div class="s">Net P&amp;L per trade</div></div>
-      <div class="stat"><div class="k">Average winning trade</div><div class="v ${r.st.w?'pos':'zero'}">${r.st.w?money(r.avgWin):'–'}</div></div>
-      <div class="stat"><div class="k">Average losing trade</div><div class="v ${r.st.l?'neg':'zero'}">${r.st.l?money(-r.avgLoss):'–'}</div></div>
-      <div class="stat"><div class="k">Avg win / avg loss</div><div class="v ${r.ratio==null?'zero':r.ratio>=1?'pos':'neg'}">${r.st.w&&r.st.l?r.ratio.toFixed(2)+' : 1':'–'}</div><div class="s">Reward-to-loss size ratio</div></div>
-      <div class="stat"><div class="k">Trades in range</div><div class="v ${has?'':'zero'}">${r.count}</div></div>
-    </div>
-    <div class="rb-note">Drawdown uses cumulative recorded trade P&amp;L starting at ₹0. It is not account-balance drawdown; fees and charges are included only if your trade P&amp;L already includes them.</div>
-  </div>`;
-}
 function analyticsPage(){
   return `<div class="title">Analytics</div>
   <div class="agrid">
   <div class="a-range"><button class="rangebtn" data-act="range-toggle" aria-expanded="${S.rangeOpen?'true':'false'}">${I('calendar2',16)}<span>${esc(rangeLabel())}</span>${I('chev',14)}</button>
     ${S.rangeOpen?`<div class="card" style="margin-top:10px;margin-bottom:0">${filterUI('analytics')}<div class="k" style="margin-top:-6px">Applies to the cards below, except Weekly review</div></div>`:''}</div>
   <div class="card a-net"><div class="card-h"><h2>${I('trend',22)}Net P&amp;L</h2></div>${netChart()}</div>
-  ${riskAnalyticsCard()}
   ${goalCard().replace('class="card d-new','class="card a-goal')}
   ${disciplineCard('analytics')}
   ${weeklyCard().replace('class="card d-new','class="card a-week')}
@@ -3016,6 +2981,7 @@ function settingsPage(){
   <div class="setwrap">
   <div class="sec" style="margin-top:0">Account</div>
   <div class="list">
+    ${li('user','User profile','sub-profile')}
     ${li('card','Subscription','sub-subscription',subLabel())}
     ${li('refresh',`Sync with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
   </div>
@@ -3043,7 +3009,7 @@ function settingsPage(){
   </div>`;
 }
 
-const NAV=[['dashboard','navHome','Dashboard'],['trades','navTrades','Trades'],['analytics','navAnalytics','Analytics'],['profile','user','Profile'],['settings','navSettings','Settings']];
+const NAV=[['dashboard','navHome','Dashboard'],['trades','navTrades','Trades'],['analytics','navAnalytics','Analytics'],['settings','navSettings','Settings']];
 function bottomNav(){
   return `<nav class="bnav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,22)}</span>${lb}</button>`).join('')}</nav>`;
 }
@@ -3055,7 +3021,7 @@ function shell(inner,withNav){
       <div class="sbrand">${logoMark(30,'s')}<span class="sname">Save Your Trade</span></div>
       <div class="snav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,20)}</span><span class="lb">${lb}</span></button>`).join('')}</div>
       <div class="sfoot">${syncBtn()}
-        <button class="suser" data-act="tab" data-tab="profile" aria-label="User profile"><span class="av">${ini}</span><span class="stx"><b>${full}</b><span>${esc(S.user.email)}</span></span></button>
+        <button class="suser" data-act="sub-profile" aria-label="User profile"><span class="av">${ini}</span><span class="stx"><b>${full}</b><span>${esc(S.user.email)}</span></span></button>
       </div>
     </aside>
     <main class="main">${inner}</main>
@@ -3073,7 +3039,7 @@ function expiredPage(){
 function mainView(){
   const gated=new Set(['dashboard','trades','analytics']);
   const blocked=S.subStatus==='expired'&&gated.has(S.tab);
-  const pages={dashboard,trades:tradesPage,analytics:analyticsPage,profile:()=>{if(!S.draft)S.draft={...S.user};return profilePage()},settings:settingsPage};
+  const pages={dashboard,trades:tradesPage,analytics:analyticsPage,settings:settingsPage};
   const content=blocked?expiredPage():pages[S.tab]();
   return shell(`<div class="screen hasnav"><div class="grow">${content}</div>${foot()}</div>`,true);
 }
@@ -3085,10 +3051,7 @@ function docPage(title,key){
 }
 function profilePage(){
   const f=S.draft;
-  const initials=((f.first||'').trim().charAt(0)+(f.last||'').trim().charAt(0)).toUpperCase()||String(f.email||'?').charAt(0).toUpperCase();
-  const displayName=((f.first||'')+' '+(f.last||'')).trim()||'Your profile';
   return `<div class="screen"><div class="grow">${bar('User profile')}
-    <div class="card profile-head"><div class="profile-avatar" aria-hidden="true">${esc(initials)}</div><div class="profile-summary"><div class="profile-name">${esc(displayName)}</div><div class="profile-email">${esc(f.email||'')}</div><div class="profile-caption">Manage your personal account details</div></div></div>
     <div class="lbl">First name *</div><label class="field">${I('user',20)}<input data-d="first" value="${esc(f.first)}"></label>
     <div class="lbl">Last name *</div><label class="field">${I('user',20)}<input data-d="last" value="${esc(f.last)}"></label>
     <div class="lbl">Email</div><label class="field">${I('mail',20)}<input type="email" data-d="email" value="${esc(f.email)}" readonly style="opacity:.6"><button type="button" class="textbtn" data-act="sub-email" style="flex:none;padding:12px 0">Change</button></label>
@@ -4120,7 +4083,7 @@ function act(a,el){
     }
     case 'open-terms':return openSite('https://saveyourtrade.in/terms');
     case 'open-privacy':return openSite('https://saveyourtrade.in/privacy');
-    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null;if(S.tab==='profile')S.draft={...S.user}});
+    case 'tab':return go(()=>{S.tab=el.dataset.tab;S.sub=null});
     case 'tour-open':return go(()=>{S.sub=null;S.tab='dashboard';S.tour=0;S.tourDir='n'});
     case 'tour-next':return S.tour>=TOUR.length-1?tourClose():tourGo(S.tour+1,'n');
     case 'tour-back':return tourGo(S.tour-1,'b');
@@ -4153,7 +4116,7 @@ function act(a,el){
     case 'del-trade':S.delModal=true;ovFresh=true;return render();
     case 'confirm-del-trade':return deleteManualTrade();
     case 'back':
-      if(S.sub==='password'||S.sub==='email'){S.sub='profile';}else{S.sub=null;if(S.tab==='profile')S.tab='settings';}
+      if(S.sub==='password'||S.sub==='email'){S.sub='profile';}else{S.sub=null;}
       return go(()=>{});
     case 'sub-profile':return go(()=>{S.draft={...S.user};S.sub='profile'});
     case 'sub-subscription':return go(()=>{S.sub='subscription'});
