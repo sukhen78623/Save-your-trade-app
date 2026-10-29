@@ -109,46 +109,6 @@ h1,h2,h3{letter-spacing:-.01em}
 
 .screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:18px 16px 20px}
 .screen.hasnav{padding-bottom:88px}
-/* ===== Mobile top bar + profile menu + centre add button ===== */
-.pav{position:relative;width:38px;height:38px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-line);color:var(--green-d);display:grid;place-items:center;font-weight:500;font-size:15px;flex:none}
-.pav i{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
-.pav i.exp{background:var(--red)}
-.ov.pm{align-items:flex-start;justify-content:flex-end;padding:56px 12px 12px}
-.pmenu{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--shadow-lg);padding:14px;max-height:calc(100dvh - 76px);overflow:auto}
-.ov.fresh .pmenu{animation:pop .22s}
-.pm-h{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px}
-.pm-h .pav{width:46px;height:46px;font-size:18px;display:grid}
-.pm-h b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pm-h span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pm-h>div{min-width:0}
-.pm-plan{border:1px solid var(--green-line);background:var(--green-bg);border-radius:var(--r2);padding:11px 12px;margin-bottom:10px}
-.pm-plan.exp{border-color:var(--red-line);background:var(--red-bg)}
-.pm-plan .pt{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.pm-plan .pn{font-weight:500;font-size:14px}
-.pm-plan .ps{font-size:11px;font-weight:500;color:var(--green-d);border:1px solid var(--green-line);border-radius:20px;padding:1px 9px;line-height:18px;white-space:nowrap}
-.pm-plan.exp .ps{color:var(--red-d);border-color:var(--red-line)}
-.pm-plan .pd{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
-.pm-plan .pb{text-decoration:none;display:flex;width:100%;align-items:center;justify-content:center;margin-top:9px;min-height:38px;font-size:13px;border-radius:9px;font-weight:500}
-.pm-li{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 6px;border-radius:var(--r2);font-size:14px}
-.pm-li:active{background:var(--surface2)}
-.pm-li svg{color:var(--muted)}
-.pm-li .grow{min-width:0}
-.pm-li small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
-.pm-li.ok small{color:var(--green-d)}
-.pm-li.danger{color:var(--red-d)}.pm-li.danger svg{color:var(--red-d)}
-.pm-sep{height:1px;background:var(--line);margin:6px 0}
-
-.nudge{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--green-bg);border:1px solid var(--green-line);border-radius:var(--r3);padding:13px 14px;margin-bottom:12px}
-.nudge>svg{color:var(--green-d)}
-.nudge .nt{flex:1;min-width:0}
-.nudge .nt b{display:block;font-weight:500;font-size:14px}
-.nudge .nt span{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:1px}
-.nudge .go{flex:none;display:inline-flex;align-items:center;gap:2px;font-size:12.5px;font-weight:500;color:var(--green-d)}
-.nudge:active{filter:brightness(.97)}
-@media (min-width:768px){.dash>.nudge{grid-column:1/-1;margin:0}}
-
-@media (min-width:768px){.ov.pm{display:none}}
-
 .grow{flex:1}
 .foot{margin-top:28px;text-align:center;color:var(--faint);font-size:12px;line-height:1.7}
 .foot .heart{display:inline-block;vertical-align:-2px;margin:0 1px;color:var(--heart)}
@@ -537,7 +497,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.top{grid-column:1/-1;margin-bottom:0;align-items:center}
   .dash>.card{margin:0}
   .dash>.d-hero{grid-column:1/-1}
-  .dash>.d-hero .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .dash>.d-hero .stats{grid-template-columns:repeat(2,minmax(0,200px))}
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-month .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
   .dash>.d-disc{grid-column:1/-1}
@@ -602,7 +562,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .stx{display:block}
   .main .screen{padding:28px 36px 32px}
   .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
-  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
   .dash>.d-disc{grid-column:1/-1}
   .dash>.d-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .dash>.d-discscore{grid-column:1/-1}
@@ -736,21 +696,6 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 @keyframes tTwinkle{0%,100%{opacity:0;transform:scale(.2)}50%{opacity:1;transform:scale(1)}}
 @keyframes tConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
 @media (prefers-reduced-motion:reduce){#tour *{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important}}
-
-/* dashboard top: greeting + avatar, then broker + market side by side (phone only) */
-@media (max-width:767px){
-  .dash>.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 12px;align-items:start}
-  .dash>.top .trow{display:flex;justify-content:flex-end}
-  .dash>.top .topr{grid-column:1/-1;flex-direction:row;align-items:stretch;gap:8px;width:100%}
-  .dash>.top .topr>*{flex:1 1 0;min-width:0}
-  .dash>.top .topr .mkt{width:auto;min-width:0}
-  .dash>.top .topr .sync{justify-content:center;white-space:normal;text-align:center}
-  .dash .d-hero .stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .dash .d-hero .stat{padding:8px 9px}
-  .dash .d-hero .stat .v{font-size:14px}
-  .dash .d-hero .stat .s{font-size:10.5px;line-height:1.3}
-}
-@media (min-width:768px){.dash>.top .trow{display:none}}
 </style>
 </head>
 <body>
@@ -1074,7 +1019,7 @@ const S={
   subStatus:'trial', subDaysLeft:0, trialEndsAt:null, subscriptionEndsAt:null,
   tab:'dashboard', sub:null, subFrom:'main',
   connected:false, broker:null, changeModal:false, trades:[], tradesLoading:false, R:initR(),
-  editId:null, draft:{}, mform:{}, delModal:false, sheet:false, logoutModal:false, profMenu:false, busy:null, conn:null, tpage:1,
+  editId:null, draft:{}, mform:{}, delModal:false, sheet:false, logoutModal:false, busy:null, conn:null, tpage:1,
   pw:{cur:'',nw:'',cf:''}, em:{nw:'',pw:''}, emSent:'', fb:{type:'glitch',msg:''}, fbSent:false, feedbacks:[], shotReady:false, connTitle:'', connNote:'',
   calMonth:today().slice(0,7), calDay:null
 };
@@ -2141,17 +2086,8 @@ function disciplineCard(key){
   </div>`;
 }
 
-
-function dashNudges(){
-  if(S.tradesLoading)return '';
-  const [a,b]=weekRange(1),n=S.trades.filter(t=>t.date>=a&&t.date<=b).length;
-  let seen='';try{seen=safeStorage.getItem('sy-wk-seen')||''}catch(e){}
-  if(!n||seen===a)return '';
-  return `<button class="nudge" data-act="nudge-week" data-wk="${a}">${I('calendar2',26)}<div class="nt"><b>Weekly review ready</b><span>${fmtD(a)} – ${fmtD(b)} • ${n} trade${n===1?'':'s'}</span></div><span class="go">Open${I('chev',16)}</span></button>`;
-}
 function dashboard(){
   const td=stats(S.trades.filter(t=>t.date===today()));
-  const tc=S.trades.filter(t=>t.date===today()).length,expc=tc?td.total/tc:0;
   const mo=stats(S.trades.filter(t=>inR('monthly',t)));
   const recent=sorted(S.trades).slice(0,3);
   return `<div class="dash">
@@ -2159,7 +2095,6 @@ function dashboard(){
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
       <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
-    <div class="trow">${avatarBtn()}</div>
     <div class="topr">${syncBtn()}${mktBox()}</div>
   </div>
 
@@ -2168,18 +2103,12 @@ function dashboard(){
     <div class="k">Total P&amp;L</div>
     <div class="big ${cls(td.total)}" data-count="${td.total}" data-fmt="money">${money(td.total)}</div>
     <div class="stats">
-      <div class="stat"><div class="k">Win rate</div><div class="v ${td.w+td.l?'':'zero'}">${td.w+td.l?td.rate+'%':'–'}</div></div>
-      <div class="stat"><div class="k">Trades</div><div class="v ${tc?'':'zero'}">${tc}</div><div class="s">${tc?`<span class="${td.w?'pos':''}">${td.w} win</span> • <span class="${td.l?'neg':''}">${td.l} loss</span>`:''}</div></div>
-      <div class="stat"><div class="k">Profit factor</div><div class="v ${td.w+td.l?(td.pf>1?'pos':td.pf<1?'neg':''):'zero'}">${td.w+td.l?pfStr(td.pf):'–'}</div></div>
-      <div class="stat"><div class="k">Gross profit</div><div class="v ${td.gp?'pos':'zero'}">${money(td.gp)}</div></div>
-      <div class="stat"><div class="k">Gross loss</div><div class="v ${td.gl?'neg':'zero'}">${money(-td.gl)}</div></div>
-      <div class="stat"><div class="k">Expectancy</div><div class="v ${tc?cls(expc):'zero'}">${tc?money(expc):'–'}</div><div class="s">${tc?'per trade':''}</div></div>
+      <div class="stat"><div class="k">Win trades</div><div class="v ${td.w?'pos':'zero'}">${td.w}</div></div>
+      <div class="stat"><div class="k">Loss trades</div><div class="v ${td.l?'neg':'zero'}">${td.l}</div></div>
     </div>
   </div>
 
   ${disciplineGauge()}
-
-  ${dashNudges()}
 
   <div class="card d-recent">
     <div class="card-h"><h2>${I('trades',22)}Recent trades</h2><button class="textbtn" data-act="tab" data-tab="trades">View all${I('chev',18)}</button></div>
@@ -3080,38 +3009,6 @@ function settingsPage(){
   </div>`;
 }
 
-
-function planInfo(){
-  const st=S.subStatus,d=S.subDaysLeft;
-  if(st==='active')return{cls:'',name:planDisplay(S.subscriptionPlan),chip:'Subscribed',line:`${d} day${d===1?'':'s'} left`+(S.subscriptionEndsAt?` • valid until ${fmtFullDate(S.subscriptionEndsAt)}`:''),btn:'Manage subscription',ghost:true};
-  if(st==='trial')return{cls:'',name:'Free trial',chip:'Trial active',line:`${d} day${d===1?'':'s'} left`+(S.trialEndsAt?` • ends ${fmtFullDate(S.trialEndsAt)}`:''),btn:'Subscribe now',ghost:false};
-  return{cls:'exp',name:'Plan expired',chip:'Expired',line:'Subscribe to keep using your journal and analytics',btn:'Subscribe now',ghost:false};
-}
-function avatarBtn(){
-  const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
-  return `<button class="pav" data-act="pm-open" aria-label="Profile and plan">${ini}<i class="${S.subStatus==='expired'?'exp':''}"></i></button>`;
-}
-function profMenuView(fresh){
-  const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
-  const full=esc(((S.user.first||'')+' '+(S.user.last||'')).trim()||'My account');
-  const pi=planInfo();
-  const brk=S.connected?`<span class="grow"><span>${esc(S.broker||'Broker')} Connected</span></span>`:`<span class="grow"><span>Sync with broker</span><small>Not connected</small></span>`;
-  return `<div class="ov pm ${fresh?'fresh':''}" data-act="close-ov"><div class="pmenu" data-act="stop">
-    <div class="pm-h"><span class="pav">${ini}</span><div><b>${full}</b><span>${esc(S.user.email)}</span></div></div>
-    <div class="pm-plan ${pi.cls}">
-      <div class="pt"><span class="pn">${esc(pi.name)}</span><span class="ps">${pi.chip}</span></div>
-      <div class="pd">${esc(pi.line)}</div>
-      <a class="btn pb ${pi.ghost?'ghost':''}" href="${subscribeUrl()}">${pi.btn}</a>
-    </div>
-    <button class="pm-li" data-act="pm-profile">${I('user',22)}<span class="grow">User profile</span>${I('chev',18)}</button>
-    <button class="pm-li" data-act="pm-sub">${I('card',22)}<span class="grow">Subscription</span>${I('chev',18)}</button>
-    <button class="pm-li ${S.connected?'ok':''}" data-act="pm-sheet">${S.connected&&S.broker?bIcon(S.broker,22):I('refresh',22)}${brk}${I('chev',18)}</button>
-    <button class="pm-li" data-act="pm-settings">${I('navSettings',22)}<span class="grow">Settings</span>${I('chev',18)}</button>
-    <div class="pm-sep"></div>
-    <button class="pm-li danger" data-act="pm-logout">${I('logout',22)}<span class="grow">Logout</span></button>
-  </div></div>`;
-}
-
 const NAV=[['dashboard','navHome','Dashboard'],['trades','navTrades','Trades'],['analytics','navAnalytics','Analytics'],['settings','navSettings','Settings']];
 function bottomNav(){
   return `<nav class="bnav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,22)}</span>${lb}</button>`).join('')}</nav>`;
@@ -3560,7 +3457,6 @@ function render(top=false){
   else if(S.user)html=mainView();else html=authView();
   if(S.sheet)html+=sheetView(fresh);
   if(S.shotView)html+=shotView(fresh);
-  if(S.profMenu&&S.user)html+=profMenuView(fresh);
   if(S.logoutModal)html+=logoutView(fresh);
   if(S.delModal)html+=deleteView(fresh);
   if(S.changeModal)html+=changeBrokerView(fresh);
@@ -4196,7 +4092,7 @@ function act(a,el){
     case 'sheet':S.sheet=true;ovFresh=true;return render();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
-    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.profMenu=false;S.goalConfirm=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
+    case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.goalConfirm=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
     case 'broker':{
       const b=el.dataset.b;
       if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
@@ -4205,13 +4101,6 @@ function act(a,el){
       return b==='5paisa'?fivepaisaAction():b==='AliceBlue'?aliceAction():b==='AngelOne'?angelOneAction():b==='Fyers'?fyersAction():b==='Upstox'?upstoxAction():zerodhaAction();}
     case 'edit':return go(()=>openEdit(+el.dataset.id));
     case 'add-trade':return go(()=>{S.mform={broker:S.broker||'',scripName:'',side:'buy',entry:'',exit:'',qty:'',date:today(),time:''};S.error='';S.sub='addtrade'});
-    case 'nudge-week':return go(()=>{try{safeStorage.setItem('sy-wk-seen',el.dataset.wk)}catch(e){}S.wk='last';S.sub=null;S.tab='analytics'});
-    case 'pm-open':S.profMenu=true;ovFresh=true;return render();
-    case 'pm-profile':return go(()=>{S.profMenu=false;S.draft={...S.user};S.sub='profile'});
-    case 'pm-sub':return go(()=>{S.profMenu=false;S.sub='subscription'});
-    case 'pm-settings':return go(()=>{S.profMenu=false;S.sub=null;S.tab='settings'});
-    case 'pm-sheet':S.profMenu=false;S.sheet=true;ovFresh=true;return render();
-    case 'pm-logout':S.profMenu=false;S.logoutModal=true;ovFresh=true;return render();
     case 'mside':S.mform.side=el.dataset.v;return render();
     case 'save-manual-trade':return saveManualTrade();
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
