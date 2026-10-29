@@ -117,7 +117,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .pmenu{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--shadow-lg);padding:14px;max-height:calc(100dvh - 76px);overflow:auto}
 .ov.fresh .pmenu{animation:pop .22s}
 .pm-h{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px}
-.pm-h .pav{width:46px;height:46px;font-size:18px}
+.pm-h .pav{width:46px;height:46px;font-size:18px;display:grid}
 .pm-h b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pm-h span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pm-h>div{min-width:0}
@@ -128,7 +128,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .pm-plan .ps{font-size:11px;font-weight:500;color:var(--green-d);border:1px solid var(--green-line);border-radius:20px;padding:1px 9px;line-height:18px;white-space:nowrap}
 .pm-plan.exp .ps{color:var(--red-d);border-color:var(--red-line)}
 .pm-plan .pd{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
-.pm-plan .pb{display:flex;width:100%;align-items:center;justify-content:center;margin-top:9px;min-height:38px;font-size:13px;border-radius:9px;font-weight:500}
+.pm-plan .pb{text-decoration:none;display:flex;width:100%;align-items:center;justify-content:center;margin-top:9px;min-height:38px;font-size:13px;border-radius:9px;font-weight:500}
 .pm-li{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 6px;border-radius:var(--r2);font-size:14px}
 .pm-li:active{background:var(--surface2)}
 .pm-li svg{color:var(--muted)}
@@ -137,6 +137,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .pm-li.ok small{color:var(--green-d)}
 .pm-li.danger{color:var(--red-d)}.pm-li.danger svg{color:var(--red-d)}
 .pm-sep{height:1px;background:var(--line);margin:6px 0}
+
 .nudge{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--green-bg);border:1px solid var(--green-line);border-radius:var(--r3);padding:13px 14px;margin-bottom:12px}
 .nudge>svg{color:var(--green-d)}
 .nudge .nt{flex:1;min-width:0}
@@ -146,8 +147,7 @@ h1,h2,h3{letter-spacing:-.01em}
 .nudge:active{filter:brightness(.97)}
 @media (min-width:768px){.dash>.nudge{grid-column:1/-1;margin:0}}
 
-@media (min-width:768px){.trow .pav{display:none}.ov.pm{display:none}}
-.trow{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+@media (min-width:768px){.ov.pm{display:none}}
 
 .grow{flex:1}
 .foot{margin-top:28px;text-align:center;color:var(--faint);font-size:12px;line-height:1.7}
@@ -537,7 +537,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .dash>.top{grid-column:1/-1;margin-bottom:0;align-items:center}
   .dash>.card{margin:0}
   .dash>.d-hero{grid-column:1/-1}
-  .dash>.d-hero .stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .dash>.d-hero .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
   .dash>.d-month{grid-column:1/-1}
   .dash>.d-month .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
   .dash>.d-disc{grid-column:1/-1}
@@ -602,7 +602,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
   .stx{display:block}
   .main .screen{padding:28px 36px 32px}
   .dash>.d-hero{grid-column:span 4;display:flex;flex-direction:column}
-  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:1fr 1fr}
+  .dash>.d-hero .stats{margin-top:auto;padding-top:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
   .dash>.d-disc{grid-column:1/-1}
   .dash>.d-disc .disc{grid-template-columns:repeat(5,minmax(0,1fr))}
   .dash>.d-discscore{grid-column:1/-1}
@@ -736,6 +736,21 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 @keyframes tTwinkle{0%,100%{opacity:0;transform:scale(.2)}50%{opacity:1;transform:scale(1)}}
 @keyframes tConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
 @media (prefers-reduced-motion:reduce){#tour *{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+
+/* dashboard top: greeting + avatar, then broker + market side by side (phone only) */
+@media (max-width:767px){
+  .dash>.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 12px;align-items:start}
+  .dash>.top .trow{display:flex;justify-content:flex-end}
+  .dash>.top .topr{grid-column:1/-1;flex-direction:row;align-items:stretch;gap:8px;width:100%}
+  .dash>.top .topr>*{flex:1 1 0;min-width:0}
+  .dash>.top .topr .mkt{width:auto;min-width:0}
+  .dash>.top .topr .sync{justify-content:center;white-space:normal;text-align:center}
+  .dash .d-hero .stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .dash .d-hero .stat{padding:8px 9px}
+  .dash .d-hero .stat .v{font-size:14px}
+  .dash .d-hero .stat .s{font-size:10.5px;line-height:1.3}
+}
+@media (min-width:768px){.dash>.top .trow{display:none}}
 </style>
 </head>
 <body>
@@ -2144,7 +2159,8 @@ function dashboard(){
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
       <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
-    <div class="topr"><div class="trow">${syncBtn()}${avatarBtn()}</div>${mktBox()}</div>
+    <div class="trow">${avatarBtn()}</div>
+    <div class="topr">${syncBtn()}${mktBox()}</div>
   </div>
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
@@ -2152,13 +2168,11 @@ function dashboard(){
     <div class="k">Total P&amp;L</div>
     <div class="big ${cls(td.total)}" data-count="${td.total}" data-fmt="money">${money(td.total)}</div>
     <div class="stats">
-      <div class="stat"><div class="k">Trades</div><div class="v ${tc?'':'zero'}">${tc}</div></div>
       <div class="stat"><div class="k">Win rate</div><div class="v ${td.w+td.l?'':'zero'}">${td.w+td.l?td.rate+'%':'–'}</div></div>
-      <div class="stat"><div class="k">Win trades</div><div class="v ${td.w?'pos':'zero'}">${td.w}</div></div>
-      <div class="stat"><div class="k">Loss trades</div><div class="v ${td.l?'neg':'zero'}">${td.l}</div></div>
+      <div class="stat"><div class="k">Trades</div><div class="v ${tc?'':'zero'}">${tc}</div><div class="s">${tc?`<span class="${td.w?'pos':''}">${td.w} win</span> • <span class="${td.l?'neg':''}">${td.l} loss</span>`:''}</div></div>
+      <div class="stat"><div class="k">Profit factor</div><div class="v ${td.w+td.l?(td.pf>1?'pos':td.pf<1?'neg':''):'zero'}">${td.w+td.l?pfStr(td.pf):'–'}</div></div>
       <div class="stat"><div class="k">Gross profit</div><div class="v ${td.gp?'pos':'zero'}">${money(td.gp)}</div></div>
       <div class="stat"><div class="k">Gross loss</div><div class="v ${td.gl?'neg':'zero'}">${money(-td.gl)}</div></div>
-      <div class="stat"><div class="k">Profit factor</div><div class="v ${td.w+td.l?(td.pf>1?'pos':td.pf<1?'neg':''):'zero'}">${td.w+td.l?pfStr(td.pf):'–'}</div></div>
       <div class="stat"><div class="k">Expectancy</div><div class="v ${tc?cls(expc):'zero'}">${tc?money(expc):'–'}</div><div class="s">${tc?'per trade':''}</div></div>
     </div>
   </div>
