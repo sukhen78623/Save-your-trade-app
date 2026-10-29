@@ -110,13 +110,9 @@ h1,h2,h3{letter-spacing:-.01em}
 .screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:18px 16px 20px}
 .screen.hasnav{padding-bottom:88px}
 /* ===== Mobile top bar + profile menu + centre add button ===== */
-.mhead{position:sticky;top:0;z-index:15;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 6px;min-height:54px}
-.mhead .mb{display:flex;align-items:center;gap:9px;min-width:0;font-weight:500;font-size:16px;letter-spacing:-.01em}
-.mhead .mb svg{display:block;border-radius:8px;flex:none}
 .pav{position:relative;width:38px;height:38px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-line);color:var(--green-d);display:grid;place-items:center;font-weight:500;font-size:15px;flex:none}
 .pav i{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
 .pav i.exp{background:var(--red)}
-.screen.hasnav{padding-top:8px;min-height:calc(100vh - 54px);min-height:calc(100dvh - 54px)}
 .ov.pm{align-items:flex-start;justify-content:flex-end;padding:56px 12px 12px}
 .pmenu{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--shadow-lg);padding:14px;max-height:calc(100dvh - 76px);overflow:auto}
 .ov.fresh .pmenu{animation:pop .22s}
@@ -150,11 +146,8 @@ h1,h2,h3{letter-spacing:-.01em}
 .nudge:active{filter:brightness(.97)}
 @media (min-width:768px){.dash>.nudge{grid-column:1/-1;margin:0}}
 
-.bnav button.addc{position:relative}
-.bnav button.addc .ico{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#5d9d67 0%,#45834f 100%);color:#fff;margin-top:-20px;border:4px solid var(--bg);box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.bnav button.addc{color:var(--muted)}
-.bnav button.addc:active .ico{filter:brightness(.92)}
-@media (min-width:768px){.mhead{display:none}.ov.pm{display:none}}
+@media (min-width:768px){.trow .pav{display:none}.ov.pm{display:none}}
+.trow{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 
 .grow{flex:1}
 .foot{margin-top:28px;text-align:center;color:var(--faint);font-size:12px;line-height:1.7}
@@ -2136,16 +2129,11 @@ function disciplineCard(key){
 
 function dashNudges(){
   if(S.tradesLoading)return '';
-  let h='';
-  const dow=(new Date().getDay()+6)%7;
-  if(dow<=2){
-    const [a,b]=weekRange(1),n=S.trades.filter(t=>t.date>=a&&t.date<=b).length;
-    if(n)h+=`<button class="nudge" data-act="nudge-week">${I('calendar2',26)}<div class="nt"><b>Weekly review ready</b><span>${fmtD(a)} – ${fmtD(b)} • ${n} trade${n===1?'':'s'}</span></div><span class="go">Open${I('chev',16)}</span></button>`;
-  }
-  if(!S.connected)h+=`<button class="nudge" data-act="sheet">${I('refresh',26)}<div class="nt"><b>Connect your broker</b><span>Your trades come in automatically, no typing needed</span></div><span class="go">Connect${I('chev',16)}</span></button>`;
-  return h;
+  const [a,b]=weekRange(1),n=S.trades.filter(t=>t.date>=a&&t.date<=b).length;
+  let seen='';try{seen=safeStorage.getItem('sy-wk-seen')||''}catch(e){}
+  if(!n||seen===a)return '';
+  return `<button class="nudge" data-act="nudge-week" data-wk="${a}">${I('calendar2',26)}<div class="nt"><b>Weekly review ready</b><span>${fmtD(a)} – ${fmtD(b)} • ${n} trade${n===1?'':'s'}</span></div><span class="go">Open${I('chev',16)}</span></button>`;
 }
-
 function dashboard(){
   const td=stats(S.trades.filter(t=>t.date===today()));
   const tc=S.trades.filter(t=>t.date===today()).length,expc=tc?td.total/tc:0;
@@ -2156,7 +2144,7 @@ function dashboard(){
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
       <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
-    <div class="topr">${syncBtn()}${mktBox()}</div>
+    <div class="topr"><div class="trow">${syncBtn()}${avatarBtn()}</div>${mktBox()}</div>
   </div>
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
@@ -3085,9 +3073,9 @@ function planInfo(){
   if(st==='trial')return{cls:'',name:'Free trial',chip:'Trial active',line:`${d} day${d===1?'':'s'} left`+(S.trialEndsAt?` • ends ${fmtFullDate(S.trialEndsAt)}`:''),btn:'Subscribe now',ghost:false};
   return{cls:'exp',name:'Plan expired',chip:'Expired',line:'Subscribe to keep using your journal and analytics',btn:'Subscribe now',ghost:false};
 }
-function mobHeader(){
+function avatarBtn(){
   const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
-  return `<header class="mhead"><div class="mb">${logoMark(30,'h')}<span>Save Your Trade</span></div><button class="pav" data-act="pm-open" aria-label="Profile and plan">${ini}<i class="${S.subStatus==='expired'?'exp':''}"></i></button></header>`;
+  return `<button class="pav" data-act="pm-open" aria-label="Profile and plan">${ini}<i class="${S.subStatus==='expired'?'exp':''}"></i></button>`;
 }
 function profMenuView(fresh){
   const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
@@ -3112,9 +3100,7 @@ function profMenuView(fresh){
 
 const NAV=[['dashboard','navHome','Dashboard'],['trades','navTrades','Trades'],['analytics','navAnalytics','Analytics'],['settings','navSettings','Settings']];
 function bottomNav(){
-  const btn=([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,22)}</span>${lb}</button>`;
-  const add=`<button class="addc" data-act="nav-add" aria-label="Add trade"><span class="ico">${I('plus',26)}</span>Add trade</button>`;
-  return `<nav class="bnav">${NAV.slice(0,2).map(btn).join('')}${add}${NAV.slice(2).map(btn).join('')}</nav>`;
+  return `<nav class="bnav">${NAV.map(([k,ic,lb])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-tab="${k}" aria-label="${lb}"><span class="ico">${I(ic,22)}</span>${lb}</button>`).join('')}</nav>`;
 }
 function shell(inner,withNav){
   const ini=esc(String(S.user.first||S.user.email||'?').charAt(0).toUpperCase());
@@ -3144,7 +3130,7 @@ function mainView(){
   const blocked=S.subStatus==='expired'&&gated.has(S.tab);
   const pages={dashboard,trades:tradesPage,analytics:analyticsPage,settings:settingsPage};
   const content=blocked?expiredPage():pages[S.tab]();
-  return shell(`${mobHeader()}<div class="screen hasnav"><div class="grow">${content}</div>${foot()}</div>`,true);
+  return shell(`<div class="screen hasnav"><div class="grow">${content}</div>${foot()}</div>`,true);
 }
 
 function bar(title){return `<div class="bar"><button class="bk" data-act="back" aria-label="Back">${I('back',22)}</button><h1>${title}</h1></div>`}
@@ -4205,16 +4191,13 @@ function act(a,el){
       return b==='5paisa'?fivepaisaAction():b==='AliceBlue'?aliceAction():b==='AngelOne'?angelOneAction():b==='Fyers'?fyersAction():b==='Upstox'?upstoxAction():zerodhaAction();}
     case 'edit':return go(()=>openEdit(+el.dataset.id));
     case 'add-trade':return go(()=>{S.mform={broker:S.broker||'',scripName:'',side:'buy',entry:'',exit:'',qty:'',date:today(),time:''};S.error='';S.sub='addtrade'});
-    case 'nudge-week':return go(()=>{S.wk='last';S.sub=null;S.tab='analytics'});
+    case 'nudge-week':return go(()=>{try{safeStorage.setItem('sy-wk-seen',el.dataset.wk)}catch(e){}S.wk='last';S.sub=null;S.tab='analytics'});
     case 'pm-open':S.profMenu=true;ovFresh=true;return render();
     case 'pm-profile':return go(()=>{S.profMenu=false;S.draft={...S.user};S.sub='profile'});
     case 'pm-sub':return go(()=>{S.profMenu=false;S.sub='subscription'});
     case 'pm-settings':return go(()=>{S.profMenu=false;S.sub=null;S.tab='settings'});
     case 'pm-sheet':S.profMenu=false;S.sheet=true;ovFresh=true;return render();
     case 'pm-logout':S.profMenu=false;S.logoutModal=true;ovFresh=true;return render();
-    case 'nav-add':
-      if(S.subStatus==='expired')return toast('Your plan has expired. Subscribe to add trades');
-      return go(()=>{S.mform={broker:S.broker||'',scripName:'',side:'buy',entry:'',exit:'',qty:'',date:today(),time:''};S.error='';S.sub='addtrade'});
     case 'mside':S.mform.side=el.dataset.v;return render();
     case 'save-manual-trade':return saveManualTrade();
     case 'pg':S.tpage+=+el.dataset.d;return render(true);
