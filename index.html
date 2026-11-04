@@ -40,6 +40,9 @@
 })();
 </script>
 <meta name="theme-color" content="#111314">
+<script>try{var _t=localStorage.getItem('tj-theme');if(_t==='light'||_t==='dark')document.documentElement.setAttribute('data-theme',_t)}catch(e){}</script>
+<link rel="preconnect" href="https://clnhiudhlqwodrhinepg.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <title>Save Your Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -423,7 +426,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 @keyframes ring{0%{transform:scale(.6);opacity:.75}100%{transform:scale(1.7);opacity:0}}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--green-line)}50%{box-shadow:0 0 0 6px transparent}}
-#app.enter .screen>.grow>*:not(.dash):not(.agrid),#app.enter :is(.dash,.agrid)>*{animation:fadeUp .45s both}
+#app.enter .screen>.grow>*:not(.dash):not(.agrid),#app.enter :is(.dash,.agrid)>*{animation:fadeUp .32s both}
 #app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(2){animation-delay:.05s}
 #app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(3){animation-delay:.1s}
 #app.enter :is(.screen>.grow,.dash,.agrid)>:nth-child(4){animation-delay:.15s}
@@ -433,10 +436,21 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .ov.fresh{animation:fadeIn .2s}
 .ov.fresh .sheet{animation:slideUp .34s cubic-bezier(.2,.8,.2,1)}
 .ov.fresh .modal{animation:pop .24s}
-.loader{position:fixed;inset:0;background:var(--bg);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;animation:fadeIn .25s}
-.lg{position:relative;width:100px;height:100px;display:grid;place-items:center;color:var(--green)}
-.lg::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:spin .9s linear infinite}
-.ltxt{color:var(--muted);font-size:14px;font-weight:500;letter-spacing:.02em}
+#ldr{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;opacity:1;visibility:visible;transition:opacity .28s ease,visibility 0s}
+#ldr.off{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility 0s .28s}
+#ldr .lmark{position:relative;width:96px;height:96px;display:grid;place-items:center}
+#ldr .lmark::before,#ldr .lmark::after{content:'';position:absolute;inset:6px;border-radius:26px;border:2px solid var(--green);opacity:0;animation:ldrRing 2.2s cubic-bezier(.2,.6,.3,1) infinite}
+#ldr .lmark::after{animation-delay:1.1s}
+#ldr .lmark svg{position:relative;width:64px;height:64px;filter:drop-shadow(0 10px 22px var(--green-line));animation:ldrFloat 2.2s ease-in-out infinite}
+#ldr .tj-line{stroke-dasharray:30;stroke-dashoffset:30;animation:ldrLine 1.8s ease-in-out infinite}
+#ldr .lbar{width:132px;height:3px;border-radius:99px;background:var(--line);overflow:hidden}
+#ldr .lbar i{display:block;height:100%;width:45%;border-radius:99px;background:linear-gradient(90deg,transparent,var(--green),transparent);animation:ldrBar 1.25s ease-in-out infinite}
+#ldr .ltxt{color:var(--muted);font:500 13px/1 var(--font,system-ui,sans-serif);letter-spacing:.06em;text-transform:uppercase;margin-top:-8px}
+@keyframes ldrRing{0%{transform:scale(.7);opacity:.55}100%{transform:scale(1.35);opacity:0}}
+@keyframes ldrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes ldrLine{0%,10%{stroke-dashoffset:30}50%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:-30}}
+@keyframes ldrBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){#ldr .lmark::before,#ldr .lmark::after,#ldr .lmark svg,#ldr .lbar i{animation:none}#ldr .tj-line{animation:none;stroke-dashoffset:0}}
 .connect{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 0 10px;text-align:center}
 .rings{position:relative;width:120px;height:120px;display:grid;place-items:center}
 .rings span{position:absolute;inset:16px;border-radius:50%;border:2px solid var(--green);animation:ring 1.8s ease-out infinite}
@@ -454,7 +468,7 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .chart-sel{transform-box:fill-box;transform-origin:center;animation:selPulse 1.4s ease-in-out infinite}
 @keyframes selPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.55}}
 .chart-tip{transform-box:fill-box;transform-origin:center;animation:pop .22s cubic-bezier(.2,.8,.2,1) both}
-.track i{transform-origin:left;animation:barGrow 1.15s cubic-bezier(.22,.8,.25,1) both}
+.track i{transform-origin:left;animation:barGrow .8s cubic-bezier(.22,.8,.25,1) both}
 @keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .scroll-anim .track i{animation-play-state:paused}
 .scroll-anim.in-view .track i{animation-play-state:running}
@@ -703,7 +717,8 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 </style>
 </head>
 <body>
-<div id="app"><div style="padding:60px 20px;text-align:center;color:var(--muted);font:16px system-ui,sans-serif">Loading Save Your Trade…</div></div>
+<div id="ldr" role="status" aria-live="polite"><div class="lmark"><svg viewBox="0 0 64 64" aria-label="Save Your Trade"><defs><linearGradient id="ldrg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--mark-a)"/><stop offset="1" style="stop-color:var(--mark-b)"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#ldrg)"/><path d="M22 11H42Q45 11 45 14V53L32 43.5L19 53V14Q19 11 22 11Z" fill="#fff" fill-opacity=".97"/><path class="tj-line" d="M25 35L30.5 29.5L34.5 33L40 25.5" fill="none" stroke="var(--mark-b)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="lbar"><i></i></div><div class="ltxt" id="ldrTxt">Loading</div></div>
+<div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer onload="window.gisLoaded&&window.gisLoaded()"></script>
 <script>
@@ -1094,6 +1109,8 @@ async function loadAll(session){
   const u=session.user;
   S.connected=false;S.broker=null;
   /* Start all four requests together instead of one after another (this is what makes login fast) */
+  S.tradesLoading=true;S.trades=[];
+  const pTrades=loadTrades().then(()=>null,e=>{S.trades=[];console.error(e)});
   const pProfile=sb.from('profiles').select('*').eq('id',u.id).maybeSingle().then(r=>r.data,()=>null);
   const pPlan=sb.from('user_profiles').select('plan,trial_ends_at,subscription_ends_at').eq('id',u.id).maybeSingle().then(r=>r.data,()=>null);
   const pBroker=refreshBroker();
@@ -1110,11 +1127,14 @@ async function loadAll(session){
   S.user={id:u.id,first:(p&&p.first_name)||m.first_name||'',last:(p&&p.last_name)||m.last_name||'',gender:String((p&&p.gender)||m.gender||'').toLowerCase(),dob:(p&&p.dob)||m.dob||'',email:u.email||'',plan:plan};
   S.acct=S.user;
   S.tourPending=tourShouldShow(u);S.tour=null;
-  S.trades=[];
-  /* Trade history can be large, so it no longer blocks login: the dashboard opens right away
-     and the trade list fills in a moment later, re-rendering once it's ready */
-  S.tradesLoading=true;
-  loadTrades().catch(e=>{S.trades=[];console.error(e)}).then(()=>{S.tradesLoading=false;if(S.tourPending){S.tourPending=false;S.tour=0;S.tourDir='n'}render(true)});
+  /* Trades were already requested at the top, in parallel with the profile. The dashboard opens
+     right away and the trade list fills in quietly (no second page animation, no jump to top) */
+  pTrades.then(()=>{
+    if(!S.user||S.user.id!==u.id)return;
+    S.tradesLoading=false;
+    if(S.tourPending){S.tourPending=false;S.tour=0;S.tourDir='n'}
+    render();
+  });
 }
 
 function friendlyError(e){
@@ -3356,9 +3376,6 @@ function sheetView(fresh){
   }
   return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="sheet bm">${body}</div></div>`;
 }
-function loaderView(){
-  return `<div class="loader"><div class="lg">${logoMark(50)}</div><div class="ltxt">${S.busy}</div></div>`;
-}
 function changeBrokerView(fresh){
   const n=esc(S.broker||'your broker');
   return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="modal"><h3>Change broker?</h3><p>This will log you out of ${n}. You can then login with another broker to fetch trades.</p>
@@ -3482,6 +3499,12 @@ function tourGo(i,dir){
 function tourClose(){S.tour=null;tourMark();render()}
 
 let ovFresh=false;
+/* One persistent loader: it never restarts its animation between renders, so no flicker */
+function setLoader(msg){
+  const l=document.getElementById('ldr');if(!l)return;
+  if(msg){const t=document.getElementById('ldrTxt');if(t&&t.textContent!==msg)t.textContent=msg;l.classList.remove('off')}
+  else l.classList.add('off');
+}
 function render(top=false){
   const y=window.scrollY;
   const fresh=ovFresh;ovFresh=false;
@@ -3495,11 +3518,11 @@ function render(top=false){
   if(S.changeModal)html+=changeBrokerView(fresh);
   if(S.goalConfirm)html+=goalConfirmView(fresh);
   if(S.tour!=null&&S.user)html+=tourView();
-  if(S.busy)html+=loaderView();
   try{document.body.style.overflow=(S.tour!=null&&S.user)?'hidden':''}catch(e){}
   app.classList.toggle('enter',top);
   app.classList.toggle('noshell',!S.user);
   app.innerHTML=html;
+  setLoader(S.busy);
   window.scrollTo(0,top?0:y);
   drawGoogleBtn();
   animateGaugeNum();
@@ -3529,7 +3552,7 @@ function animateCountUp(root){
   (root||document).querySelectorAll('[data-count]').forEach(el=>{
     if(!scoped&&el.closest('.scroll-anim'))return;
     const target=+el.dataset.count;if(!isFinite(target))return;
-    const fmt=el.dataset.fmt||'int',dur=1400,start=performance.now();
+    const fmt=el.dataset.fmt||'int',dur=900,start=performance.now();
     const paint=v=>{el.textContent=fmt==='pct'?Math.round(v)+'%':fmt==='money'?money(Math.round(v)):Math.round(v)};
     const step=now=>{
       const p=Math.min(1,(now-start)/dur);
@@ -3547,7 +3570,7 @@ function animateArcs(root){
     const target=+el.dataset.len,C=+el.dataset.c,delay=+el.dataset.delay||0;
     if(!isFinite(target))return;
     setTimeout(()=>{
-      const dur=1200,start=performance.now();
+      const dur=900,start=performance.now();
       const step=now=>{
         const p=Math.min(1,(now-start)/dur);
         const eased=1-Math.pow(1-p,3);
@@ -4255,7 +4278,6 @@ document.addEventListener('change',e=>{
 try{const h=(window.location.hash||'').slice(1).toLowerCase();if(h==='terms'||h==='privacy'){S.sub=h;S.subFrom='auth'}}catch(e){}
 setInterval(()=>{const c=document.getElementById('clock');if(c)c.textContent=timeStr()},20000);
 setInterval(mktTick,1000);
-render(true);
 initSession();
 </script>
 </body>
