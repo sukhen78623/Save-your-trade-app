@@ -347,6 +347,10 @@ textarea.ta:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)
 .chartwrap{margin-bottom:14px}
 
 .calnav{display:flex;align-items:center;gap:6px}
+@keyframes calInN{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes calInB{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+.d-cal.swap[data-dir="n"] .calgrid:not(.calhead){animation:calInN .22s ease both}
+.d-cal.swap[data-dir="b"] .calgrid:not(.calhead){animation:calInB .22s ease both}
 .calnb{width:26px;height:26px;border-radius:var(--r1);background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
 .calnb:active{background:var(--surface2)}
 .calnb svg.ic{width:15px;height:15px}
@@ -2227,6 +2231,35 @@ function shiftMonth(ym,delta){
   const d=new Date(y,m-1+delta,1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
+/* Change calendar month without re-rendering the page: only the calendar card is swapped, scroll position stays, no whole-page animation */
+function calShift(n){
+  S.calMonth=shiftMonth(S.calMonth,n);S.error='';
+  const el=document.querySelector('.d-cal');
+  if(!el)return render();
+  const y=window.scrollY,h=el.offsetHeight;
+  app.classList.remove('enter');
+  const tmp=document.createElement('div');tmp.innerHTML=calendarCard();
+  const nw=tmp.firstElementChild;
+  nw.setAttribute('data-dir',n>0?'n':'b');nw.classList.add('swap');
+  nw.style.minHeight=h+'px';
+  el.replaceWith(nw);
+  window.scrollTo(0,y);
+  setTimeout(()=>{nw.style.minHeight=''},260);
+}
+/* Swipe left or right on the calendar to change month */
+(function(){
+  let sx=0,sy=0,on=false;
+  document.addEventListener('touchstart',e=>{
+    const c=e.target.closest&&e.target.closest('.d-cal');
+    if(!c||e.touches.length!==1){on=false;return}
+    on=true;sx=e.touches[0].clientX;sy=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!on)return;on=false;
+    const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.6)calShift(dx<0?1:-1);
+  },{passive:true});
+})();
 function calPnlByDate(){
   const map={};
   S.trades.forEach(t=>{map[t.date]=(map[t.date]||0)+pnl(t)});
@@ -4136,8 +4169,8 @@ function act(a,el){
     case 'fb-done':return go(()=>{S.sub=null});
     case 'change-broker':if(S.conn)return;S.changeModal=true;ovFresh=true;return render();
     case 'confirm-change-broker':return changeBroker();
-    case 'cal-prev':return go(()=>{S.calMonth=shiftMonth(S.calMonth,-1)});
-    case 'cal-next':return go(()=>{S.calMonth=shiftMonth(S.calMonth,1)});
+    case 'cal-prev':return calShift(-1);
+    case 'cal-next':return calShift(1);
     case 'cal-day':return go(()=>{S.calDay=el.dataset.date;S.sub='day'});
     case 'sub-rules':return go(()=>{S.rlDraft={...rlGet()};S.sub='rules'});
     case 'rules-save':return rlSaveForm();
