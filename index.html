@@ -4280,5 +4280,165 @@ setInterval(()=>{const c=document.getElementById('clock');if(c)c.textContent=tim
 setInterval(mktTick,1000);
 initSession();
 </script>
+<!-- ===== DIWALI DECORATION (auto-shows only 6 to 10 Nov 2026; add ?diwali=1 to the address to preview anytime) ===== -->
+<script>
+(function(){
+try{
+  var dt=new Date(),key=dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate();
+  var force=/[?&]diwali=1/.test(location.search);
+  if(!force&&!(key>=20261106&&key<=20261110))return;
+  var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+
+  var css=document.createElement('style');
+  css.textContent=
+  /* everything is hidden until the user is logged in */
+  '#dw-lights,#dw-fx,.dw-diya,#dw-chip{display:none}'+
+  'body.dw-on #dw-lights{display:flex}body.dw-on #dw-fx{display:block}body.dw-on .dw-diya{display:block}body.dw-on #dw-chip{display:block}'+
+  '#dw-lights{position:fixed;top:0;left:0;right:0;z-index:35;pointer-events:none;height:30px}'+
+  '.dw-seg{flex:1;position:relative;height:14px;border-bottom:2px solid #7a5a2a;border-radius:0 0 50% 50%/0 0 100% 100%;opacity:.9}'+
+  '.dw-b{position:absolute;left:50%;top:12px;width:8px;height:11px;margin-left:-4px;border-radius:50% 50% 55% 55%;background:var(--c);box-shadow:0 0 8px 2px var(--c),0 0 16px 4px var(--c);animation:dwTw 1.7s ease-in-out infinite alternate;animation-delay:var(--d)}'+
+  '.dw-b::before{content:"";position:absolute;left:1px;top:-3px;width:6px;height:4px;background:#7a5a2a;border-radius:2px}'+
+  '@keyframes dwTw{0%{opacity:.35;transform:scale(.85)}100%{opacity:1;transform:scale(1.08)}}'+
+  '#dw-fx{position:fixed;inset:0;width:100%;height:100%;z-index:34;pointer-events:none}'+
+  '.dw-diya{position:fixed;z-index:36;width:74px;height:74px;bottom:82px;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}'+
+  '.dw-diya.l{left:6px}.dw-diya.r{right:6px}'+
+  '.glow{position:absolute;left:50%;top:6px;width:90px;height:90px;margin-left:-45px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,170,40,.55),rgba(255,120,0,.18) 60%,transparent);animation:dwGlow 2.2s ease-in-out infinite alternate}'+
+  '.dw-diya svg{position:relative;width:100%;height:100%;display:block;overflow:visible}'+
+  '.dw-fl{transform-box:fill-box;transform-origin:50% 100%;animation:dwFl .9s ease-in-out infinite alternate}'+
+  '.dw-diya.r .dw-fl{animation-delay:.35s}'+
+  '@keyframes dwFl{0%{transform:scale(1,.92) rotate(-3deg)}50%{transform:scale(.94,1.08) rotate(2deg)}100%{transform:scale(1.04,.96) rotate(-1deg)}}'+
+  '@keyframes dwGlow{from{opacity:.65;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}'+
+  /* loading screen: a lit diya instead of the logo */
+  '#ldr .lmark::before,#ldr .lmark::after{border-color:#ff9d3c}'+
+  '#ldr .lmark svg{width:78px;height:78px;overflow:visible;filter:drop-shadow(0 10px 22px rgba(255,150,30,.5))}'+
+  '#ldr .lmark .glow{top:50%;width:120px;height:120px;margin:-60px 0 0 -60px}'+
+  '#ldr .lbar i{background:linear-gradient(90deg,transparent,#ff9d3c,transparent)}'+
+  /* small flip chip that stays on one side */
+  '#dw-chip{position:fixed;z-index:36;left:50%;bottom:92px;transform:translateX(-50%);width:150px;height:34px;perspective:500px;pointer-events:none}'+
+  '.dw-in{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:dwFlip 7s ease-in-out infinite}'+
+  '.dw-f{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:999px;backface-visibility:hidden;-webkit-backface-visibility:hidden;'+
+    'font:800 12px "Plus Jakarta Sans",system-ui,sans-serif;white-space:nowrap;background:linear-gradient(135deg,rgba(60,14,0,.93),rgba(130,45,0,.93));border:1px solid rgba(255,200,90,.6);color:#ffd76a;box-shadow:0 4px 14px rgba(255,120,0,.3);padding:0 10px;overflow:hidden;text-overflow:ellipsis}'+
+  '.dw-f.b{transform:rotateX(180deg);color:#ffe2a8}'+
+  '@keyframes dwFlip{0%,38%{transform:rotateX(0)}50%,88%{transform:rotateX(180deg)}100%{transform:rotateX(360deg)}}'+
+  '@media (min-width:768px){.dw-diya{bottom:14px;width:88px;height:88px}.dw-diya.l{left:calc(var(--side-w,88px) + 14px)}#dw-chip{bottom:34px}}'+
+  /* welcome card, shown briefly after login */
+  '#dw-card{position:fixed;z-index:37;top:34px;left:50%;transform:translate(-50%,-140%);max-width:92vw;width:max-content;text-align:center;padding:12px 22px;border-radius:18px;'+
+    'background:linear-gradient(135deg,rgba(60,14,0,.94),rgba(120,40,0,.94));border:1px solid rgba(255,200,90,.65);box-shadow:0 12px 34px rgba(255,120,0,.35),0 0 0 3px rgba(255,190,70,.12);'+
+    'transition:transform .8s cubic-bezier(.2,.9,.25,1.1),opacity .6s;opacity:0;cursor:pointer;font-family:"Plus Jakarta Sans",system-ui,sans-serif}'+
+  '#dw-card.show{transform:translate(-50%,0);opacity:1}'+
+  '#dw-card .t{font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.2;background:linear-gradient(90deg,#ffd76a,#fff3c4,#ff9d3c,#ffd76a);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:dwShine 3s linear infinite}'+
+  '#dw-card .s{margin-top:4px;font-size:13px;color:#ffe2a8;font-weight:600}'+
+  '#dw-card .m{margin-top:2px;font-size:12px;color:#ffcf8a;opacity:.9}'+
+  '@keyframes dwShine{to{background-position:-250% 0}}'+
+  '@media (prefers-reduced-motion:reduce){.dw-b,.dw-fl,.glow,.dw-in,#dw-card .t{animation:none!important}}';
+  document.head.appendChild(css);
+
+  /* diya drawing (unique gradient ids per copy) */
+  function diyaSvg(u){
+    return '<span class="glow"></span><svg viewBox="0 0 64 64" aria-hidden="true">'+
+    '<defs><linearGradient id="dwF'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".45" stop-color="#ffb52e"/><stop offset="1" stop-color="#ff5a00"/></linearGradient>'+
+    '<linearGradient id="dwD'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0793a"/><stop offset="1" stop-color="#8a3510"/></linearGradient></defs>'+
+    '<path class="dw-fl" d="M32 8C39 18 42 24 39 31C37 35 27 35 25 31C22 24 28 18 32 8Z" fill="url(#dwF'+u+')"/>'+
+    '<path d="M32 22C35 26 35 29 32 32C29 29 29 26 32 22Z" fill="#fffbe0" opacity=".9"/>'+
+    '<rect x="30.6" y="31" width="2.8" height="6" rx="1.2" fill="#3a2410"/>'+
+    '<path d="M6 38Q32 64 58 38Q32 44 6 38Z" fill="url(#dwD'+u+')"/>'+
+    '<ellipse cx="32" cy="38" rx="26" ry="5" fill="#f0934a"/><ellipse cx="32" cy="38" rx="20" ry="3.2" fill="#8a3510"/>'+
+    '<circle cx="18" cy="48" r="1.6" fill="#ffd76a"/><circle cx="32" cy="53" r="1.6" fill="#ffd76a"/><circle cx="46" cy="48" r="1.6" fill="#ffd76a"/></svg>';
+  }
+
+  /* 1. loading screen becomes a glowing diya */
+  var lm=document.querySelector('#ldr .lmark');
+  if(lm)lm.innerHTML=diyaSvg('ld');
+
+  /* 2. decorations (hidden until login) */
+  var lights=document.createElement('div');lights.id='dw-lights';lights.setAttribute('aria-hidden','true');
+  var cols=['#ffc83d','#ff7a2f','#ff4d8d','#3fd17a','#ff3b3b','#5ab8ff'];
+  var n=Math.max(8,Math.ceil(window.innerWidth/34));
+  for(var i=0;i<n;i++){
+    var seg=document.createElement('div');seg.className='dw-seg';
+    var b=document.createElement('i');b.className='dw-b';
+    b.style.setProperty('--c',cols[i%cols.length]);b.style.setProperty('--d',((i*0.23)%1.7).toFixed(2)+'s');
+    seg.appendChild(b);lights.appendChild(seg);
+  }
+  document.body.appendChild(lights);
+
+  var cv=document.createElement('canvas');cv.id='dw-fx';cv.setAttribute('aria-hidden','true');
+  document.body.appendChild(cv);
+  var cx=cv.getContext('2d'),W=0,H=0,dpr=Math.min(2,window.devicePixelRatio||1),P=[],raf=0,on=false,intro=false;
+  function size(){W=window.innerWidth;H=window.innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
+  size();window.addEventListener('resize',size);
+  var pal=['#ffd76a','#ff9d3c','#ff5e7e','#8affc1','#8ec9ff','#ffffff'];
+  function burst(x,y){
+    if(reduce||!on)return;
+    var c=pal[Math.floor(Math.random()*pal.length)],c2=pal[Math.floor(Math.random()*pal.length)];
+    for(var i=0;i<30;i++){
+      var a=Math.PI*2*i/30+Math.random()*.2,s=1.4+Math.random()*2.4;
+      P.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,c:i%2?c:c2,r:1.4+Math.random()*1.4});
+    }
+    if(!raf)raf=requestAnimationFrame(tick);
+  }
+  function tick(){
+    cx.clearRect(0,0,W,H);cx.globalCompositeOperation='lighter';
+    for(var i=P.length-1;i>=0;i--){
+      var p=P[i];p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.vy=p.vy*.985+.045;p.l-=.016;
+      if(p.l<=0){P.splice(i,1);continue}
+      cx.globalAlpha=Math.max(0,p.l);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fill();
+    }
+    cx.globalAlpha=1;cx.globalCompositeOperation='source-over';
+    raf=P.length?requestAnimationFrame(tick):0;
+  }
+  setInterval(function(){
+    if(!on||document.hidden||reduce)return;
+    burst(W*(.15+Math.random()*.7),H*(.12+Math.random()*.28));
+  },3400);
+
+  ['l','r'].forEach(function(side,idx){
+    var bt=document.createElement('button');bt.type='button';bt.className='dw-diya '+side;bt.setAttribute('aria-label','Light the diya');
+    bt.innerHTML=diyaSvg('s'+idx);
+    bt.addEventListener('click',function(){
+      var r=bt.getBoundingClientRect();burst(r.left+r.width/2,r.top+10);burst(W/2,H*.3);showCard();
+    });
+    document.body.appendChild(bt);
+  });
+
+  /* 3. small flipping "Happy Diwali" chip, stays on screen */
+  var chip=document.createElement('div');chip.id='dw-chip';chip.setAttribute('aria-hidden','true');
+  chip.innerHTML='<div class="dw-in"><div class="dw-f a">🪔 Happy Diwali</div><div class="dw-f b"></div></div>';
+  document.body.appendChild(chip);
+  var back=chip.querySelector('.dw-f.b');
+
+  /* 4. welcome card (briefly after login) */
+  var card=document.createElement('div');card.id='dw-card';card.setAttribute('role','status');
+  document.body.appendChild(card);
+  var hideT=0;
+  function who(){try{return (S&&S.user&&S.user.first)||''}catch(e){return ''}}
+  function esc2(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function showCard(){
+    var nm=who();
+    card.innerHTML='<div class="t">🪔 Happy Diwali 🪔</div><div class="s">Shubho Dipaboli'+(nm?', '+esc2(nm):'')+'</div><div class="m">May light fill every corner of your life ✨</div>';
+    card.classList.add('show');clearTimeout(hideT);hideT=setTimeout(hideCard,7000);
+  }
+  function hideCard(){card.classList.remove('show')}
+  card.addEventListener('click',hideCard);
+
+  /* 5. switch everything on only while a user is logged in */
+  function check(){
+    var li=false;try{li=!!(S&&S.user)}catch(e){}
+    if(li&&!on){
+      on=true;document.body.classList.add('dw-on');
+      if(!intro){intro=true;setTimeout(function(){if(!on)return;showCard();burst(W*.3,H*.25);burst(W*.7,H*.22)},700)}
+    }else if(!li&&on){
+      on=false;intro=false;document.body.classList.remove('dw-on');hideCard();P.length=0;
+    }
+    if(on){
+      var t='Shubho Dipaboli'+(who()?', '+who():'');
+      if(back.textContent!==t)back.textContent=t;
+    }
+  }
+  setInterval(check,600);check();
+}catch(e){console.error('Diwali decoration skipped',e)}
+})();
+</script>
+
 </body>
 </html>
