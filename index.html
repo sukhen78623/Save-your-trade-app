@@ -256,6 +256,12 @@ h1,h2,h3{letter-spacing:-.01em}
 .addb:active{filter:brightness(.94)}
 .titlerow{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
 .titlerow .title{margin:0}
+.fest{display:flex;align-items:center;justify-content:center;border:1px solid;border-radius:var(--r2);padding:8px 14px;font-weight:600;font-size:13px;white-space:nowrap;perspective:600px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.fest-in{display:inline-block;transition:transform .28s ease;backface-visibility:hidden}
+.fest-in.fo{transform:rotateY(90deg)}
+.fest-in.fi{animation:festFlipIn .28s ease}
+@keyframes festFlipIn{from{transform:rotateY(-90deg)}to{transform:rotateY(0)}}
+@media (prefers-reduced-motion:reduce){.fest-in{transition:none}.fest-in.fi{animation:none}}
 .tsync{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px}
 .tsync .btn{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
 .delrow{margin-top:14px}
@@ -2070,6 +2076,37 @@ function tradeRow(t,withEdit=true){
   </div>`;
 }
 
+/* ===== FESTIVAL WISHES =====
+   Naya utsob jorte: neeche list-e ek ta line jure dao. Dates 'YYYYMMDD'. Utsob shesh hole nijei bondho hoy.
+   from/to = kon dine dekhabe | t = wish (english, hindi...) | i = emoji | bg = background | fg = lekhar rong */
+const FESTIVALS=[
+  {id:'diwali', from:20261106,to:20261110,t:['Happy Diwali','शुभ दीपावली'],i:'🪔',bg:'#7a1030',fg:'#ffd978'},
+  {id:'newyear',from:20261231,to:20270102,t:['Happy New Year','शुभ नववर्ष'],i:'🎆',bg:'#14346b',fg:'#ffd23f'}
+];
+let festIdx=0;
+function festNow(){
+  try{
+    const q=new URLSearchParams(location.search).get('fest');
+    if(q){const f=FESTIVALS.find(x=>x.id===q);if(f)return f}
+    const d=new Date(),n=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+    return FESTIVALS.find(x=>n>=x.from&&n<=x.to)||null;
+  }catch(e){return null}
+}
+function festChip(){
+  const f=festNow();if(!f)return '';
+  return `<div class="fest" style="background:${f.bg};color:${f.fg};border-color:${f.fg}" aria-label="${esc(f.t[0])}"><span class="fest-in" id="festIn">${f.i} ${esc(f.t[festIdx%f.t.length])}</span></div>`;
+}
+setInterval(()=>{
+  const f=festNow();if(!f)return;
+  const el=document.getElementById('festIn');if(!el)return;
+  festIdx++;el.classList.add('fo');
+  setTimeout(()=>{
+    el.textContent=f.i+' '+f.t[festIdx%f.t.length];
+    el.classList.remove('fo');el.classList.add('fi');
+    setTimeout(()=>el.classList.remove('fi'),280);
+  },280);
+},3200);
+
 function syncBtn(){
   return S.connected
     ?`<button class="sync active" data-act="sheet">${S.broker?bIcon(S.broker,22):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</button>`
@@ -2121,7 +2158,7 @@ function dashboard(){
     <div><div class="hello">${greeting()}</div><div class="name">${esc(S.user.first)}</div>
       <div class="gnote">${esc(greetingNote())}</div>
       <div class="when">${dateStr()} • <span id="clock">${timeStr()}</span></div></div>
-    <div class="topr">${syncBtn()}${mktBox()}</div>
+    <div class="topr">${festChip()||syncBtn()}${mktBox()}</div>
   </div>
 
   <div class="card hero d-hero ${td.total>0?'g':td.total<0?'r':''}">
