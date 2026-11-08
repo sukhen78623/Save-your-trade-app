@@ -256,6 +256,8 @@ h1,h2,h3{letter-spacing:-.01em}
 .addb:active{filter:brightness(.94)}
 .titlerow{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
 .titlerow .title{margin:0}
+.tsync{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.tsync .btn{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
 .delrow{margin-top:14px}
 .pill.mn{color:var(--muted);background:var(--surface2);border-color:var(--line)}
 .editb svg.ic{width:18px;height:18px}
@@ -2071,7 +2073,7 @@ function tradeRow(t,withEdit=true){
 function syncBtn(){
   return S.connected
     ?`<button class="sync active" data-act="sheet">${S.broker?bIcon(S.broker,22):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</button>`
-    :`<button class="sync" data-act="sheet">${I('refresh',18)}Sync with broker</button>`;
+    :`<button class="sync" data-act="sheet">${I('refresh',18)}Connect with Broker</button>`;
 }
 
 function rulesBlock(){
@@ -2167,6 +2169,9 @@ function tradesPage(){
   S.tpage=Math.min(Math.max(1,S.tpage),pages);
   const rows=list.slice((S.tpage-1)*10,S.tpage*10);
   return `<div class="titlerow"><div class="title">Trades</div><button class="addb" data-act="add-trade" aria-label="Add manual trade">${I('plus',22)}</button></div>
+  ${S.connected
+    ?`<div class="tsync"><button class="sync active" data-act="sheet">${S.broker?bIcon(S.broker,22):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</button><button class="btn small" data-act="fetch-trades">${I('refresh',18)}Sync / Fetch Trades</button></div>`
+    :`<div class="tsync"><button class="btn small" data-act="sheet">${I('refresh',18)}Connect with Broker</button></div>`}
   <div class="card">${filterUI('trades')}<div class="k" style="margin-top:-6px">${list.length} trade${list.length===1?'':'s'} • 10 per page</div><button class="btn ghost small" style="margin-top:12px" data-act="csv">${I('file',18)}Export CSV</button></div>
   ${rows.length?`<div class="card pagecard">${rows.map(t=>tradeRow(t)).join('')}</div>
   ${pages>1?`<div class="pager"><button class="btn ghost small" data-act="pg" data-d="-1" ${S.tpage<=1?'disabled':''}>Previous</button><span class="k">Page ${S.tpage} of ${pages}</span><button class="btn ghost small" data-act="pg" data-d="1" ${S.tpage>=pages?'disabled':''}>Next</button></div>`:''}`
@@ -3036,7 +3041,7 @@ function settingsPage(){
   <div class="list">
     ${li('user','User profile','sub-profile')}
     ${li('card','Subscription','sub-subscription',subLabel())}
-    ${li('refresh',`Sync with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
+    ${li('refresh',`Connect with broker${S.connected?`<span class="lsub">${S.broker?bIcon(S.broker,18):'<span class="dot"></span>'}${esc(S.broker||'Broker')} Connected</span>`:''}`,'sheet')}
   </div>
   <div class="sec">Trading discipline</div>
   <div class="list">
@@ -3363,8 +3368,8 @@ function sheetView(fresh){
   }else if(S.conn==='done'){
     body=`<div class="connect"><div class="okc">${checkSvg(92)}</div><div class="ct pos">${esc(S.connTitle||'Broker connected')}</div>${S.connNote?`<div class="note">${esc(S.connNote)}</div>`:''}</div>`;
   }else{
-    body=`<div class="bm-h"><div class="hd" style="margin:0">${I('refresh',22)}Sync with broker</div><button class="xbtn" data-act="close-ov-btn" aria-label="Close">${I('x',20)}</button></div>
-    <div class="note">Choose your broker below. A few are live now; more will be connected later.</div>
+    body=`<div class="bm-h"><div class="hd" style="margin:0">${I('refresh',22)}Connect with broker</div><button class="xbtn" data-act="close-ov-btn" aria-label="Close">${I('x',20)}</button></div>
+    <div class="note">Choose your broker below to connect. A few are live now; more will be connected later.</div>
     <div class="blist">${BROKERS.map((b,i)=>{
       const isZ=LIVE_BROKERS.includes(b);
       const on=S.connected&&S.broker===b;
@@ -3372,7 +3377,7 @@ function sheetView(fresh){
       return `<button class="brow ${on?'on':''}" style="--i:${i}" data-act="broker" data-b="${b}">${bIcon(b,40)}<span class="bn">${b}</span>${st}</button>`;
     }).join('')}</div>
     ${S.connected?`<button class="btn ghost" style="margin-top:14px" data-act="change-broker">Change broker</button>`:''}
-    <div class="note" style="margin-top:14px">Tap your broker to login and fetch today's trades. We need a fresh login once every day.</div>`;
+    <div class="note" style="margin-top:14px">Tap your broker to log in and connect. To fetch your trades, open the <b>Trades</b> tab and tap <b>Sync / Fetch Trades</b>. We need a fresh login once every day.</div>`;
   }
   return `<div class="ov center ${fresh?'fresh':''}" data-act="close-ov"><div class="sheet bm">${body}</div></div>`;
 }
@@ -3407,7 +3412,7 @@ function tourMark(){
 const TOUR=[
   {k:'welcome'},
   {k:'f',a:'#4f8f5a',h:'Your trades, on autopilot',p:'Connect your broker once and your trades come in by themselves. Or add trades manually, whichever you like.',
-   s:['Tap <b>Sync with broker</b> on your dashboard','Choose your broker and log in to it','Your trades appear. Sync again anytime','No broker? Tap <b>+</b> in the Trades tab to add a trade by hand'],note:'live',art:'sync'},
+   s:['Tap <b>Connect with broker</b> on your dashboard','Choose your broker and log in to it','Open the <b>Trades</b> tab and tap <b>Sync / Fetch Trades</b>','No broker? Tap <b>+</b> in the Trades tab to add a trade by hand'],note:'live',art:'sync'},
   {k:'f',a:'#3b7bd1',h:'Every trade has a story',p:'Write why you took a trade and what you learned from it. Your notes stay saved with each trade.',
    s:['Open any trade from the <b>Trades</b> tab','Add your setup, stop loss, target and notes','Mark your mistakes and attach a screenshot'],art:'journal'},
   {k:'f',a:'#c98a1b',h:'Your rules, your discipline',p:'Set your own daily limits. We never block you. We simply keep count and show your discipline score.',
@@ -3749,8 +3754,11 @@ async function handleBrokerReturn(){
   if(result==='connected'){
     await refreshBroker();
     if(S.connected){
-      S.sheet=true;ovFresh=true;render();
-      return name==='5paisa'?syncFivepaisa():name==='AliceBlue'?syncAlice():name==='AngelOne'?syncAngelOne():name==='Fyers'?syncFyers():name==='Upstox'?syncUpstox():syncZerodha();
+      S.sheet=true;ovFresh=true;
+      S.conn='done';S.connTitle=name+' connected';S.connNote='Now open the Trades tab and tap Sync / Fetch Trades';
+      render();
+      setTimeout(()=>{resetConn();S.sheet=false;render(true)},2600);
+      return;
     }
     result='failed';
   }
@@ -3800,6 +3808,14 @@ async function changeBroker(){
   }
 }
 function resetConn(){S.conn=null;S.connTitle='';S.connNote=''}
+/* Trades page button: connect first, then fetch. Fetching never happens automatically on connect. */
+function fetchTrades(){
+  if(!sb||S.conn)return;
+  S.sheet=true;ovFresh=true;
+  if(!S.connected)return render();
+  const b=S.broker;
+  return b==='5paisa'?syncFivepaisa():b==='AliceBlue'?syncAlice():b==='AngelOne'?syncAngelOne():b==='Fyers'?syncFyers():b==='Upstox'?syncUpstox():syncZerodha();
+}
 async function upstoxAction(){
   if(!sb)return;
   if(S.connected)return syncUpstox();
@@ -3828,7 +3844,7 @@ async function syncUpstox(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function aliceAction(){
@@ -3858,7 +3874,7 @@ async function syncAlice(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function fivepaisaAction(){
@@ -3888,7 +3904,7 @@ async function syncFivepaisa(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function fyersAction(){
@@ -3918,7 +3934,7 @@ async function syncFyers(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function angelOneAction(){
@@ -3948,7 +3964,7 @@ async function syncAngelOne(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function zerodhaAction(){
@@ -3979,7 +3995,7 @@ async function syncZerodha(){
     render();
     setTimeout(()=>{resetConn();S.sheet=false;render(true)},2200);
   }catch(e){
-    resetConn();render();toast(e.message||'Sync failed');
+    resetConn();S.sheet=false;render();toast(e.message||'Sync failed');
   }
 }
 async function saveProfile(){
@@ -4146,6 +4162,7 @@ function act(a,el){
     case 'tour-skip':return tourClose();
     case 'tour-connect':S.tour=null;tourMark();S.sheet=true;ovFresh=true;return render();
     case 'sheet':S.sheet=true;ovFresh=true;return render();
+    case 'fetch-trades':return fetchTrades();
     case 'view-shot':S.shotView=el.dataset.url;ovFresh=true;return render();
     case 'stop':return;
     case 'close-ov':case 'close-ov-btn':if(S.conn)return;if(S.changeModal){S.changeModal=false;return render()}S.sheet=false;S.goalConfirm=false;S.logoutModal=false;S.delModal=false;S.shotView=null;return render();
@@ -4154,6 +4171,7 @@ function act(a,el){
       if(!LIVE_BROKERS.includes(b))return toast(b+' will be connected later');
       if(S.conn)return;
       if(S.connected&&S.broker!==b)return toast('Change broker first to connect '+b);
+      if(S.connected&&S.broker===b)return toast(b+' is already connected. Open the Trades tab and tap Sync / Fetch Trades');
       return b==='5paisa'?fivepaisaAction():b==='AliceBlue'?aliceAction():b==='AngelOne'?angelOneAction():b==='Fyers'?fyersAction():b==='Upstox'?upstoxAction():zerodhaAction();}
     case 'edit':return go(()=>openEdit(+el.dataset.id));
     case 'add-trade':return go(()=>{S.mform={broker:S.broker||'',scripName:'',side:'buy',entry:'',exit:'',qty:'',date:today(),time:''};S.error='';S.sub='addtrade'});
